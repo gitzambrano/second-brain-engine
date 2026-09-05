@@ -143,6 +143,9 @@ jobs:
               c.write_text(text, encoding='utf-8')
           PY
 
+      - name: Install test dependency
+        run: python -m pip install pytest
+
       - name: Run explicit callout unit tests
         run: python -m pytest -q tests/test_html_preprocess_callouts.py
 
