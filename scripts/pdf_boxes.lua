@@ -3,7 +3,7 @@
 --
 -- Pipeline: html_preprocess.transform_markdown → fenced divs → this filter
 -- → LaTeX environments defined in HEADER_TEX (export_essay_pdf.py).
--- Wikibox receives a color argument from badge-content heuristics.
+-- Wikibox receives a color argument from the explicit semantic class.
 -- Sumário is converted from BulletList to sbtoc environment.
 -- References (## Referências) get sbrefitem wrapping + Link→↗.
 
@@ -27,53 +27,23 @@ local function has_class(el, class)
 end
 
 -- ------------------------------------------------------------------
--- Box color detection from badge content
+-- Box color from explicit semantic class
 -- ------------------------------------------------------------------
 
--- Ordem importa: a primeira regra que casar vence. As mais especificas
--- ("experimento mental", "evidencia empirica") vem antes das genericas,
--- senao "evidência empírica" cairia em nenhuma e "experimento" perderia
--- para um substring solto.
---
--- O vocabulario real do corpus e: IDEIA NN, EXPERIMENTO MENTAL N,
--- EVIDENCIA EMPIRICA N, MAPA CONCEITUAL. Os dois do meio nao casavam com
--- regra nenhuma e saiam no cinza padrao — justamente os dois tipos mais
--- expressivos. Antes de tirar um termo daqui, confira o que o corpus usa:
---   grep -oh 'class="box-badge">' -A2 output/html/*.html
-local BADGE_COLOR_RULES = {
-  {'experimento mental', 'boxexp'}, {'experimento', 'boxexp'},
-  {'evidência empírica', 'boxev'}, {'evidencia empirica', 'boxev'},
-  {'evidência', 'boxev'}, {'evidencia', 'boxev'}, {'dado', 'boxev'},
-  {'mapa conceitual', 'boxmap'}, {'mapa', 'boxmap'},
-  {'título', 'boxmap'}, {'titulo', 'boxmap'}, {'resumo', 'boxmap'},
-  {'definição', 'boxmap'}, {'definicao', 'boxmap'}, {'conceito', 'boxmap'},
-  {'framework', 'boxmap'}, {'teoria', 'boxmap'},
-  {'exemplo', 'boxexp'}, {'caso', 'boxexp'}, {'casuístico', 'boxexp'},
-  {'aplicação', 'boxexp'}, {'aplicacao', 'boxexp'},
-  {'aviso', 'boxav'}, {'atenção', 'boxav'}, {'atencao', 'boxav'},
-  {'cuidado', 'boxav'}, {'problema', 'boxav'}, {'risco', 'boxav'},
-  {'ataque', 'boxav'}, {'objeção', 'boxav'}, {'objecao', 'boxav'},
-  {'evolução', 'boxev'}, {'evolucao', 'boxev'}, {'história', 'boxev'},
-  {'linha do tempo', 'boxev'}, {'cronologia', 'boxev'},
-  {'insight', 'boxid'}, {'ideia', 'boxid'}, {'idéia', 'boxid'},
-  {'tese', 'boxid'}, {'argumento', 'boxid'},
-  {'princípio', 'boxid'}, {'principio', 'boxid'},
+local CLASS_COLOR_RULES = {
+  {'experimento', 'boxexp'},
+  {'evidencia', 'boxev'},
+  {'mapa', 'boxmap'},
+  {'ataque', 'boxav'}, {'aviso', 'boxav'},
+  {'ideia', 'boxid'},
+  {'generico', 'boxline'},
 }
 
 local function get_box_color(el)
-  for _, b in ipairs(el.content) do
-    if b.t == 'Div' and has_class(b, 'box-badge') then
-      -- `string.lower` do Lua so mapeia ASCII: "EVIDÊNCIA" viraria
-      -- "evidÊncia" (o Ê fica com os bytes da maiuscula) e nunca casaria
-      -- com a regra acentuada. `pandoc.text.lower` e ciente de UTF-8.
-      local badge = pandoc.text.lower(stringify(b))
-      for _, rule in ipairs(BADGE_COLOR_RULES) do
-        if badge:find(rule[1], 1, true) then
-          return rule[2]
-        end
-      end
-      return 'boxline'
-    end
+  -- The Python preprocessor chooses the class from the explicit [!type].
+  -- Badge, title, emoji and body text are never inspected to choose a type.
+  for _, rule in ipairs(CLASS_COLOR_RULES) do
+    if has_class(el, rule[1]) then return rule[2] end
   end
   return 'boxline'
 end
