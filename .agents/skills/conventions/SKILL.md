@@ -185,62 +185,74 @@ Exportadores convertem links de seção, removem `## Conexões` e limpam wikilin
 
 ## Callouts / caixas de destaque
 
-Obsidian é a fonte sintática. Uma caixa existe somente com um cabeçalho explícito:
+Obsidian é a sintaxe canônica. Use **somente tipos nativos canônicos do Obsidian**:
 
 ```markdown
-> [!experiment] Qualquer título
-> Conteúdo.
+> [!example] Experimento Mental III — O Cérebro Dividido
+> Texto da caixa.
 ```
 
-O título depois de `[!type]` é livre e opcional. Ele nunca determina o tipo. `> Experimento Mental`, emojis, negrito ou palavras como `Atenção` em um blockquote comum não criam caixa tipada. `>` simples continua sendo citação. O exporter não infere tipos pelo conteúdo.
+A ordem é: tipo nativo, título livre e corpo Markdown. O título aparece no Obsidian e no export. Ele pode ser qualquer texto e **nunca determina o tipo**.
 
-Tipos semânticos preferidos em essays:
+O exporter não infere caixas por rótulo, emoji, negrito, palavras no título, palavras no corpo, posição ou contexto. `>` simples continua sendo blockquote. Tipos customizados e aliases não são aceitos no source canônico.
+
+### Tipos canônicos
 
 | Tipo | Use para |
 | --- | --- |
-| `experiment` | experimento mental, cenário ou teste controlado |
-| `evidence` | evidência empírica, dado medido ou observado |
-| `concept` | mapa conceitual, framework ou modelo de alto nível |
-| `definition` | definição precisa ou terminologia |
-| `assumption` | premissa, hipótese ou hipótese de modelagem |
-| `method` | método, procedimento ou recomendação de implementação |
-| `source` | nota vinculada a uma fonte ou base documental |
-| `argument` | objeção, ataque, contra-argumento ou tensão |
-| `result` | resultado ou veredicto; prefira aninhado à caixa que o produz |
-| `conclusion` | conclusão ou síntese local |
-| `idea` | ideia de brainstorm, proposta ou alternativa de projeto |
-| `meta` | nota editorial sobre o próprio texto |
-| `person` | ficha curta de pessoa ou pensador |
-| `book` | ficha curta de obra |
-| `pullquote` | destaque tipográfico escolhido pelo autor |
-| `epigraph` | epígrafe |
-| `code` | nota curta sobre código/configuração; não substitui fenced code automaticamente |
+| `note` | nota genérica, contextual ou editorial |
+| `abstract` | conceito, definição, mapa conceitual, framework, modelo, aside explicativo |
+| `info` | evidência, dado, observação, contexto documental |
+| `todo` | ação, procedimento a executar, checklist de implementação |
+| `tip` | ideia, insight, recomendação, proposta |
+| `success` | resultado, veredicto, conclusão positiva ou confirmada |
+| `question` | objeção, contra-argumento, questão aberta, tensão filosófica |
+| `warning` | limitação, ressalva, atenção, interpretação borderline |
+| `failure` | teste falho, resultado rejeitado, condição inválida |
+| `danger` | invalidez crítica ou aviso de alta severidade |
+| `bug` | defeito de software ou implementação |
+| `example` | experimento mental, exemplo trabalhado, cenário, caso de teste |
+| `quote` | pull quote, epígrafe ou citação deliberadamente destacada |
 
-Também são aceitos os tipos nativos canônicos do Obsidian: `note`, `abstract`, `info`, `todo`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example` e `quote`.
+Não use aliases (`summary`, `tldr`, `hint`, `important`, `check`, `done`, `help`, `faq`, `caution`, `attention`, `fail`, `missing`, `error`, `cite`). Use o tipo canônico correspondente.
 
-Não use aliases como `important`, `caution`, `check`, `faq` ou `cite` no source canônico. Tipos customizados são estilizados no vault por `.obsidian/snippets/second-brain-callouts.css`.
+### Título e corpo
 
-Renderização:
+O título depois de `[!type]` é livre e opcional. Numerações como `Ideia 01` ou `Experimento Mental IV` devem ser escritas explicitamente pelo autor; nunca são geradas nem inferidas.
 
-- `experiment`/`example` → experimento;
-- `evidence`/`info`/`success`/`result` → evidência;
-- `concept`/`definition`/`abstract`/`assumption`/`method`/`source` → mapa;
-- `argument`/`question`/`failure` → ataque;
-- `warning`/`danger`/`bug` → aviso;
-- `idea`/`tip`/`conclusion` → ideia;
-- `note`/`todo`/`meta`/`code` → genérico;
-- `person`/`book` → cards;
-- `pullquote`/`epigraph` → pull quote;
-- `quote` → quote.
+O corpo é Markdown normal e pode conter parágrafos, listas, tabelas, equações, imagens, fenced code e subtítulos `###`/`####`. Subtítulos dentro da caixa continuam dentro dela no HTML/PDF.
 
-`result`/`conclusion` aninhados podem renderizar como footer de veredicto. Profundidade máxima: 2.
+Callouts podem ser aninhados. `success` aninhado pode usar o tratamento visual de veredicto porque essa regra depende apenas do tipo explícito e do nesting.
+
+### Renderização
+
+O tipo nativo é a única chave de estilo. O parser em `scripts/lib/html_preprocess.py` emite uma classe `.callout-<type>` e a família visual existente:
+
+| Tipo | Família visual |
+| --- | --- |
+| `example` | experimento / ferrugem |
+| `info` | evidência / azul |
+| `abstract` | mapa conceitual / dourado |
+| `question` | ataque / ferrugem |
+| `warning` | aviso / âmbar |
+| `failure` | falha / ferrugem |
+| `danger` | aviso crítico / ferrugem forte |
+| `bug` | erro técnico / ferrugem forte |
+| `tip` | ideia / dourado |
+| `todo` | ação / accent |
+| `success` | resultado / accent; aninhado pode virar veredicto |
+| `note` | neutro |
+| `quote` | pull quote |
+
+Essa identidade foi planejada a partir das caixas históricas dos essays: `callout-note`, `callout-warn`, `callout-danger`, `test-card`, `pval-card`, `pullquote`, `experiment`, `verdict`, `philosopher-card`, `disturbing-moment`, `pull-quote`, `neuro-box`, `steelman`, `aside` e `callout` genérico.
 
 ### Código e mobile
 
-Fenced code permanece fenced code quando sintaxe, indentação, whitespace ou copy/paste importam. Não há conversão automática. Quando um bloco é na verdade pseudocódigo, processo, exemplo, configuração explicada ou saída conceitual, o autor pode migrá-lo manualmente para `example`, `method`, `info`/`concept`, `result`/`success` ou `warning`/`danger`. Código real dentro de callout continua código e pode exigir scroll horizontal em mobile.
+Fenced code permanece fenced code quando sintaxe, indentação, whitespace, estrutura de linhas ou copy/paste importam. Não existe conversão automática.
 
-O contrato completo de migração e renderização está em `migration_instrunction.md`.
+Quando um bloco antigo em monospace é na verdade pseudocódigo, sequência de passos, explicação de configuração, resultado conceitual ou prosa destacada, ele pode ser **migrado manualmente** para `example`, `todo`, `abstract`, `info`, `tip`, `success`, `warning`, `failure` ou `danger`, conforme a semântica escolhida pelo autor. Código real também pode ficar dentro de um callout e continua código.
 
+O contrato completo está em `migration_instrunction.md`.
 ## Dois tipos de essay
 
 - **Originais (`/import`)**: preserve a prosa do autor na ingestão; aplique apenas as transformações autorizadas em `/import`. Tradução ou edição substantiva exige pedido explícito. O documento arquivado em `wiki/sources/` permanece intocado.

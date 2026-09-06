@@ -31,6 +31,18 @@ end
 -- ------------------------------------------------------------------
 
 local CLASS_COLOR_RULES = {
+  {'callout-example', 'boxexp'},
+  {'callout-info', 'boxev'},
+  {'callout-success', 'boxev'},
+  {'callout-abstract', 'boxmap'},
+  {'callout-todo', 'boxev'},
+  {'callout-tip', 'boxid'},
+  {'callout-question', 'boxav'},
+  {'callout-warning', 'boxav'},
+  {'callout-failure', 'boxav'},
+  {'callout-danger', 'boxav'},
+  {'callout-bug', 'boxav'},
+  {'callout-note', 'boxline'},
   {'experimento', 'boxexp'},
   {'evidencia', 'boxev'},
   {'mapa', 'boxmap'},

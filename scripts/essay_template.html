@@ -476,6 +476,28 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
    precisa continuar legível: em cinza de borda ele desaparecia no fundo. */
 .box.generico{--boxc:var(--border);--box-badge-c:var(--text-dim);}
 
+/* Native Obsidian callout identities. The type class is emitted directly
+   from [!type]; title/body text never participates in style selection. */
+.box.callout-note{--boxc:var(--border);--box-badge-c:var(--text-dim);}
+.box.callout-abstract{--boxc:var(--gold);}
+.box.callout-info{--boxc:var(--accent);}
+.box.callout-todo{--boxc:var(--accent);border-left-style:dashed;}
+.box.callout-tip{--boxc:var(--gold-dim);}
+.box.callout-success{--boxc:var(--accent);border-left-width:5px;}
+.box.callout-question{--boxc:var(--rust);}
+.box.callout-warning{--boxc:var(--amber);}
+.box.callout-failure{--boxc:var(--rust);border-left-style:dashed;}
+.box.callout-danger{--boxc:var(--rust-bright);border-left-width:5px;}
+.box.callout-bug{--boxc:var(--rust-bright);border-left-style:double;}
+.box.callout-example{--boxc:var(--rust);}
+.box > h3,.box > h4,.box > h5,.box > h6{
+  padding:0 1.3rem;color:var(--text-bright);line-height:1.3;
+}
+.box > h3{font-size:1.08rem;margin:1.2rem 0 .55rem;}
+.box > h4{font-size:1rem;margin:1rem 0 .45rem;}
+.box > h5,.box > h6{font-size:.94rem;margin:.9rem 0 .4rem;}
+.box > ul,.box > ol{padding-left:2.9rem;padding-right:1.3rem;}
+
 /* Badge: versalete espacejado sem retângulo preenchido */
 .box-badge{
   display:block;width:fit-content;
