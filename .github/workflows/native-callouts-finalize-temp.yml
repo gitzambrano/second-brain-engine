@@ -1,0 +1,194 @@
+name: Temporary finalize native Obsidian callouts
+
+on:
+  push:
+    branches: [feature/explicit-callouts]
+    paths:
+      - '.github/workflows/native-callouts-finalize-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/explicit-callouts
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Patch conventions and rendering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # conventions: replace only the callout section.
+          p = Path('.agents/skills/conventions/SKILL.md')
+          s = p.read_text(encoding='utf-8')
+          section = r'''## Callouts / caixas de destaque
+
+Obsidian é a sintaxe canônica. Use **somente tipos nativos canônicos do Obsidian**:
+
+```markdown
+> [!example] Experimento Mental III — O Cérebro Dividido
+> Texto da caixa.
+```
+
+A ordem é: tipo nativo, título livre e corpo Markdown. O título aparece no Obsidian e no export. Ele pode ser qualquer texto e **nunca determina o tipo**.
+
+O exporter não infere caixas por rótulo, emoji, negrito, palavras no título, palavras no corpo, posição ou contexto. `>` simples continua sendo blockquote. Tipos customizados e aliases não são aceitos no source canônico.
+
+### Tipos canônicos
+
+| Tipo | Use para |
+| --- | --- |
+| `note` | nota genérica, contextual ou editorial |
+| `abstract` | conceito, definição, mapa conceitual, framework, modelo, aside explicativo |
+| `info` | evidência, dado, observação, contexto documental |
+| `todo` | ação, procedimento a executar, checklist de implementação |
+| `tip` | ideia, insight, recomendação, proposta |
+| `success` | resultado, veredicto, conclusão positiva ou confirmada |
+| `question` | objeção, contra-argumento, questão aberta, tensão filosófica |
+| `warning` | limitação, ressalva, atenção, interpretação borderline |
+| `failure` | teste falho, resultado rejeitado, condição inválida |
+| `danger` | invalidez crítica ou aviso de alta severidade |
+| `bug` | defeito de software ou implementação |
+| `example` | experimento mental, exemplo trabalhado, cenário, caso de teste |
+| `quote` | pull quote, epígrafe ou citação deliberadamente destacada |
+
+Não use aliases (`summary`, `tldr`, `hint`, `important`, `check`, `done`, `help`, `faq`, `caution`, `attention`, `fail`, `missing`, `error`, `cite`). Use o tipo canônico correspondente.
+
+### Título e corpo
+
+O título depois de `[!type]` é livre e opcional. Numerações como `Ideia 01` ou `Experimento Mental IV` devem ser escritas explicitamente pelo autor; nunca são geradas nem inferidas.
+
+O corpo é Markdown normal e pode conter parágrafos, listas, tabelas, equações, imagens, fenced code e subtítulos `###`/`####`. Subtítulos dentro da caixa continuam dentro dela no HTML/PDF.
+
+Callouts podem ser aninhados. `success` aninhado pode usar o tratamento visual de veredicto porque essa regra depende apenas do tipo explícito e do nesting.
+
+### Renderização
+
+O tipo nativo é a única chave de estilo. O parser em `scripts/lib/html_preprocess.py` emite uma classe `.callout-<type>` e a família visual existente:
+
+| Tipo | Família visual |
+| --- | --- |
+| `example` | experimento / ferrugem |
+| `info` | evidência / azul |
+| `abstract` | mapa conceitual / dourado |
+| `question` | ataque / ferrugem |
+| `warning` | aviso / âmbar |
+| `failure` | falha / ferrugem |
+| `danger` | aviso crítico / ferrugem forte |
+| `bug` | erro técnico / ferrugem forte |
+| `tip` | ideia / dourado |
+| `todo` | ação / accent |
+| `success` | resultado / accent; aninhado pode virar veredicto |
+| `note` | neutro |
+| `quote` | pull quote |
+
+Essa identidade foi planejada a partir das caixas históricas dos essays: `callout-note`, `callout-warn`, `callout-danger`, `test-card`, `pval-card`, `pullquote`, `experiment`, `verdict`, `philosopher-card`, `disturbing-moment`, `pull-quote`, `neuro-box`, `steelman`, `aside` e `callout` genérico.
+
+### Código e mobile
+
+Fenced code permanece fenced code quando sintaxe, indentação, whitespace, estrutura de linhas ou copy/paste importam. Não existe conversão automática.
+
+Quando um bloco antigo em monospace é na verdade pseudocódigo, sequência de passos, explicação de configuração, resultado conceitual ou prosa destacada, ele pode ser **migrado manualmente** para `example`, `todo`, `abstract`, `info`, `tip`, `success`, `warning`, `failure` ou `danger`, conforme a semântica escolhida pelo autor. Código real também pode ficar dentro de um callout e continua código.
+
+O contrato completo está em `migration_instrunction.md`.
+'''
+          pattern = re.compile(r'## Callouts / caixas de destaque\n.*?(?=\n## Dois tipos de essay)', re.S)
+          s2, n = pattern.subn(section.rstrip(), s, count=1)
+          if n != 1:
+              raise SystemExit(f'conventions callout section: expected 1, got {n}')
+          p.write_text(s2, encoding='utf-8')
+
+          # HTML: only box-local CSS. Page shell remains untouched.
+          p = Path('scripts/essay_template.html')
+          s = p.read_text(encoding='utf-8')
+          if '.box.callout-note' not in s:
+              marker = '/* Badge: versalete espacejado sem retângulo preenchido */'
+              css = r'''/* Native Obsidian callout identities. The type class is emitted directly
+   from [!type]; title/body text never participates in style selection. */
+.box.callout-note{--boxc:var(--border);--box-badge-c:var(--text-dim);}
+.box.callout-abstract{--boxc:var(--gold);}
+.box.callout-info{--boxc:var(--accent);}
+.box.callout-todo{--boxc:var(--accent);border-left-style:dashed;}
+.box.callout-tip{--boxc:var(--gold-dim);}
+.box.callout-success{--boxc:var(--accent);border-left-width:5px;}
+.box.callout-question{--boxc:var(--rust);}
+.box.callout-warning{--boxc:var(--amber);}
+.box.callout-failure{--boxc:var(--rust);border-left-style:dashed;}
+.box.callout-danger{--boxc:var(--rust-bright);border-left-width:5px;}
+.box.callout-bug{--boxc:var(--rust-bright);border-left-style:double;}
+.box.callout-example{--boxc:var(--rust);}
+
+/* Markdown headings are legal inside callouts. Keep them compact and aligned
+   with the box text rather than letting global chapter spacing leak in. */
+.box > h3,.box > h4,.box > h5,.box > h6{
+  padding:0 1.3rem;color:var(--text-bright);line-height:1.3;
+}
+.box > h3{font-size:1.08rem;margin:1.2rem 0 .55rem;}
+.box > h4{font-size:1rem;margin:1rem 0 .45rem;}
+.box > h5,.box > h6{font-size:.94rem;margin:.9rem 0 .4rem;}
+.box > ul,.box > ol{padding-left:2.9rem;padding-right:1.3rem;}
+
+'''
+              if marker not in s:
+                  raise SystemExit('HTML box CSS insertion marker not found')
+              s = s.replace(marker, css + marker, 1)
+              p.write_text(s, encoding='utf-8')
+
+          # PDF: type-derived class only. No badge/title/body search.
+          p = Path('scripts/pdf_boxes.lua')
+          s = p.read_text(encoding='utf-8')
+          repl = r'''local CLASS_COLOR_RULES = {
+            {'callout-example', 'boxexp'},
+            {'callout-info', 'boxev'},
+            {'callout-success', 'boxev'},
+            {'callout-abstract', 'boxmap'},
+            {'callout-todo', 'boxev'},
+            {'callout-tip', 'boxid'},
+            {'callout-question', 'boxav'},
+            {'callout-warning', 'boxav'},
+            {'callout-failure', 'boxav'},
+            {'callout-danger', 'boxav'},
+            {'callout-bug', 'boxav'},
+            {'callout-note', 'boxline'},
+            -- Legacy family fallback for non-callout internal components.
+            {'experimento', 'boxexp'},
+            {'evidencia', 'boxev'},
+            {'mapa', 'boxmap'},
+            {'ataque', 'boxav'}, {'aviso', 'boxav'},
+            {'ideia', 'boxid'},
+            {'generico', 'boxline'},
+          }'''
+          s2, n = re.subn(r'local CLASS_COLOR_RULES = \{.*?\n\}', repl, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit(f'pdf CLASS_COLOR_RULES: expected 1, got {n}')
+          p.write_text(s2, encoding='utf-8')
+          PY
+
+      - name: Run native callout tests
+        run: |
+          python -m pip install -q pytest
+          python -m pytest -q tests/test_html_preprocess_callouts.py
+          python - <<'PY'
+          from scripts.lib.html_preprocess import NATIVE_TYPES
+          assert NATIVE_TYPES == {'note','abstract','info','todo','tip','success','question','warning','failure','danger','bug','example','quote'}
+          PY
+
+      - name: Commit final native callout integration
+        run: |
+          git config user.name 'Second Brain Callout Migration'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .agents/skills/conventions/SKILL.md scripts/essay_template.html scripts/pdf_boxes.lua
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: render native Obsidian callout types'
+            git push origin HEAD:feature/explicit-callouts
+          fi
