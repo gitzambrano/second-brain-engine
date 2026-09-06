@@ -1,144 +1,188 @@
 # Callout Migration Instructions
 
-This file is the migration contract for Second Brain highlight boxes. The goal is to make box semantics explicit in Markdown while preserving the existing HTML/PDF visual language.
+This file defines the Second Brain callout contract for authors, migrations, HTML export, PDF export, and Obsidian.
 
-## Non-negotiable rule: no type inference
+## Core rule
 
-A callout exists only when the Markdown contains an explicit Obsidian header:
-
-```markdown
-> [!experiment] Experimento Mental I — O Navio de Teseu Biológico
-> Corpo da caixa.
-```
-
-The exporter must **never** infer a type from the title, body, emoji, bold text, label wording, position, or surrounding section.
-
-Consequences:
-
-- `> Experimento Mental I` is a normal blockquote, not an experiment box.
-- `> ⚠️ Atenção` is a normal blockquote unless it starts with an explicit `[!warning]`/`[!danger]` header.
-- `> [!warning] Experimento Mental I` is a warning because the type is `warning`; the title does not override it.
-- Unknown callout types are errors.
-- Obsidian aliases such as `important`, `caution`, `check`, `faq`, and `cite` are not canonical source syntax; use the canonical type instead.
-
-Plain blockquotes remain plain quotes:
+The Markdown source uses **only canonical native Obsidian callout types**:
 
 ```markdown
-> Texto citado.
-> Autor ou fonte.
+> [!example] Experimento Mental III — O Cérebro Dividido
+> Texto da caixa.
 ```
+
+The order is always:
+
+1. native Obsidian type: `[!example]`;
+2. free author title: `Experimento Mental III — O Cérebro Dividido`;
+3. body Markdown.
+
+The title is visible in Obsidian and is preserved by HTML/PDF export. The title may be any text and never changes the type.
+
+The exporter must **never infer a callout type** from title, body, emoji, bold text, wording, numbering, position, surrounding section, or legacy CSS class.
+
+Examples:
+
+```markdown
+> [!warning] Experimento Mental I
+> This is a warning because the type is `warning`.
+
+> Experimento Mental I
+> This is a normal blockquote because it has no `[!type]` header.
+```
+
+Unknown types, custom types, and aliases are rejected in canonical source.
+
+## Canonical types
+
+Use these native Obsidian identifiers only:
+
+| Type | Second Brain use | Primary HTML/PDF identity |
+| --- | --- | --- |
+| `note` | generic note, editorial note, compact person/work note when no stronger type applies | neutral note/card language |
+| `abstract` | definition, conceptual map, framework, model, conceptual aside | gold/map language |
+| `info` | evidence, observation, measured data, documentary context | blue/evidence language |
+| `todo` | action, procedure to execute, implementation checklist | action/accent language |
+| `tip` | idea, insight, recommendation, design proposal | gold/idea language |
+| `success` | result, verdict, confirmed outcome, local positive conclusion | result/evidence language |
+| `question` | objection, counterargument, open question, philosophical tension | rust/attack language |
+| `warning` | limitation, caveat, attention, borderline interpretation | amber/warning language |
+| `failure` | failed test, rejected result, invalid condition | failure/rust language |
+| `danger` | critical invalidity or high-severity warning | strong warning/rust language |
+| `bug` | software defect or implementation fault | technical error language |
+| `example` | thought experiment, worked example, scenario, test case | experiment/rust language |
+| `quote` | pull quote, epigraph, deliberately highlighted quotation | typographic quote language |
+
+Do not use aliases such as `summary`, `tldr`, `hint`, `important`, `check`, `done`, `help`, `faq`, `caution`, `attention`, `fail`, `missing`, `error`, or `cite`. Use the canonical type instead.
 
 ## Titles
 
-The text after `[!type]` is an arbitrary author-facing title. It may be omitted.
+The title after `[!type]` is free text and is part of the document content.
 
 ```markdown
-> [!concept] Mapa Conceitual
+> [!tip] Ideia 01 — RAG para documentação
 > ...
 
-> [!concept] Um título completamente diferente
+> [!tip] Nome completamente diferente
 > ...
 ```
 
-Both boxes are `concept`. The title never changes the semantic type or visual family.
+Both are `tip`. Their visual family is identical because only the explicit type selects rendering.
 
-Obsidian folding markers (`+` and `-`) are parsed, but essays should avoid relying on folding because PDF is static and standalone HTML must remain readable without interaction.
+Do not parse title prefixes such as `Ideia`, `Experimento Mental`, `Evidência`, `Ataque`, `Atenção`, or numbering to choose a style.
 
-## Canonical semantic types
+Do not auto-number callouts. If the title must say `Ideia 01` or `Experimento Mental IV`, write that numbering explicitly in the source.
 
-These custom types are supported by the exporters and by `.obsidian/snippets/second-brain-callouts.css` in the data vault.
+## Body content
 
-| Type | Use | HTML/PDF identity |
-| --- | --- | --- |
-| `experiment` | thought experiment, controlled scenario, test case | experiment/rust |
-| `evidence` | empirical evidence, measured data, observed result | evidence/accent |
-| `concept` | conceptual map, framework, high-level model | map/gold |
-| `definition` | precise definition or terminology | map/gold |
-| `assumption` | assumption, premise, modeling hypothesis | map/gold |
-| `method` | procedure, recommended method, implementation method | map/gold |
-| `source` | source-specific note or documentary basis | map/gold |
-| `argument` | objection, attack, counterargument, philosophical tension | attack/rust |
-| `result` | result, verdict, outcome; preferred as a nested callout | verdict/evidence |
-| `conclusion` | local conclusion or synthesis | idea/gold |
-| `idea` | brainstorm item, design idea, proposal | idea/gold |
-| `meta` | editorial/meta note about the essay itself | neutral |
-| `person` | compact person/philosopher profile | person card |
-| `book` | compact book/work profile | book card |
-| `pullquote` | author-selected typographic pull quote | pull quote |
-| `epigraph` | opening or section epigraph | epigraph |
-| `code` | short code/configuration note when a callout wrapper is useful | neutral |
+A callout body is normal Markdown. It may contain:
 
-The canonical native Obsidian types are also accepted: `note`, `abstract`, `info`, `todo`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example`, and `quote`.
+- multiple paragraphs;
+- emphasis and links;
+- lists;
+- tables;
+- equations;
+- images;
+- fenced code;
+- headings/subheadings such as `###` and `####`;
+- nested callouts.
 
-Prefer the semantic Second Brain type when it exactly describes the role of the box. Use a native type for generic notes or when the native meaning is clearer.
-
-## Rendering contract
-
-The source type is the only classifier.
-
-1. `scripts/lib/html_preprocess.py` parses explicit `> [!type]` blocks.
-2. It maps the explicit type to the existing semantic HTML family (`.experimento`, `.evidencia`, `.mapa`, `.ataque`, `.aviso`, `.ideia`, `.generico`, cards, or quote components).
-3. `scripts/essay_template.html` provides the established visual styling. Do not redesign the page shell to implement callouts.
-4. `scripts/pdf_boxes.lua` reads the emitted semantic class. It does not inspect badge/title/body text to choose a color or type.
-5. The Obsidian vault snippet gives custom callout types a matching visual identity in Obsidian.
-
-Current family mapping:
-
-| Types | Family |
-| --- | --- |
-| `experiment`, `example` | `experimento` |
-| `evidence`, `info`, `success`, `result` | `evidencia` |
-| `concept`, `definition`, `abstract`, `assumption`, `method`, `source` | `mapa` |
-| `argument`, `question`, `failure` | `ataque` |
-| `warning`, `danger`, `bug` | `aviso` |
-| `idea`, `tip`, `conclusion` | `ideia` |
-| `note`, `todo`, `meta`, `code` | `generico` |
-| `person`, `book` | cards |
-| `pullquote`, `epigraph` | typographic pull quotes |
-| `quote` | explicit quote component |
-
-## Nested results
-
-Nested callouts are supported to depth 2. Use `result`/`conclusion` inside a semantic box when the result belongs to that box:
+Example:
 
 ```markdown
-> [!experiment] Experimento Mental III — O Cérebro Dividido
+> [!abstract] Modelo de validação
+> Introdução curta.
+>
+> ### Hipóteses
+> Texto da subseção.
+>
+> ### Critério
+> Texto da segunda subseção.
+```
+
+The exporter must preserve those headings inside the box. It must not flatten them into a title or infer a new callout type from them.
+
+## Nested callouts
+
+Nested native callouts are supported. A nested `success` is rendered as the established verdict/result footer because that behavior depends only on the explicit type and nesting, never on wording:
+
+```markdown
+> [!example] Experimento Mental III — O Cérebro Dividido
 > Descrição do experimento.
 >
-> > [!result] Veredicto
+> > [!success] Veredicto
 > > A teoria não preserva unicidade sob divisão.
 ```
 
-The exporter renders the nested result as the existing verdict footer. No search for the words “Veredicto”, “Resultado”, or “Resposta” occurs.
+Other nested callouts remain normal nested callouts.
 
-## Code blocks and mobile
+## Rendering contract
 
-Do not automatically convert fenced code blocks. A migration decision must be explicit.
+`[!type]` is the sole classifier.
 
-Keep a fenced code block when exact syntax, indentation, whitespace, or copy/paste semantics matter. Always specify the language when known.
+1. `scripts/lib/html_preprocess.py` parses explicit native Obsidian callouts.
+2. It adds an output class derived from the native type, such as `.callout-example` or `.callout-warning`.
+3. The same explicit type maps to an existing Second Brain visual family used by `scripts/essay_template.html`.
+4. `scripts/pdf_boxes.lua` reads emitted classes. It never searches badge/title/body text.
+5. The callout title is emitted verbatim as the visible box title.
+6. The rest of the essay shell — cover, typography, headings, TOC, margins, tables, figures, code, pagination — is outside the callout migration contract and must not change because of callout parsing.
 
-Use a callout with normal Markdown instead when the block is really explanatory pseudocode, a sequence of conceptual steps, a configuration explanation, a sample result, or prose that was put in monospace only for emphasis. Useful replacements include:
+Native type to established family:
 
-- `[!example]` or `[!experiment]` for a worked example;
-- `[!method]` for a procedure;
-- `[!info]` or `[!concept]` for explanatory structure;
-- `[!success]`/`[!result]` for expected output;
-- `[!warning]`/`[!danger]` for unsafe or invalid usage.
+| Native type | Existing visual family / historical components that informed it |
+| --- | --- |
+| `example` | `experiment`, `test-card`, worked-example boxes |
+| `info` | empirical-evidence boxes, data/result cards |
+| `abstract` | conceptual maps, definitions, explanatory asides, general conceptual callouts |
+| `question` | `steelman`, attack/objection boxes, philosophical tensions |
+| `warning` | warning/caveat callouts |
+| `danger` | danger/critical callouts |
+| `failure` | negative/invalid-result treatment |
+| `bug` | technical fault treatment |
+| `tip` | idea/recommendation boxes |
+| `todo` | implementation/action/procedure boxes |
+| `success` | verdict/result treatment |
+| `note` | neutral notes and low-emphasis contextual cards |
+| `quote` | `pull-quote`, `pullquote`, epigraph-style highlights |
 
-A real code fence may live inside a callout, but the wrapper does not make long code lines responsive. Real code remains horizontally scrollable on mobile. Prefer splitting long lines where the language permits it.
+Historical HTML components used to plan these identities include `callout-note`, `callout-warn`, `callout-danger`, `test-card`, `pval-card`, `pullquote`, `experiment`, `verdict`, `philosopher-card`, `disturbing-moment`, `pull-quote`, `neuro-box`, `steelman`, `aside`, and the general `callout` family.
 
-No exporter or migration script may decide that a block “looks like code” or “looks like a concept” and silently change its type.
+## Code and mobile
 
-## Migration procedure for legacy essays
+Fenced code remains fenced code whenever exact syntax, indentation, whitespace, line structure, or copy/paste behavior matters. The exporter must not automatically convert code to another box type.
 
-1. Generate HTML and PDF from the untouched current source and keep them as BEFORE baselines.
-2. Identify each legacy highlighted component manually from the source and existing export.
-3. Assign one explicit callout type to each component.
-4. Rewrite only that component to `> [!type] Title` syntax. Preserve prose verbatim unless the user requested editorial changes.
+Some old blocks were formatted as code even though they were really prose-like structures. On mobile those blocks can be unnecessarily wide and require horizontal scrolling. Such a block may be **manually** migrated when its semantic role is clear:
+
+- pseudocode or worked example → `[!example]`;
+- implementation steps/checklist → `[!todo]`;
+- explanatory model/configuration description → `[!abstract]` or `[!info]`;
+- recommendation → `[!tip]`;
+- expected result/output → `[!success]`;
+- invalid use/caveat → `[!warning]`, `[!failure]`, or `[!danger]`.
+
+Real code may also live inside any callout:
+
+```markdown
+> [!example] Exemplo de configuração
+> ```python
+> value = compute_case()
+> ```
+```
+
+No production script may decide that a block “looks like code”, “looks like an idea”, or “looks like a warning” and silently change it.
+
+## Migration procedure
+
+For each legacy essay:
+
+1. Generate HTML and PDF from the untouched source and keep them as BEFORE baselines.
+2. Inspect the existing HTML components and source manually.
+3. Assign a native Obsidian type to every intentional highlight.
+4. Write `> [!type] Title` explicitly. Preserve the title and prose as document content.
 5. Keep ordinary blockquotes ordinary.
-6. Keep real fenced code as code unless a manual migration decision says otherwise.
-7. Regenerate HTML/PDF with the same exporters.
-8. Compare BEFORE/AFTER. Outside callout regions, visual changes are regressions.
-9. Validate Obsidian rendering with the custom snippet enabled.
+6. Keep real fenced code as code unless a manual editorial migration is explicitly chosen.
+7. Regenerate with the same HTML/PDF exporters.
+8. Compare BEFORE/AFTER. Changes outside the highlighted components are regressions.
+9. Test the Markdown directly in Obsidian; no custom callout type or CSS snippet is required for semantic recognition.
 
-The one-time migration may involve manual classification. The production exporter must never contain legacy label/emoji/body heuristics to reproduce that classification.
+Manual classification is allowed during one-time migration. Runtime inference is not.
