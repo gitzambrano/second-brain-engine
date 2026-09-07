@@ -7,8 +7,13 @@ def test_html_tab_is_flush_and_uses_exact_frame_color():
     s = (ROOT / 'scripts/essay_template.html').read_text(encoding='utf-8')
     assert 'border:1px solid var(--boxc);' in s
     assert 'display:inline-block;margin:-1px 0 0 -1px;' in s
-    assert 'background:var(--boxc);color:#fff;' in s
-    assert 'font-size:.78rem;font-weight:600' in s
+    assert 'background:color-mix(in srgb,var(--boxc) 14%,transparent);' in s
+    assert 'border-bottom:2px solid var(--boxc);' in s
+    assert 'color:var(--boxc);' in s
+    assert 'font-size:.72rem;font-weight:600' in s
+    # `example`/`tip` levam o filete mais fino e a tinta mais clara.
+    assert '.box:is(.callout-example,.callout-tip) > .box-title p{' in s
+    assert 'border-bottom-width:1px;' in s
 
 
 def test_pdf_tab_title_is_readable_uppercase_and_breathes():
