@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 
 import console_encoding  # noqa: F401
@@ -23,7 +24,19 @@ FOLGA_MARGEM_PT = 3.0
 CORPO_MAX = 13.0
 VAZIO_LIMITE_PT = 170.0
 TITULO_CAPITULO_PT = (17.0, 19.5)
-FIGURA_GRANDE_PT = 200.0
+FIGURA_TOPO_MIN_PT = 120.0
+FIGURA_TOPO_MAX_Y_PT = 200.0
+
+# Glifos editoriais desenhados em corpo grande não são títulos. Em particular,
+# os quotes premium usam aspas curvas grandes; classificá-las só pelo tamanho da
+# fonte produz falsos TITULO_ORFAO. A auditoria continua usando a posição desses
+# glifos para medir a ocupação visual da página, mas nunca os usa como a última
+# linha semântica ao decidir se existe um título órfão.
+ORNAMENTO_PURO_RE = re.compile(r"^[\s“”‘’\"'«»‹›]+$")
+
+
+def eh_ornamento_puro(texto):
+    return bool(texto) and bool(ORNAMENTO_PURO_RE.fullmatch(texto))
 
 
 def linhas_da_pagina(page):
@@ -69,16 +82,24 @@ def primeira_pagina_de_corpo(doc):
 
 
 def figura_grande_no_topo(page):
-    alvo = None
+    """Há conteúdo gráfico de tamanho editorial começando no topo da página?
+
+    O export pode compor uma figura como uma única imagem grande ou como um
+    mosaico de painéis. A regra antiga exigia uma imagem individual >200 pt e
+    confundia páginas legitimamente encurtadas antes de mosaicos/figuras de
+    ~195 pt com PAGINA_VAZADA. 120 pt ainda exclui ícones e pequenos ornamentos,
+    mas reconhece um painel que, junto de legenda/margens, pode precisar ser
+    empurrado integralmente para a página seguinte.
+    """
     for image in page.get_image_info():
-        height = image["bbox"][3] - image["bbox"][1]
-        if height > FIGURA_GRANDE_PT:
-            alvo = min(alvo, image["bbox"][1]) if alvo is not None else image["bbox"][1]
+        y0, y1 = image["bbox"][1], image["bbox"][3]
+        if y0 < FIGURA_TOPO_MAX_Y_PT and y1 - y0 >= FIGURA_TOPO_MIN_PT:
+            return True
     for drawing in page.get_drawings():
-        height = drawing["rect"].y1 - drawing["rect"].y0
-        if height > FIGURA_GRANDE_PT:
-            alvo = min(alvo, drawing["rect"].y0) if alvo is not None else drawing["rect"].y0
-    return alvo is not None and alvo < 200.0
+        rect = drawing["rect"]
+        if rect.y0 < FIGURA_TOPO_MAX_Y_PT and rect.y1 - rect.y0 >= FIGURA_TOPO_MIN_PT:
+            return True
+    return False
 
 
 def auditar(pdf_path):
@@ -119,8 +140,17 @@ def auditar(pdf_path):
                             % (LEFT_MM * MM - bbox[0], txt[:60]),
                         }
                     )
-            ultima_y, ultimo_tam, ultimo_txt = linhas[-1]
-            fundo = max(ultima_y, desenhos_da_pagina(page))
+
+            linhas_sem_ornamento = [
+                line for line in linhas if not eh_ornamento_puro(line[2])
+            ]
+            if not linhas_sem_ornamento:
+                continue
+
+            # A linha semântica decide TITULO_ORFAO; a linha visual mais baixa
+            # continua contando para calcular quanto da página ficou ocupada.
+            _, ultimo_tam, ultimo_txt = linhas_sem_ornamento[-1]
+            fundo = max(linhas[-1][0], desenhos_da_pagina(page))
             sobra = fim_mancha - fundo
             ultima = page_number == doc.page_count
             if not ultima and ultimo_tam > CORPO_MAX:

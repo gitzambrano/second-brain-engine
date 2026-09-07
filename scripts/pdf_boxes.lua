@@ -3,7 +3,7 @@
 --
 -- Pipeline: html_preprocess.transform_markdown → fenced divs → this filter
 -- → LaTeX environments defined in HEADER_TEX (export_essay_pdf.py).
--- Wikibox receives a color argument from badge-content heuristics.
+-- Wikibox receives a color argument from the explicit semantic class.
 -- Sumário is converted from BulletList to sbtoc environment.
 -- References (## Referências) get sbrefitem wrapping + Link→↗.
 
@@ -27,55 +27,30 @@ local function has_class(el, class)
 end
 
 -- ------------------------------------------------------------------
--- Box color detection from badge content
+-- Box color from explicit semantic class
 -- ------------------------------------------------------------------
 
--- Ordem importa: a primeira regra que casar vence. As mais especificas
--- ("experimento mental", "evidencia empirica") vem antes das genericas,
--- senao "evidência empírica" cairia em nenhuma e "experimento" perderia
--- para um substring solto.
---
--- O vocabulario real do corpus e: IDEIA NN, EXPERIMENTO MENTAL N,
--- EVIDENCIA EMPIRICA N, MAPA CONCEITUAL. Os dois do meio nao casavam com
--- regra nenhuma e saiam no cinza padrao — justamente os dois tipos mais
--- expressivos. Antes de tirar um termo daqui, confira o que o corpus usa:
---   grep -oh 'class="box-badge">' -A2 output/html/*.html
-local BADGE_COLOR_RULES = {
-  {'experimento mental', 'boxexp'}, {'experimento', 'boxexp'},
-  {'evidência empírica', 'boxev'}, {'evidencia empirica', 'boxev'},
-  {'evidência', 'boxev'}, {'evidencia', 'boxev'}, {'dado', 'boxev'},
-  {'mapa conceitual', 'boxmap'}, {'mapa', 'boxmap'},
-  {'título', 'boxmap'}, {'titulo', 'boxmap'}, {'resumo', 'boxmap'},
-  {'definição', 'boxmap'}, {'definicao', 'boxmap'}, {'conceito', 'boxmap'},
-  {'framework', 'boxmap'}, {'teoria', 'boxmap'},
-  {'exemplo', 'boxexp'}, {'caso', 'boxexp'}, {'casuístico', 'boxexp'},
-  {'aplicação', 'boxexp'}, {'aplicacao', 'boxexp'},
-  {'aviso', 'boxav'}, {'atenção', 'boxav'}, {'atencao', 'boxav'},
-  {'cuidado', 'boxav'}, {'problema', 'boxav'}, {'risco', 'boxav'},
-  {'ataque', 'boxav'}, {'objeção', 'boxav'}, {'objecao', 'boxav'},
-  {'evolução', 'boxev'}, {'evolucao', 'boxev'}, {'história', 'boxev'},
-  {'linha do tempo', 'boxev'}, {'cronologia', 'boxev'},
-  {'insight', 'boxid'}, {'ideia', 'boxid'}, {'idéia', 'boxid'},
-  {'tese', 'boxid'}, {'argumento', 'boxid'},
-  {'princípio', 'boxid'}, {'principio', 'boxid'},
+local CLASS_BOX_RULES = {
+  {'callout-example', 'boxexp', 'wikitab'},
+  {'callout-tip', 'boxid', 'wikitab'},
+  {'callout-info', 'boxev', 'wikitab'},
+  {'callout-abstract', 'boxmap', 'wikitab'},
+  {'callout-note', 'boxnote', 'wikinote'},
+  {'callout-todo', 'boxentity', 'wikientity'},
+  {'callout-warning', 'boxstat', 'wikistat'},
+  {'callout-success', 'boxsuccess', 'wikistate'},
+  {'callout-question', 'boxquestion', 'wikistate'},
+  {'callout-failure', 'boxfailure', 'wikistate'},
+  {'callout-danger', 'boxdanger', 'wikistate'},
+  {'callout-bug', 'boxbug', 'wikistate'},
 }
 
-local function get_box_color(el)
-  for _, b in ipairs(el.content) do
-    if b.t == 'Div' and has_class(b, 'box-badge') then
-      -- `string.lower` do Lua so mapeia ASCII: "EVIDÊNCIA" viraria
-      -- "evidÊncia" (o Ê fica com os bytes da maiuscula) e nunca casaria
-      -- com a regra acentuada. `pandoc.text.lower` e ciente de UTF-8.
-      local badge = pandoc.text.lower(stringify(b))
-      for _, rule in ipairs(BADGE_COLOR_RULES) do
-        if badge:find(rule[1], 1, true) then
-          return rule[2]
-        end
-      end
-      return 'boxline'
-    end
+local function get_box_style(el)
+  -- Only the explicit .callout-<type> class participates. No title/body text.
+  for _, rule in ipairs(CLASS_BOX_RULES) do
+    if has_class(el, rule[1]) then return rule[2], rule[3] end
   end
-  return 'boxline'
+  return 'boxline', 'wikistate'
 end
 
 -- ------------------------------------------------------------------
@@ -205,6 +180,21 @@ local REFS_SUFFIXES = {'bibliográficas', 'bibliograficas', 'bibliográfica',
                        'bibliografica', 'citadas', 'consultadas'}
 
 function Header(el)
+  if has_class(el, 'entity-meta') then
+    return { pandoc.RawBlock('latex',
+      '\\wbentitymeta{' .. lescape(stringify(el)) .. '}%') }
+  end
+  if has_class(el, 'callout-inner-heading') then
+    -- Subtitle inside an explicit callout. As a plain heading it inherited
+    -- section spacing, which reads as cramped inside the frame; the macro
+    -- owns the rhythm instead. Inline content is preserved, so emphasis in
+    -- the subtitle survives.
+    return {
+      pandoc.RawBlock('latex', '\\wbinnerbegin{}'),
+      pandoc.Para(el.content),
+      pandoc.RawBlock('latex', '\\wbinnerend{}'),
+    }
+  end
   if el.level == 2 then
     after_sumario = false
     in_references = false
@@ -382,10 +372,34 @@ function BulletList(el)
 end
 
 -- ------------------------------------------------------------------
+-- Span: direct-child verdict tag inherits the explicit parent callout color.
+-- ------------------------------------------------------------------
+
+function Span(el)
+  if has_class(el, 'verdict-tag') then
+    local out = { pandoc.RawInline('latex',
+      '{\\fontsize{9.7pt}{12pt}\\selectfont\\sffamily\\bfseries\\color{wbtype}\\addfontfeatures{LetterSpace=8}\\MakeUppercase{') }
+    for _, inl in ipairs(el.content) do table.insert(out, inl) end
+    table.insert(out, pandoc.RawInline('latex', '}}'))
+    return out
+  end
+  return nil
+end
+
+-- ------------------------------------------------------------------
 -- Div: internal markers + external environments
 -- ------------------------------------------------------------------
 
 function Div(el)
+  if has_class(el, 'stat-divider') then
+    return { pandoc.RawBlock('latex', '\\wbstatdivider%') }
+  end
+  if has_class(el, 'stat-source') then
+    local out = { pandoc.RawBlock('latex', '\\begin{wbstatsource}%') }
+    for _, b in ipairs(el.content) do table.insert(out, b) end
+    table.insert(out, pandoc.RawBlock('latex', '\\end{wbstatsource}%'))
+    return out
+  end
   if has_class(el, 'box-badge') then
     return { pandoc.RawBlock('latex',
       '\\wbbadge{' .. lescape(stringify(el)) .. '}%') }
@@ -405,9 +419,28 @@ function Div(el)
 
   if has_class(el, 'box-verdict') then
     local out = { pandoc.RawBlock('latex',
-      '\\vspace{4pt}\\par\\hrule height 0.4pt\\vspace{5pt}\\begingroup\\small%') }
+      '\\par\\vspace{12pt}\\noindent\\textcolor{wbtype}{\\rule{\\linewidth}{0.4pt}}\\par\\vspace{9pt}\\begingroup\\normalsize%') }
     for _, b in ipairs(el.content) do table.insert(out, b) end
     table.insert(out, pandoc.RawBlock('latex', '\\endgroup%'))
+    return out
+  end
+
+  if has_class(el, 'quote-label') then
+    return { pandoc.RawBlock('latex',
+      '\\sbquotelabel{' .. lescape(stringify(el)) .. '}%') }
+  end
+
+  if has_class(el, 'quote-text') then
+    local out = { pandoc.RawBlock('latex', '\\sbquoteopen\\begingroup\\itshape%') }
+    for _, b in ipairs(el.content) do table.insert(out, b) end
+    table.insert(out, pandoc.RawBlock('latex', '\\endgroup\\sbquoteclose%'))
+    return out
+  end
+
+  if has_class(el, 'quote-attribution') then
+    local out = { pandoc.RawBlock('latex', '\\begin{sbquoteattr}%') }
+    for _, b in ipairs(el.content) do table.insert(out, b) end
+    table.insert(out, pandoc.RawBlock('latex', '\\end{sbquoteattr}%'))
     return out
   end
 
@@ -424,11 +457,24 @@ function Div(el)
   end
 
   if has_class(el, 'box') then
-    local color = get_box_color(el)
-    local out = { pandoc.RawBlock('latex',
-      '\\begin{wikibox}{' .. color .. '}%') }
+    local color, env = get_box_style(el)
+    if has_class(el, 'box-untitled') and env == 'wikitab' then
+      env = 'wikitabuntitled'
+    end
+    local out = {}
+    -- Div children have already been traversed, so an authored box-title is
+    -- represented here by the structural RawBlock \wbtitle{...}. Reserve
+    -- opening room BEFORE the breakable tcolorbox begins; no title/body text
+    -- or callout type participates in this decision.
+    local first = el.content[1]
+    if first and first.t == 'RawBlock' and first.format == 'latex'
+       and first.text:match('^\\wbtitle{') then
+      table.insert(out, pandoc.RawBlock('latex', '\\Needspace{8\\baselineskip}%'))
+    end
+    table.insert(out, pandoc.RawBlock('latex',
+      '\\begin{' .. env .. '}{' .. color .. '}%'))
     for _, b in ipairs(el.content) do table.insert(out, b) end
-    table.insert(out, pandoc.RawBlock('latex', '\\end{wikibox}%'))
+    table.insert(out, pandoc.RawBlock('latex', '\\end{' .. env .. '}%'))
     return out
   end
   if has_class(el, 'quote') then
@@ -618,6 +664,25 @@ end
 function Table(el)
   local num_cols = #el.colspecs
   if num_cols == 0 then return el end
+
+  -- Contract-approved visual exception: 8% gold fill in existing PDF header
+  -- cells only. No column width, padding, font, border or pagination changes.
+  if el.head and el.head.rows then
+    for _, row in ipairs(el.head.rows) do
+      for _, cell in ipairs(row.cells) do
+        if cell.contents and #cell.contents > 0 then
+          local first = cell.contents[1]
+          if first.t == 'Plain' or first.t == 'Para' then
+            table.insert(first.content, 1, pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}'))
+          else
+            table.insert(cell.contents, 1, pandoc.RawBlock('latex', '\\cellcolor{sbink!8!white}%'))
+          end
+        else
+          cell.contents = {pandoc.Plain({pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}')})}
+        end
+      end
+    end
+  end
 
   local pref = {}   -- largura desejada (maior celula)
   local floor_ = {} -- largura minima (maior palavra)

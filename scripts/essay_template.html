@@ -35,6 +35,22 @@ $endif$
   --rust-bright:#A84F3C;
   --accent:#4A8FA8;
   --amber:#967030;
+  /* Native Obsidian callout palette — dark theme. Each semantic type owns
+     an explicit accent instead of borrowing a generic global color. */
+  --callout-note:#A2988A;
+  --callout-abstract:#B08B4F;
+  --callout-info:#B08B4F;
+  --callout-todo:#B18A4A;
+  --callout-tip:#B08B4F;
+  --callout-success:#63A37B;
+  --callout-question:#B08B4F;
+  --callout-warning:#B08B4F;
+  --callout-failure:#A95C4C;
+  --callout-danger:#D06A58;
+  --callout-bug:#C65F52;
+  --callout-example:#B08B4F;
+  --callout-quote:#8A857E;
+  --quote-bg:#1C1B1A;
   /* No escuro a caixa de destaque deixa de ser cinza neutro e ganha um ouro
      de baixíssima opacidade: separa a caixa da prosa sem virar bloco colorido.
      No claro os dois tokens voltam a ser as superfícies neutras de sempre. */
@@ -56,6 +72,22 @@ $endif$
   --rust-bright:#A04030;
   --accent:#35708A;
   --amber:#7A5A18;
+  /* Native Obsidian callout palette — light theme. Hues keep the same
+     semantic identity, but luminance/saturation are tuned independently. */
+  --callout-note:#4A5C77;
+  --callout-abstract:#2F5FB0;
+  --callout-info:#2F5FB0;
+  --callout-todo:#7B5C22;
+  --callout-tip:#2F5FB0;
+  --callout-success:#2F7951;
+  --callout-question:#2F5FB0;
+  --callout-warning:#2F5FB0;
+  --callout-failure:#874238;
+  --callout-danger:#A13F34;
+  --callout-bug:#963A32;
+  --callout-example:#2F5FB0;
+  --callout-quote:#7A7A76;
+  --quote-bg:#F3F2F0;
   --box-bg:var(--surface);
   --box-verdict-bg:var(--surface2);
 }
@@ -84,6 +116,22 @@ $endif$
     --rust-bright:#A04030;
     --accent:#35708A;
     --amber:#7A5A18;
+  /* Native Obsidian callout palette — light theme. Hues keep the same
+     semantic identity, but luminance/saturation are tuned independently. */
+  --callout-note:#4A5C77;
+  --callout-abstract:#2F5FB0;
+  --callout-info:#2F5FB0;
+  --callout-todo:#7B5C22;
+  --callout-tip:#2F5FB0;
+  --callout-success:#2F7951;
+  --callout-question:#2F5FB0;
+  --callout-warning:#2F5FB0;
+  --callout-failure:#874238;
+  --callout-danger:#A13F34;
+  --callout-bug:#963A32;
+  --callout-example:#2F5FB0;
+  --callout-quote:#7A7A76;
+  --quote-bg:#F3F2F0;
     --box-bg:var(--surface);
     --box-verdict-bg:var(--surface2);
   }
@@ -217,12 +265,9 @@ body{
    a tela é larga o bastante para haver o que escapar: abaixo disso a coluna
    já ocupa quase tudo e o breakout não teria para onde ir. */
 @media (min-width:1400px){
-  /* Só o TETO sobe. Nada de `width`: uma tabela estreita continua estreita e
-     uma figura continua no tamanho natural — o que muda é até onde elas podem
-     ir quando precisam. `margin-left:50%` + `translateX(-50%)` centraliza
-     seja qual for a largura resultante. */
-  .content > figure,
-  .content > table{
+  /* Apenas figuras podem escapar da coluna de prosa. Tabelas permanecem na
+     coluna e, quando largas, rolam dentro do próprio elemento. */
+  .content > figure{
     max-width:min(var(--wide-width),1500px);
     margin-left:50%;
     transform:translateX(-50%);
@@ -411,7 +456,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 /* ------------------------------------------------------------------ */
 .quote{
   margin:2rem 0;padding:1.05rem 1.3rem;
-  background:var(--surface2);border-left:2px solid var(--gold-dim);
+  background:var(--quote-bg);border-left:2px solid var(--callout-quote);
 }
 .quote p{font-size:.97rem;color:var(--text);margin-bottom:1rem;}
 .quote p:last-child{margin-bottom:0;}
@@ -419,7 +464,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 .pull-quote{
   position:relative;
   margin:2.8rem 0 2.4rem;padding:1.55rem 1.4rem 1.2rem;
-  background:var(--surface);border-left:3px solid var(--gold);
+  background:var(--quote-bg);border-left:3px solid var(--callout-quote);
 }
 /* As aspas gigantes (::before com " a 5rem) foram removidas:
    a pull-quote já se distingue por itálico, filete lateral e respiro. */
@@ -431,11 +476,8 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 }
 .pull-quote.epigraph::before{display:none;}
 .pull-quote.epigraph p{font-style:italic;color:var(--text-dim);}
-.pull-quote.epigraph p:last-child{
-  font-style:normal;font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--gold-dim);margin-top:.9rem;
-}
+/* A epigrafe usa a MESMA atribuicao das demais citacoes: fonte propria por
+   posicao fazia o mesmo componente parecer dois componentes diferentes. */
 /* Mesma fonte e corpo da .quote — a distincao fica na borda e no fundo,
    nao no tamanho (citacoes do mesmo essay nao podem parecer componentes
    diferentes). */
@@ -449,6 +491,62 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   margin-top:.3rem;
 }
 .pq-cite p{margin:0;}
+
+/* Premium quote contract: the source quotation marks delimit content;
+   the renderer supplies oversized typographic marks. Attribution is separate. */
+.quote,.pull-quote{
+  position:relative;
+  overflow:hidden;
+}
+.quote{
+  margin:2.35rem 0;padding:1.25rem 1.45rem 1.2rem;
+  background:var(--quote-bg);border-left:2px solid var(--callout-quote);
+}
+.pull-quote{
+  margin:2.8rem 0 2.4rem;padding:1.4rem 1.5rem 1.25rem;
+  background:var(--quote-bg);border-left:3px solid var(--callout-quote);
+}
+.quote-text{
+  position:relative;
+  padding:.2rem 1.45rem .1rem 1.5rem;
+}
+.quote-text::before,.quote-text::after{
+  position:absolute;
+  font-family:var(--font-display);
+  font-size:2.35rem;line-height:.85;
+  color:color-mix(in srgb,var(--callout-quote) 62%,transparent);
+  pointer-events:none;
+}
+.quote-text::before{content:"“";left:.02rem;top:.08rem;}
+.quote-text::after{content:"”";right:.05rem;bottom:-.08rem;}
+.quote-text p{
+  margin:0 0 .85rem;
+  font-style:italic;font-size:1.01rem;line-height:1.76;color:var(--text);
+}
+.quote-text p:last-child{margin-bottom:0;}
+@media (min-width:901px){
+  .quote-text p{text-align:justify;hyphens:none;-webkit-hyphens:none;}
+}
+.quote-attribution{
+  margin:.8rem 1.45rem 0 1.5rem;
+  padding-top:.65rem;
+  border-top:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+  font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.8rem;line-height:1.55;letter-spacing:.035em;
+  color:var(--text-dim);font-style:normal;
+}
+.quote-attribution p,.pull-quote .quote-attribution p{margin:0;font:inherit;color:inherit;}
+.quote-label{
+  width:fit-content;margin:0 1.45rem .45rem 1.5rem;
+  font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.66rem;line-height:1.35;letter-spacing:.08em;
+  color:var(--callout-quote);font-weight:600;
+}
+.quote-label p{margin:0;}
+.pull-quote.epigraph .quote-text p{color:var(--text-dim);}
+.pull-quote.epigraph .quote-attribution{
+  text-align:center;border-top:none;margin-top:.55rem;
+}
 
 /* ------------------------------------------------------------------ */
 /* Caixas tipadas                                                      */
@@ -465,16 +563,29 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   background:var(--box-bg);
   overflow:hidden;
 }
-.box.experimento{--boxc:var(--rust);}
-.box.evidencia{--boxc:var(--accent);}
-.box.mapa{--boxc:var(--gold);}
-.box.ataque{--boxc:var(--rust);}
-.box.aviso{--boxc:var(--amber);}
-.box.nivel{--boxc:var(--accent);}
-.box.ideia{--boxc:var(--gold-dim);}
-/* generico: filete cinza discreto — sem cor de destaque. O rótulo, porém,
-   precisa continuar legível: em cinza de borda ele desaparecia no fundo. */
-.box.generico{--boxc:var(--border);--box-badge-c:var(--text-dim);}
+/* No authored title means there is no title block to create top rhythm. */
+.box.box-untitled{padding-top:.95rem;}
+/* Native Obsidian callout identities. The type class is emitted directly
+   from [!type]; title/body text never participates in style selection. */
+.box.callout-note{--boxc:var(--callout-note);}
+.box.callout-abstract{--boxc:var(--callout-abstract);}
+.box.callout-info{--boxc:var(--callout-info);}
+.box.callout-todo{--boxc:var(--callout-todo);border-left-style:dashed;}
+.box.callout-tip{--boxc:var(--callout-tip);}
+.box.callout-success{--boxc:var(--callout-success);border-left-width:5px;}
+.box.callout-question{--boxc:var(--callout-question);}
+.box.callout-warning{--boxc:var(--callout-warning);}
+.box.callout-failure{--boxc:var(--callout-failure);border-left-style:dashed;}
+.box.callout-danger{--boxc:var(--callout-danger);border-left-width:5px;}
+.box.callout-bug{--boxc:var(--callout-bug);border-left-style:double;}
+.box.callout-example{--boxc:var(--callout-example);}
+.box > h3,.box > h4,.box > h5,.box > h6{
+  padding:0 1.3rem;color:var(--text-bright);line-height:1.3;
+}
+.box > h3{font-size:1.08rem;margin:1.2rem 0 1.05rem;}
+.box > h4{font-size:1rem;margin:1rem 0 1rem;}
+.box > h5,.box > h6{font-size:.94rem;margin:.9rem 0 .4rem;}
+.box > ul,.box > ol{padding-left:2.9rem;padding-right:1.3rem;}
 
 /* Badge: versalete espacejado sem retângulo preenchido */
 .box-badge{
@@ -494,16 +605,33 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 .box > p:last-of-type{margin-bottom:1.2rem;}
 .box-title p,.box-badge p{margin:0;padding:0;}
 
+/* Authored box header: compact color chip. The callout type itself is never
+   rendered as a word; --boxc only carries its visual identity. */
+.box-title{
+  padding:.85rem 1.3rem .25rem;
+  font:inherit;color:inherit;
+}
+.box-title p{
+  display:inline-block;
+  margin:0;padding:.28rem .58rem;
+  border:1px solid color-mix(in srgb,var(--boxc) 58%,transparent);
+  border-radius:3px;
+  background:color-mix(in srgb,var(--boxc) 8%,transparent);
+  color:var(--boxc);
+  font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.72rem;font-weight:600;letter-spacing:.055em;line-height:1.35;
+}
+
 .box-verdict{
-  margin-top:1.3rem;padding:1rem 1.3rem 1.05rem;
-  background:var(--box-verdict-bg);
-  border-top:1px solid var(--border);
+  margin-top:1.45rem;padding:1.05rem 1.3rem 1.1rem;
+  background:color-mix(in srgb,var(--boxc) 7%,var(--surface));
+  border-top:1px solid color-mix(in srgb,var(--boxc) 48%,var(--border));
 }
 .box-verdict p{margin:0 0 .7rem;font-size:.92rem;color:var(--text-bright);}
 .verdict-tag{
   display:block;font-family:'JetBrains Mono',Consolas,monospace;
   font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;
-  color:var(--gold);margin-bottom:.5rem;
+  color:var(--boxc);margin-bottom:.5rem;
 }
 
 /* Cards: filosofos e obras */
@@ -570,9 +698,11 @@ pre code{overflow-wrap:normal;}
 pre{
   background:var(--surface2);border:1px solid var(--border);
   padding:1em 1.2em;border-radius:6px;overflow-x:auto;
-  /* `.656em` e não `.8em` porque o `<code>` interno deixou de multiplicar o
-     seu próprio `.82em` — o corpo final na tela grande é exatamente o mesmo. */
-  font-size:.656em;line-height:1.55;
+  /* Ao remover a multiplicação do `<code>` interno, o valor foi congelado em
+     `.656em` só para preservar o corpo antigo — 11,5px contra 17,5px da prosa.
+     O celular já tinha subido para `.88em`; a tela grande ficou para trás e o
+     bloco de código saía menor justamente onde há mais espaço. */
+  font-size:.8em;line-height:1.55;
 }
 /* O Pandoc envolve todo bloco em `<pre><code>`, e o `.82em` do `code` se
    multiplicava pelo do `pre`: no celular o texto do bloco saía a 9,7px, bem
@@ -711,11 +841,159 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
      caíam para 9,9-11,5px, e o espacejamento de .2em piora ainda mais a
      leitura nesse corpo. */
   .box-badge{font-size:.78rem;}
-  .verdict-tag{font-size:.76rem;}
+  .verdict-tag{font-size:.78rem;}
   .label-solo{font-size:.74rem;}
   .card-meta{font-size:.78rem;}
   .pq-cite{font-size:.9rem;}
+  .quote-attribution{font-size:.84rem;}
   .pull-quote.epigraph p:last-child{font-size:.78rem;}
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Explicit callout visual families v2                                */
+/* Type classes are the ONLY family selectors. Text is never inspected. */
+/* ------------------------------------------------------------------ */
+
+/* TAB EDITORIAL — experiment, idea, evidence, conceptual map. */
+.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract){
+  border:1px solid var(--boxc);
+  border-radius:0;
+  background:color-mix(in srgb,var(--boxc) 2.5%,var(--bg));
+  overflow:hidden;
+}
+.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{
+  margin:0;padding:0 0 1.15rem;
+}
+.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
+  display:inline-block;margin:-1px 0 0 -1px;
+  padding:.5rem 1.05rem .44rem;
+  border:0;border-radius:0;
+  border-bottom:2px solid var(--boxc);
+  background:color-mix(in srgb,var(--boxc) 14%,transparent);
+  color:var(--boxc);
+  font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.72rem;font-weight:600;line-height:1.35;
+  letter-spacing:.15em;text-transform:uppercase;
+  font-variant:normal;
+}
+/* `info`/`abstract` afirmam um fato; `example`/`tip` propoem um cenario. A
+   faixa do segundo par pesa um pouco menos para marcar essa diferenca sem
+   trocar de cor — a familia visual continua a mesma. */
+.box:is(.callout-example,.callout-tip) > .box-title p{
+  border-bottom-width:1px;
+  background:color-mix(in srgb,var(--boxc) 7%,transparent);
+}
+.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > :is(h3,h4,h5,h6):first-of-type{
+  color:var(--boxc);
+}
+.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title + :is(h3,h4,h5,h6){
+  margin-top:0;
+}
+
+/* NOTE — tonal block + strong rail, no tab. */
+/* `note` e a caixa PADRAO: a que se usa quando o bloco merece um quadro, mas
+   nao merece ser gritado. Sem faixa lateral larga, sem cor propria, sem troca
+   de familia tipografica — moldura constante, o mesmo tint dos cabecalhos de
+   tabela e a mesma prosa de fora da caixa. As outras familias existem para
+   quando se QUER destacar. */
+.box.callout-note{
+  border:1px solid var(--border);border-radius:3px;
+  background:var(--surface2);
+}
+.box.callout-note > .box-title{padding:1.05rem 1.3rem .3rem;}
+.box.callout-note > .box-title p{
+  display:block;margin:0;padding:0;border:0;border-radius:0;background:none;
+  color:var(--gold);
+  font-family:inherit;
+  font-size:1rem;font-weight:700;letter-spacing:0;line-height:1.4;
+  text-transform:none;font-variant:normal;
+}
+.box.callout-note > p{font-family:inherit;line-height:1.72;}
+
+/* ENTITY — explicit [!todo]; title=name, ####=metadata. */
+.box.callout-todo{
+  border:0;border-left:5px solid var(--boxc);border-radius:0;
+  background:var(--surface);overflow:hidden;
+}
+.box.callout-todo > .box-title{padding:1.25rem 1.3rem .22rem;}
+.box.callout-todo > .box-title p{
+  display:block;margin:0;padding:0;border:0;border-radius:0;background:none;
+  color:var(--text-bright);font-family:var(--font-display);
+  font-size:1.24rem;font-weight:700;letter-spacing:0;line-height:1.28;
+  text-transform:none;font-variant:normal;
+}
+.box.callout-todo > h4.entity-meta{
+  margin:.42rem 0 .9rem;padding:0 1.3rem;
+  color:var(--boxc);font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.82rem;font-weight:550;letter-spacing:.12em;line-height:1.48;
+  text-transform:uppercase;
+}
+
+/* STAT — explicit [!warning]; any authored title receives value treatment. */
+.box.callout-warning{
+  border:1px solid var(--border);border-left:6px solid var(--boxc);
+  border-radius:9px;background:var(--surface);overflow:hidden;
+}
+.box.callout-warning > .box-title{padding:1.3rem 1.3rem .75rem;}
+.box.callout-warning > .box-title p{
+  display:block;margin:0;padding:0;border:0;border-radius:0;background:none;
+  color:var(--boxc);font-family:var(--font-display);
+  font-size:clamp(1.75rem,4.5vw,2.3rem);font-weight:700;line-height:1.1;
+  letter-spacing:-.015em;text-transform:none;font-variant:normal;
+}
+.box.callout-warning > p{font-size:1.02rem;line-height:1.68;}
+.box.callout-warning > .stat-divider{
+  height:1px;margin:1.35rem 1.3rem .95rem;padding:0;
+  background:var(--border);opacity:.85;
+}
+.box.callout-warning > .stat-source{
+  margin:0;padding:0 1.3rem 1.25rem;
+  font-family:'JetBrains Mono',Consolas,monospace;
+  font-size:.78rem;line-height:1.62;letter-spacing:.025em;color:var(--text-dim);
+}
+.box.callout-warning > .stat-source p{margin:0;padding:0;font:inherit;color:inherit;}
+.box.callout-warning > .stat-source a{color:var(--accent);}
+
+/* Small native-family refinements. Color remains semantic, while geometry
+   keeps related callouts distinguishable even without relying on hue alone. */
+.box.callout-abstract{background:color-mix(in srgb,var(--boxc) 3%,var(--bg));}
+.box.callout-info{background:color-mix(in srgb,var(--boxc) 3.5%,var(--bg));}
+.box.callout-tip{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
+.box.callout-example{background:color-mix(in srgb,var(--boxc) 3%,var(--bg));}
+.box.callout-success{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
+.box.callout-question{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
+.box.callout-failure{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
+.box.callout-danger{background:color-mix(in srgb,var(--boxc) 7%,var(--surface));border-left-width:6px;}
+.box.callout-bug{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
+
+.box:is(.callout-success,.callout-question,.callout-failure,.callout-danger,.callout-bug) > .box-title{
+  padding:1.05rem 1.3rem .38rem;
+}
+.box:is(.callout-success,.callout-question,.callout-failure,.callout-danger,.callout-bug) > .box-title p{
+  font-size:.80rem;line-height:1.4;letter-spacing:.075em;
+}
+
+/* State families keep their semantic rails and remain visibly distinct. */
+.box.callout-success{border-left-style:solid;}
+.box.callout-question{border-left-style:solid;}
+.box.callout-failure{border-left-style:dashed;}
+.box.callout-danger{border-left-style:solid;}
+.box.callout-bug{border-left-style:double;}
+
+@media (max-width:640px){
+  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{padding:0 0 .6rem;}
+  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
+    padding:.56rem .95rem .53rem;font-size:.80rem;letter-spacing:.12em;
+  }
+  .box.callout-note > .box-title,
+  .box.callout-todo > .box-title,
+  .box.callout-warning > .box-title,
+  .box:is(.callout-success,.callout-question,.callout-failure,.callout-danger,.callout-bug) > .box-title{padding-left:1.05rem;padding-right:1.05rem;}
+  .box.callout-todo > .box-title p{font-size:1.15rem;}
+  .box.callout-todo > h4.entity-meta{padding-left:1.05rem;padding-right:1.05rem;font-size:.80rem;}
+  .box.callout-warning > .stat-divider{margin-left:1.05rem;margin-right:1.05rem;}
+  .box.callout-warning > .stat-source{padding-left:1.05rem;padding-right:1.05rem;font-size:.80rem;}
 }
 
 /* ------------------------------------------------------------------ */

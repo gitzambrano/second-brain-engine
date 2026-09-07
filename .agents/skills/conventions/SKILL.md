@@ -182,6 +182,57 @@ Regras:
 
 Exportadores convertem links de seção, removem `## Conexões` e limpam wikilinks residuais.
 
+
+## Callouts / caixas de destaque
+
+Sintaxe do Obsidian. O tipo escrito no source é a única coisa que define a aparência — nada é inferido de título, número, emoji ou palavra do corpo. Blockquote sem `[!tipo]` é citação, nunca caixa.
+
+```markdown
+> [!example] Experimento Mental III
+> #### O Cérebro Dividido
+> Texto da caixa.
+```
+
+### Qual tipo usar
+
+| Quando o bloco é… | Tipo | Família visual |
+| --- | --- | --- |
+| nota filosófica, metodológica ou contextual | `note` | moldura fina, tinta neutra |
+| evidência empírica, dado, observação | `info` | faixa de rótulo no topo |
+| mapa conceitual, definição, framework | `abstract` | faixa de rótulo no topo |
+| experimento mental, exemplo trabalhado, cenário | `example` | faixa de rótulo, mais leve |
+| ideia, insight, proposta | `tip` | faixa de rótulo, mais leve |
+| pessoa, organização ou obra que merece ficha | `todo` | ficha, filete lateral |
+| número-chave, métrica, estatística | `warning` | número em corpo grande |
+| veredicto de uma caixa | `success`, aninhado dentro dela | rodapé, herda a cor da caixa |
+| resultado confirmado, fora de caixa | `success` | verde contido |
+| objeção, tensão, pergunta aberta | `question` | filete lateral |
+| hipótese rejeitada, teste falho | `failure` | filete tracejado |
+| risco crítico, invalidez | `danger` | filete forte |
+| defeito de implementação | `bug` | filete duplo, rótulo mono |
+| citação com destaque editorial | `quote` | fundo cinza, filete discreto |
+
+**`note` é o padrão: na dúvida, use ele.** Metade das caixas do corpus é `note`, e é assim que deve ser — ela emoldura sem gritar. `info` e `example` ganham faixa de rótulo e servem para evidência e experimento; use com cautela, porque dez seguidas viram um muro. Os demais são ênfase rara.
+
+A cor vem do tema, nunca do tipo: azul no claro, dourado no escuro, ferrugem só na família negativa (`failure`, `danger`, `bug`). No PDF a paleta fecha em dois ouros — um para a família editorial, outro para a negativa.
+
+### Como escrever
+
+- **Título** é autoral: é o rótulo que o texto já tinha. Não invente, não encurte, não reescreva. Sem rótulo, use `> [!tipo]` sozinho.
+- **`todo`**: título = nome da entidade; primeiro `####` = linha de metadados (datas, país, instituição).
+- **`warning`**: título = o valor em destaque; `---` separa o corpo da nota de fonte.
+- **`success` aninhado** vira o rodapé da caixa que o contém e herda a cor dela.
+- **Citação** separa texto e atribuição pelas aspas tipográficas `“ ”`. Sem elas não há atribuição destacada — e nunca acrescente aspas que o autor não escreveu.
+- Dentro da caixa vale Markdown normal: parágrafos, listas, tabelas, matemática, código e caixas aninhadas.
+
+### O que não fazer
+
+- alias (`tldr`, `summary`, `hint`, `important`, `caution`, `cite`, …) ou tipo inventado — é erro, não há fallback;
+- promover prosa comum a caixa só para dar destaque;
+- converter prosa em `[!quote]`;
+- `##` ou `###` dentro da caixa (quebra o Sumário);
+- esperar que o renderer imprima `NOTA`, `EXEMPLO` ou `CITAÇÃO` — o único título visível é o seu.
+
 ## Dois tipos de essay
 
 - **Originais (`/import`)**: preserve a prosa do autor na ingestão; aplique apenas as transformações autorizadas em `/import`. Tradução ou edição substantiva exige pedido explícito. O documento arquivado em `wiki/sources/` permanece intocado.
@@ -322,10 +373,23 @@ Lista plana de fontes já processadas:
 
 ## Tratamento de imagens
 
-1. Salve imagens em `wiki/assets/`; nunca use base64 inline.
+1. Salve imagens em `wiki/assets/` com o nome `<slug-do-essay>_fig<N>.<ext>`,
+   onde `N` é a ordem de aparição no texto — o nome do arquivo diz sozinho
+   de que essay é a figura e onde ela entra. Nunca use base64 inline.
+   Figura usada por dois essays é copiada, não compartilhada: cada essay
+   é dono das suas.
 2. Extraia figuras relevantes de fontes durante a ingestão.
 3. Use caminho relativo: `../assets/...` em essays e `../../assets/...` em resumos de sources.
 4. Descreva em texto a informação essencial de gráficos e diagramas.
+5. **Toda figura tem legenda.** Uma linha em itálico logo abaixo da imagem, separada por linha em branco:
+
+   ```markdown
+   ![alt](../assets/arquivo.png)
+
+   *Figura 3. Curva de calibração do modelo contra os placares observados.*
+   ```
+
+   Numeração sequencial dentro do essay, começando em 1. Num mosaico, a legenda vem depois da última imagem do grupo e descreve o conjunto. A legenda é uma frase curta que diz o que a figura mostra — não repita o alt nem explique o argumento, que é papel da prosa. `fix_lint.py` avisa quando falta.
 
 ## Conversão de fontes (HTML/PDF/DOCX → Markdown)
 

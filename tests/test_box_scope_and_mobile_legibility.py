@@ -1,14 +1,8 @@
-"""Escopo das caixas de realce e legibilidade no celular.
+"""Escopo das caixas explícitas e legibilidade no celular.
 
-Três defeitos reais, todos invisíveis para os gates que existiam:
-
-* um callout no meio de um capítulo engolia o resto do capítulo, porque só
-  H1/H2 encerravam a cadeia de blocos que o rótulo absorve;
-* o bloco de código sugado para dentro da caixa perdia as linhas em branco e
-  ganhava quebra dura no fim de cada linha;
-* dentro de célula de tabela, a `max-width:100%` do MathJax reduzia uma
-  equação de 35ex a 4px de altura — ilegível, e sem disparar a checagem de
-  overflow, já que encolher é justamente o que evita o overflow.
+Callout é sempre sintaxe Obsidian explícita. Estes testes preservam regressões
+reais de escopo, código e legibilidade sem reintroduzir o parser heurístico
+legado baseado em rótulos em negrito ou headings vizinhos.
 """
 import re
 import sys
@@ -47,41 +41,62 @@ def _boxes(out: str) -> list[str]:
     return boxes
 
 
-def test_callout_no_meio_da_prosa_fecha_no_primeiro_heading():
+def test_callout_explicito_no_meio_da_prosa_nao_engole_heading_externo():
     md = (
-        "## Seção\n\nProsa antes do rótulo.\n\n> **⚠ Atenção**\n\n"
-        "Só este parágrafo é do callout.\n\n"
+        "## Seção\n\nProsa antes da caixa.\n\n"
+        "> [!note] Atenção\n"
+        "> Só este parágrafo é do callout.\n\n"
         "#### Subseção\n\nEsta prosa está fora da caixa.\n"
     )
-    box = _boxes(transform_markdown(md))[0]
+    boxes = _boxes(transform_markdown(md))
+    assert len(boxes) == 1
+    box = boxes[0]
     assert "Só este parágrafo é do callout." in box
     assert "Subseção" not in box
     assert "fora da caixa" not in box
 
 
-def test_rotulo_que_abre_a_secao_ainda_enquadra_as_subsecoes():
-    """Padrão do corpus: `## Ideia 2` / `> **Ideia 02**` / subseções dentro."""
+def test_callout_explicito_pode_conter_subsecoes_quando_todas_estao_citadas():
     md = (
-        "## Ideia 2\n\n> **Ideia 02**\n\n### O Problema\n\nDiagnóstico.\n\n"
-        "### A Abordagem\n\nProposta.\n\n---\n\n## Outra Seção\n\nFora.\n"
+        "## Ideia 2\n\n"
+        "> [!tip] Ideia 02\n"
+        "> ### O Problema\n"
+        "> Diagnóstico.\n"
+        ">\n"
+        "> ### A Abordagem\n"
+        "> Proposta.\n\n"
+        "## Outra Seção\n\nFora.\n"
     )
-    box = _boxes(transform_markdown(md))[0]
+    boxes = _boxes(transform_markdown(md))
+    assert len(boxes) == 1
+    box = boxes[0]
     assert "O Problema" in box and "A Abordagem" in box
     assert "Outra Seção" not in box
+    assert "Fora." not in box
 
 
-def test_rotulo_nao_engole_o_heading_de_secao_colado_nele():
+def test_blockquote_legado_em_negrito_nao_vira_callout():
     md = "Prosa.\n\n> **⚠ Atenção**\n\n## Próxima Seção\n\nCorpo da seção.\n"
     out = transform_markdown(md)
-    assert not _boxes(out) or "Próxima Seção" not in _boxes(out)[0]
+    assert not _boxes(out)
+    assert "{.quote}" in out
 
 
-def test_bloco_de_codigo_dentro_da_caixa_sai_verbatim():
+def test_bloco_de_codigo_dentro_da_caixa_explicita_preserva_linha_vazia():
     md = (
-        "Prosa.\n\n> **⚠ Atenção**\n\nParágrafo do callout.\n\n"
-        "```\nprimeira linha\n\nlinha após vazia\n```\n"
+        "Prosa.\n\n"
+        "> [!example] Código\n"
+        "> Parágrafo do callout.\n"
+        ">\n"
+        "> ```\n"
+        "> primeira linha\n"
+        ">\n"
+        "> linha após vazia\n"
+        "> ```\n"
     )
-    box = _boxes(transform_markdown(md))[0]
+    boxes = _boxes(transform_markdown(md))
+    assert len(boxes) == 1
+    box = boxes[0]
     assert "primeira linha\n\nlinha após vazia" in box
     assert "primeira linha  \n" not in box
 

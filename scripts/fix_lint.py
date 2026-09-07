@@ -360,6 +360,33 @@ def fix_ascii_double_quotes(segment):
     return re.sub(r"\x00(\d+)\x00", lambda m: masked[int(m.group(1))], segment)
 
 
+# Legenda de figura (## Tratamento de imagens em conventions): toda figura
+# leva `*Figura N. ...*` logo abaixo. Num mosaico, a legenda vem depois da
+# ultima imagem do grupo. Isto so AVISA — escrever legenda e trabalho editorial,
+# nao correcao mecanica.
+FIGURA_IMG_RE = re.compile(r"^\s*!\[")
+FIGURA_CAPTION_RE = re.compile(r"^\s*[*_]{0,2}(figura\b|fig\.|tira\b)", re.IGNORECASE)
+
+
+def figuras_sem_legenda(body):
+    """[(linha, alt)] de cada bloco de figura sem legenda logo abaixo."""
+    linhas = body.split("\n")
+    achados = []
+    i = 0
+    while i < len(linhas):
+        if not FIGURA_IMG_RE.match(linhas[i]):
+            i += 1
+            continue
+        inicio = i
+        while i < len(linhas) and (FIGURA_IMG_RE.match(linhas[i]) or not linhas[i].strip()):
+            i += 1
+        seguinte = linhas[i] if i < len(linhas) else ""
+        if not FIGURA_CAPTION_RE.match(seguinte):
+            alt = re.match(r"^\s*!\[([^\]|]*)", linhas[inicio])
+            achados.append((inicio + 1, (alt.group(1) if alt else "")[:60]))
+    return achados
+
+
 def fix_content(content):
     """Aplica todas as correções mecânicas ao conteúdo, na ordem.
 
@@ -709,6 +736,7 @@ def main():
 
     fixed_files_count = 0
     referencias_fixed_count = 0
+    sem_legenda_count = 0
     title_to_slug, all_slugs = build_title_to_slug()
 
     all_targets = [("essays", f) for f in essay_targets]
@@ -734,6 +762,12 @@ def main():
             print(f"{verb} formatting and/or links in: {file.relative_to(DATA_ROOT)}")
             fixed_files_count += 1
 
+        for linha, alt in figuras_sem_legenda(split_frontmatter(new_content)[1]):
+            print(f"AVISO figura sem legenda: {file.relative_to(DATA_ROOT)}:{linha}"
+                  f" — acrescente `*Figura N. ...*` abaixo da imagem"
+                  + (f" (alt: {alt})" if alt else ""))
+            sem_legenda_count += 1
+
         # A migração de `## Referências` para o padrão AIAA só se aplica a
         # essays — concepts/entities/insights não têm essa seção.
         if category == "essays":
@@ -744,6 +778,9 @@ def main():
                 print(f"Referências {verb} (padrão AIAA): {file.relative_to(DATA_ROOT)} "
                       f"({n_entries} entrada(s))")
 
+    if sem_legenda_count:
+        print(f"\n{sem_legenda_count} figura(s) sem legenda. Legenda e decisao "
+              f"editorial: o fixer avisa, não escreve.")
     action = "Dry-run completo — nada foi escrito." if args.dry_run else "Completed auto-fix."
     print(f"\n{action} {fixed_files_count} file(s) {'seriam' if args.dry_run else 'foram'} "
           f"modificado(s); {referencias_fixed_count} essay(s) "

@@ -479,15 +479,20 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \usepackage[most]{tcolorbox}
 \usepackage{hyperref}
 
-\directlua{
-luaotfload.add_fallback
-  ("mainfallback",
-   {
-     "Segoe UI Symbol:mode=node;",
-     "Segoe UI Emoji:mode=node;"
-   }
-  )
-}
+% Fallback de símbolos precisa ser portátil. O bloco antigo registrava
+% Segoe UI Emoji incondicionalmente; em Linux a fonte não existe e algumas
+% versões do luaotfload abortam ao resolver a fallback antes de compor uma
+% única página. DejaVu Sans cobre os símbolos editoriais usados no corpus e
+% existe nos runners Linux; Segoe UI Symbol permanece como fallback Windows.
+\IfFontExistsTF{DejaVu Sans}{%
+  \directlua{luaotfload.add_fallback("mainfallback", {"DejaVu Sans:mode=node;"})}%
+}{%
+  \IfFontExistsTF{Segoe UI Symbol}{%
+    \directlua{luaotfload.add_fallback("mainfallback", {"Segoe UI Symbol:mode=node;"})}%
+  }{%
+    \directlua{luaotfload.add_fallback("mainfallback", {"Latin Modern Roman:mode=node;"})}%
+  }%
+}%
 % Corpo em serifa de paper técnico: Latin Modern casa com a fonte das
 % equações (unicode-math usa Latin Modern Math por padrão no LuaLaTeX),
 % dando unidade texto↔fórmula. Fallback cobre símbolos/emoji que a LM
@@ -517,12 +522,20 @@ luaotfload.add_fallback
 \definecolor{codeframe}{HTML}{CBD5E1}
 \definecolor{boxbg}{HTML}{F9F9F7}
 \definecolor{boxline}{HTML}{4B5563}
-\definecolor{quoteline}{HTML}{8A6B33}
-\definecolor{boxexp}{HTML}{8E4636}
-\definecolor{boxev}{HTML}{35708A}
+\definecolor{quoteline}{HTML}{6E6A66}
+\definecolor{boxexp}{HTML}{8A6B33}
+\definecolor{boxev}{HTML}{8A6B33}
 \definecolor{boxmap}{HTML}{8A6B33}
-\definecolor{boxav}{HTML}{7A5A18}
-\definecolor{boxid}{HTML}{7A6135}
+\definecolor{boxav}{HTML}{8A6B33}
+\definecolor{boxid}{HTML}{8A6B33}
+\definecolor{boxnote}{HTML}{8A6B33}
+\definecolor{boxentity}{HTML}{8A6B33}
+\definecolor{boxstat}{HTML}{8A6B33}
+\definecolor{boxsuccess}{HTML}{8A6B33}
+\definecolor{boxquestion}{HTML}{8A6B33}
+\definecolor{boxfailure}{HTML}{6F4E22}
+\definecolor{boxdanger}{HTML}{6F4E22}
+\definecolor{boxbug}{HTML}{6F4E22}
 % Dourado bem claro (mistura resolvida de uma vez com \colorlet — a mistura
 % "sbink!35!white" inline dentro de \textcolor, direto no \markoverwith do
 % \sbtoclink abaixo, nao pegava: a linha saia com a cor do link (sblink),
@@ -688,34 +701,129 @@ luaotfload.add_fallback
 % corpo, hierarquia por peso/tamanho, nada de troca de familia.
 % parbox=false mantem o espacamento de paragrafo natural dentro da caixa.
 % ---------------------------------------------------------------------
-\newtcolorbox{wikibox}[1]{enhanced,breakable,
-  colback=boxbg,colframe=boxbg,frame hidden,
-  borderline west={2.5pt}{0pt}{#1},
-  left=10pt,right=10pt,top=8pt,bottom=8pt,parbox=false,
-  before upper={\colorlet{wbtype}{#1}}}
+% Explicit callout environments. Selection happens in pdf_boxes.lua from
+% .callout-<type> only; these environments never inspect authored text.
+\newenvironment{wikitab}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{tab}%
+  \begin{tcolorbox}[enhanced,breakable,
+    colback=boxbg,colframe=#1,boxrule=.55pt,
+    arc=0pt,outer arc=0pt,left=10pt,right=10pt,top=0pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
+% Same tab family, but with top breathing room when source has no title.
+% Selection is from the explicit structural .box-untitled class only.
+\newenvironment{wikitabuntitled}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{tab}%
+  \begin{tcolorbox}[enhanced,breakable,
+    colback=boxbg,colframe=#1,boxrule=.55pt,
+    arc=0pt,outer arc=0pt,left=10pt,right=10pt,top=13pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
+\newenvironment{wikinote}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{note}%
+  \begin{tcolorbox}[enhanced,breakable,frame hidden,arc=0pt,
+    colback=#1!5!white,borderline west={4pt}{0pt}{#1},
+    left=11pt,right=10pt,top=13pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
+
+\newenvironment{wikientity}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{entity}%
+  \begin{tcolorbox}[enhanced,breakable,frame hidden,arc=0pt,
+    colback=boxbg,borderline west={4.5pt}{0pt}{#1},
+    left=12pt,right=10pt,top=13pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
+\newenvironment{wikistat}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{stat}%
+  \begin{tcolorbox}[enhanced,breakable,
+    colback=codebg,colframe=codeframe,boxrule=.55pt,
+    borderline west={4.5pt}{0pt}{#1},arc=4pt,outer arc=4pt,
+    left=11pt,right=10pt,top=13pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
+\newenvironment{wikistate}[1]{%
+  \begingroup\colorlet{wbtype}{#1}\def\wbstyle{state}%
+  \begin{tcolorbox}[enhanced,breakable,frame hidden,arc=0pt,
+    colback=boxbg,borderline west={2.5pt}{0pt}{#1},
+    left=10pt,right=10pt,top=13pt,bottom=10pt,parbox=false]%
+}{\end{tcolorbox}\endgroup}
+
 
 \newtcolorbox{wikiquote}{enhanced,breakable,
   frame hidden,arc=0pt,
   interior style={fill=boxbg},
   borderline west={2.5pt}{0pt}{quoteline},
-  left=12pt,right=10pt,top=7pt,bottom=7pt,parbox=false}
+  left=12pt,right=10pt,top=13pt,bottom=10pt,parbox=false}
 
 \newenvironment{wikipull}
   {\begin{tcolorbox}[enhanced,breakable,
      frame hidden,arc=0pt,
      interior style={fill=boxbg},
      borderline west={3pt}{0pt}{quoteline},
-     left=12pt,right=10pt,top=8pt,bottom=7pt,parbox=false]\itshape}
+     left=12pt,right=10pt,top=13pt,bottom=10pt,parbox=false]}
   {\end{tcolorbox}}
+
+\newcommand{\sbquotelabel}[1]{%
+  \par\noindent{\footnotesize\bfseries\ttfamily\color{sbink}#1}%
+  \par\nobreak\vspace{3pt}\nobreak}
+\newcommand{\sbquoteopen}{%
+  \par\noindent{\fontsize{18pt}{18pt}\selectfont\color{sbink!55!white}\textquotedblleft}%
+  \par\vspace{-10pt}\nobreak}
+\newcommand{\sbquoteclose}{%
+  \par\vspace{-9pt}\hfill{\fontsize{18pt}{18pt}\selectfont\color{sbink!55!white}\textquotedblright}%
+  \par\nobreak}
+\newenvironment{sbquoteattr}{%
+  \par\vspace{1pt}\begingroup\small\ttfamily\upshape\color{subtlegray}
+}{%
+  \par\endgroup
+}
 
 \newtcolorbox{wikicard}{enhanced,breakable,
   frame hidden,arc=0pt,
   interior style={fill=boxbg},
   borderline west={3pt}{0pt}{boxline},
-  left=12pt,right=10pt,top=8pt,bottom=8pt,parbox=false}
+  left=12pt,right=10pt,top=13pt,bottom=10pt,parbox=false}
 
-\newcommand{\wbbadge}[1]{\par\noindent{\footnotesize\bfseries\color{wbtype}\addfontfeatures{LetterSpace=18}\MakeUppercase{#1}}\par\nobreak\vspace{2pt}\nobreak}
-\newcommand{\wbtitle}[1]{\par\noindent{\large\bfseries\color{sblink} #1}\par\nobreak\vspace{4pt}\nobreak}
+\newcommand{\wbbadge}[1]{\par\noindent{\footnotesize\bfseries\color{wbtype}\addfontfeatures{LetterSpace=18}\MakeUppercase{#1}}\par\nobreak\vspace{7pt}\nobreak}
+\newcommand{\wbtitle}[1]{%
+  \ifstrequal{\wbstyle}{tab}{%
+    \par\vspace*{-0.55pt}\noindent\hspace*{-10.55pt}%
+    \begingroup\setlength{\fboxsep}{4.8pt}%
+    \colorbox{wbtype}{\strut\fontsize{9.6pt}{11.6pt}\selectfont\ttfamily\bfseries\color{white}%
+      \addfontfeatures{LetterSpace=12}\MakeUppercase{#1}}%
+    \endgroup
+    \par\nobreak\vspace{14pt}\nobreak
+  }{\ifstrequal{\wbstyle}{note}{%
+    \par\vspace{2pt}\noindent{\fontsize{11.2pt}{13.6pt}\selectfont\sffamily\bfseries\color{wbtype}%
+      \addfontfeatures{LetterSpace=4}#1}%
+    \par\nobreak\vspace{12pt}\nobreak
+  }{\ifstrequal{\wbstyle}{entity}{%
+    \par\vspace{1pt}\noindent{\fontsize{14pt}{17pt}\selectfont\bfseries\color{sblink}#1}%
+    \par\nobreak\vspace{10pt}\nobreak
+  }{\ifstrequal{\wbstyle}{stat}{%
+    \par\vspace{1pt}\noindent{\fontsize{28pt}{31pt}\selectfont\bfseries\color{wbtype}#1}%
+    \par\nobreak\vspace{12pt}\nobreak
+  }{%
+    \par\vspace{2pt}\noindent{\fontsize{10.2pt}{12.6pt}\selectfont\sffamily\bfseries\color{wbtype}%
+      \addfontfeatures{LetterSpace=5}\MakeUppercase{#1}}%
+    \par\nobreak\vspace{8pt}\nobreak
+  }}}}%
+}
+\newcommand{\wbinnerbegin}{%
+  \par\vspace{4pt}\nobreak\begingroup
+  \fontsize{11.6pt}{14pt}\selectfont\bfseries\color{sbink}\noindent\ignorespaces}
+\newcommand{\wbinnerend}{\par\endgroup\nobreak\vspace{10pt}\nobreak}
+\newcommand{\wbentitymeta}[1]{%
+  \par\noindent{\fontsize{9.5pt}{11.8pt}\selectfont\ttfamily\color{wbtype}%
+    \addfontfeatures{LetterSpace=9}\MakeUppercase{#1}}%
+  \par\nobreak\vspace{8pt}\nobreak}
+\newcommand{\wbstatdivider}{%
+  \par\vspace{8pt}\noindent\textcolor{codeframe}{\rule{\linewidth}{0.45pt}}%
+  \par\nobreak\vspace{7pt}\nobreak}
+\newenvironment{wbstatsource}{%
+  \begingroup\footnotesize\ttfamily\color{subtlegray}%
+}{\par\endgroup}
 \newcommand{\cardname}[1]{\par\noindent{\bfseries\color{sblink}#1}\par\nobreak\vspace{1pt}\nobreak}
 \newcommand{\cardmeta}[1]{\par\noindent{\footnotesize\color{subtlegray}#1}\par\vspace{0.6em}}
 \newcommand{\parahead}[1]{\par\vspace{0.9em}\noindent{\footnotesize\bfseries\color{sbink}#1}\par\nobreak\vspace{0.35em}\nobreak}
@@ -1028,6 +1136,7 @@ def _titulo_para_medicao(titulo):
     texto = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]]*)\]\]', r'\1', titulo)
     texto = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', texto)
     texto = re.sub(r'[*`]+', '', texto)
+    texto = re.sub(r'\s+\{[^{}]*\}\s*$', '', texto)
     return ''.join(_LATEX_ESCAPE.get(c, c) for c in texto)
 
 
@@ -1064,6 +1173,54 @@ def _sob_titulo_pai(lines, idx):
         return False
     pai = re.match(r'^(#{2,3})\s', lines[j])
     return bool(pai) and len(pai.group(1)) == len(m.group(1)) - 1
+
+
+def _sob_cabecalho_de_caixa(lines, idx):
+    """O ``####`` em ``idx`` é o subtítulo logo abaixo de ``.box-title``?
+
+    ``transform_markdown`` materializa um callout titulado como um fenced div
+    ``.box-title`` seguido, quando o autor o escreveu, pelo ``####`` interno.
+    O ``\\sbsubneed`` normal não pode rodar entre os dois: ele mede a página e
+    pode emitir ``\\newpage`` exatamente depois do chip, deixando o cabeçalho
+    da caixa órfão no pé da página. Nesse caso o chip já termina em ``nobreak``;
+    marcamos o ponto antes do heading com ``\\sbnobreak`` e deixamos o próprio
+    heading manter sua primeira linha de corpo.
+    """
+    if not re.match(r'^####\s+', lines[idx]):
+        return False
+
+    def prev_nonblank(pos):
+        pos -= 1
+        while pos >= 0 and not lines[pos].strip():
+            pos -= 1
+        return pos
+
+    close = prev_nonblank(idx)
+    if close < 0 or lines[close].strip() != ':::':
+        return False
+    title = prev_nonblank(close)
+    if title < 0:
+        return False
+    opening = prev_nonblank(title)
+    if opening < 0:
+        return False
+    return bool(re.match(r'^:::\s*\{\.box-title\}\s*$', lines[opening].strip()))
+
+
+def _callout_colado(lines, idx):
+    """O bloco imediatamente após o heading é um callout já explicitamente parseado?
+
+    Esta checagem é puramente estrutural: ela não lê tipo, título nem conteúdo
+    para decidir semântica. `transform_markdown` já resolveu o `[!type]`; aqui
+    só evitamos um ponto de quebra entre um heading de capítulo e a caixa que o
+    autor colocou imediatamente depois dele.
+    """
+    j = idx + 1
+    while j < len(lines) and not lines[j].strip():
+        j += 1
+    if j >= len(lines):
+        return False
+    return bool(re.match(r'^:::\s*\{\.box(?:\s|\.)', lines[j].strip()))
 
 
 def _titulo_colado(lines, idx):
@@ -1114,7 +1271,11 @@ def inject_chapter_kickers(body):
         m = SECTION_RE.match(line)
         if not (m and len(m.group(1)) == 2):
             sub = re.match(r'^(#{3,4})\s+(.*)$', line)
-            if sub and not _sob_titulo_pai(lines, idx):
+            if sub and _sob_cabecalho_de_caixa(lines, idx):
+                # O chip e o subtítulo formam um único cabeçalho editorial.
+                # Não plante um ponto de medição/quebra entre os dois.
+                out.append('\\sbnobreak')
+            elif sub and not _sob_titulo_pai(lines, idx):
                 out.append(
                     f'\\sbsubneed{{{len(sub.group(1))}}}'
                     f'{{{_titulo_para_medicao(sub.group(2).strip())}}}')
@@ -1151,6 +1312,10 @@ def inject_chapter_kickers(body):
         out.append(heading)
         if _titulo_colado(lines, idx):
             out.append('\\sbskipnextneed')
+        elif _callout_colado(lines, idx):
+            # H2 -> callout imediato é uma relação estrutural já parseada.
+            # Não há classificação por título, corpo, emoji ou tipo.
+            out.append('\\nobreak')
     return '\n'.join(out)
 
 
