@@ -45,6 +45,9 @@ Thumbs.db
 # Saída de teste com --basetemp (capturas do job site-browser).
 /artifacts/
 
+# Anexos locais do Codex; não fazem parte do engine nem da wiki.
+/.codex-remote-attachments/
+
 # Rascunho de diagnóstico na raiz (_count.py, _pytest2.txt e afins). Já foram
 # commitados em main uma vez, um deles carregando caminho C:\Users\ da máquina
 # local. A raiz do engine é allowlist: só entra arquivo listado no teste
