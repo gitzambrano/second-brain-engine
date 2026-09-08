@@ -49,7 +49,9 @@ def test_direct_success_is_still_verdict():
 
 def test_template_contract_for_tabs_quotes_verdict_and_tables():
     s = (ROOT / 'scripts' / 'essay_template.html').read_text(encoding='utf-8')
-    assert 'margin:-1px 0 0 -1px' in s
+    # Sem borda em cima nem a esquerda: quem faz esses dois lados e a
+    # moldura da caixa, entao o rotulo nao precisa de recuo negativo.
+    assert 'display:inline-block;margin:0;' in s
     assert 'padding:0 0 1.15rem' in s
     assert 'color:var(--boxc);margin-bottom:.5rem' in s
     assert 'font-size:2.35rem' in s

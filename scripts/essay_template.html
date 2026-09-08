@@ -39,7 +39,7 @@ $endif$
      an explicit accent instead of borrowing a generic global color. */
   --callout-note:#A2988A;
   --callout-abstract:#B08B4F;
-  --callout-info:#B08B4F;
+  --callout-info:#98938A;
   --callout-todo:#B18A4A;
   --callout-tip:#B08B4F;
   --callout-success:#63A37B;
@@ -49,12 +49,17 @@ $endif$
   --callout-danger:#D06A58;
   --callout-bug:#C65F52;
   --callout-example:#B08B4F;
-  --callout-quote:#8A857E;
-  --quote-bg:#1C1B1A;
+  --callout-quote:#85878C;
+  --quote-bg:#1B1C1F;
   /* No escuro a caixa de destaque deixa de ser cinza neutro e ganha um ouro
      de baixíssima opacidade: separa a caixa da prosa sem virar bloco colorido.
      No claro os dois tokens voltam a ser as superfícies neutras de sempre. */
   --box-bg:rgba(176,139,79,.055);
+  /* No claro o acento e escuro sobre papel branco e 2,5% ja marcam.
+     No escuro o acento e mais claro que o fundo e a mesma proporcao
+     some: a mistura sobe ate dar o mesmo degrau de contraste. */
+  --tab-mix:9%;
+  --verdict-mix:10%;
   --box-verdict-bg:rgba(176,139,79,.10);
   --max-width:700px;
 }
@@ -76,7 +81,7 @@ $endif$
      semantic identity, but luminance/saturation are tuned independently. */
   --callout-note:#4A5C77;
   --callout-abstract:#2F5FB0;
-  --callout-info:#2F5FB0;
+  --callout-info:#6E7684;
   --callout-todo:#7B5C22;
   --callout-tip:#2F5FB0;
   --callout-success:#2F7951;
@@ -86,9 +91,11 @@ $endif$
   --callout-danger:#A13F34;
   --callout-bug:#963A32;
   --callout-example:#2F5FB0;
-  --callout-quote:#7A7A76;
-  --quote-bg:#F3F2F0;
+  --callout-quote:#6E7684;
+  --quote-bg:#F1F3F7;
   --box-bg:var(--surface);
+  --tab-mix:3%;
+  --verdict-mix:4%;
   --box-verdict-bg:var(--surface2);
 }
 @media (min-width:901px){
@@ -120,7 +127,7 @@ $endif$
      semantic identity, but luminance/saturation are tuned independently. */
   --callout-note:#4A5C77;
   --callout-abstract:#2F5FB0;
-  --callout-info:#2F5FB0;
+  --callout-info:#6E7684;
   --callout-todo:#7B5C22;
   --callout-tip:#2F5FB0;
   --callout-success:#2F7951;
@@ -130,9 +137,11 @@ $endif$
   --callout-danger:#A13F34;
   --callout-bug:#963A32;
   --callout-example:#2F5FB0;
-  --callout-quote:#7A7A76;
-  --quote-bg:#F3F2F0;
+  --callout-quote:#6E7684;
+  --quote-bg:#F1F3F7;
     --box-bg:var(--surface);
+  --tab-mix:3%;
+  --verdict-mix:4%;
     --box-verdict-bg:var(--surface2);
   }
 }
@@ -226,11 +235,11 @@ body{
 .masthead-rule{border:none;border-top:1px solid var(--gold-dim);width:90px;margin:1.7rem auto 1.3rem;}
 .byline{
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);
+  font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);
 }
 .cover-meta{
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--text-dim);opacity:.85;margin-top:.95rem;
 }
 /* Rascunho ocupa o LUGAR do tempo de leitura (ver o JS no fim do arquivo):
@@ -286,7 +295,7 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-display);color:var(--text-bright);line-
 .sb-kicker{
   display:flex;align-items:center;gap:.85rem;
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.72rem;font-weight:400;letter-spacing:.18em;
+  font-size:.78rem;font-weight:400;letter-spacing:.14em;
   color:var(--gold);margin-bottom:.6rem;text-transform:uppercase;
 }
 .sb-kicker::after{
@@ -514,7 +523,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   position:absolute;
   font-family:var(--font-display);
   font-size:2.35rem;line-height:.85;
-  color:color-mix(in srgb,var(--callout-quote) 62%,transparent);
+  color:color-mix(in srgb,var(--gold) 78%,transparent);
   pointer-events:none;
 }
 .quote-text::before{content:"“";left:.02rem;top:.08rem;}
@@ -531,15 +540,15 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   margin:.8rem 1.45rem 0 1.5rem;
   padding-top:.65rem;
   border-top:1px solid color-mix(in srgb,var(--border) 82%,transparent);
-  font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.8rem;line-height:1.55;letter-spacing:.035em;
+  font-family:'Source Serif 4',Georgia,'Times New Roman',serif;
+  font-size:.9rem;line-height:1.5;letter-spacing:.005em;
   color:var(--text-dim);font-style:normal;
 }
 .quote-attribution p,.pull-quote .quote-attribution p{margin:0;font:inherit;color:inherit;}
 .quote-label{
   width:fit-content;margin:0 1.45rem .45rem 1.5rem;
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.66rem;line-height:1.35;letter-spacing:.08em;
+  font-size:.76rem;line-height:1.35;letter-spacing:.06em;
   color:var(--callout-quote);font-weight:600;
 }
 .quote-label p{margin:0;}
@@ -592,7 +601,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   display:block;width:fit-content;
   color:var(--box-badge-c,var(--boxc));
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
+  font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;
   padding:.55rem 1.3rem .1rem;
   font-variant:small-caps;
 }
@@ -619,18 +628,18 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
   background:color-mix(in srgb,var(--boxc) 8%,transparent);
   color:var(--boxc);
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.72rem;font-weight:600;letter-spacing:.055em;line-height:1.35;
+  font-size:.78rem;font-weight:600;letter-spacing:.05em;line-height:1.35;
 }
 
 .box-verdict{
   margin-top:1.45rem;padding:1.05rem 1.3rem 1.1rem;
-  background:color-mix(in srgb,var(--boxc) 7%,var(--surface));
+  background:color-mix(in srgb,var(--boxc) var(--verdict-mix),var(--bg));
   border-top:1px solid color-mix(in srgb,var(--boxc) 48%,var(--border));
 }
 .box-verdict p{margin:0 0 .7rem;font-size:.92rem;color:var(--text-bright);}
 .verdict-tag{
   display:block;font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;
+  font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--boxc);margin-bottom:.5rem;
 }
 
@@ -643,7 +652,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 .card.livro .card-name{font-style:italic;}
 .card-meta{
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.72rem;letter-spacing:.05em;
+  font-size:.78rem;letter-spacing:.05em;
   color:var(--text-dim);margin:.25rem 0 .75rem;
 }
 .card p{font-size:.95rem;line-height:1.7;margin-bottom:.7rem;}
@@ -652,7 +661,7 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 /* Rotulo solto / ornamento */
 .label-solo{
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+  font-size:.74rem;letter-spacing:.15em;text-transform:uppercase;
   color:var(--gold);margin:2.3rem 0 .9rem;
 }
 .ornament{
@@ -776,6 +785,37 @@ figcaption{margin-top:.7rem;font-size:.84em;color:var(--text-dim);font-style:ita
    pixels. */
 .content p > img{display:block;margin-inline:auto;}
 img{max-width:100%;height:auto;}
+/* Visor de figura: o painel cientifico e legivel na coluna como panorama,
+   mas os eixos so se leem em tamanho natural. O toque abre o visor; o
+   conteudo da pagina nao muda. */
+.content img{cursor:zoom-in;}
+#lupa{
+  position:fixed;inset:0;z-index:200;display:none;
+  background:color-mix(in srgb,var(--bg) 94%,black);
+  overscroll-behavior:contain;touch-action:none;
+}
+#lupa[open]{display:block;}
+#lupa img{
+  position:absolute;top:50%;left:50%;
+  max-width:none;max-height:none;
+  transform-origin:center;border-radius:0;border:0;
+  will-change:transform;
+}
+#lupa-fechar{
+  position:fixed;top:.9rem;right:.9rem;z-index:201;
+  width:2.6rem;height:2.6rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-bright);font-size:1.35rem;line-height:1;
+  display:grid;place-items:center;cursor:pointer;
+}
+#lupa-dica{
+  position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);
+  z-index:201;padding:.4rem .85rem;border-radius:999px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-dim);font-size:.76rem;
+  font-family:'JetBrains Mono',Consolas,monospace;letter-spacing:.06em;
+}
+
 
 /* Figuras: o parágrafo que só contém imagens é a figura. Centraliza, espaça e
    deixa as imagens do mesmo grupo fluírem lado a lado com respiro entre elas.
@@ -849,7 +889,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
   .label-solo{font-size:.74rem;}
   .card-meta{font-size:.78rem;}
   .pq-cite{font-size:.9rem;}
-  .quote-attribution{font-size:.84rem;}
+  .quote-attribution{font-size:.88rem;}
   .pull-quote.epigraph p:last-child{font-size:.78rem;}
 }
 
@@ -863,30 +903,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract){
   border:1px solid var(--boxc);
   border-radius:0;
-  background:color-mix(in srgb,var(--boxc) 2.5%,var(--bg));
+  background:color-mix(in srgb,var(--boxc) var(--tab-mix),var(--bg));
   overflow:hidden;
 }
 .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{
-  margin:0;padding:0 0 1.15rem;
+  /* `line-height:0` no contentor: o rotulo e `inline-block` e sentava sobre a
+     linha de texto do pai, o que abria um fio sem tinta entre ele e a moldura. */
+  margin:0;padding:0 0 1.15rem;line-height:0;
 }
 .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
-  display:inline-block;margin:-1px 0 0 -1px;
+  display:inline-block;margin:0;
   padding:.5rem 1.05rem .44rem;
-  border:0;border-radius:0;
-  border-bottom:2px solid var(--boxc);
-  background:color-mix(in srgb,var(--boxc) 14%,transparent);
+  /* Sem borda em cima nem a esquerda: quem faz esses dois lados e a propria
+     moldura da caixa. Com borda propria e recuo negativo, o `overflow:hidden`
+     da caixa cortava o recuo e sobravam duas linhas quase coincidentes. */
+  border:1px solid var(--boxc);border-top:0;border-left:0;border-radius:0;
+  background:color-mix(in srgb,var(--boxc) 15%,transparent);
   color:var(--boxc);
   font-family:'JetBrains Mono',Consolas,monospace;
   font-size:.72rem;font-weight:600;line-height:1.35;
   letter-spacing:.15em;text-transform:uppercase;
   font-variant:normal;
 }
-/* `info`/`abstract` afirmam um fato; `example`/`tip` propoem um cenario. A
-   faixa do segundo par pesa um pouco menos para marcar essa diferenca sem
-   trocar de cor — a familia visual continua a mesma. */
+/* `info`/`abstract` afirmam um fato e a faixa vem cheia; `example`/`tip`
+   propoem um cenario e vem so contornada. Mesma cor, mesma tipografia,
+   mesma medida — o que muda e o preenchimento. */
 .box:is(.callout-example,.callout-tip) > .box-title p{
-  border-bottom-width:1px;
-  background:color-mix(in srgb,var(--boxc) 7%,transparent);
+  background:color-mix(in srgb,var(--boxc) 9%,transparent);
 }
 .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > :is(h3,h4,h5,h6):first-of-type{
   color:var(--boxc);
@@ -905,7 +948,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
   border:1px solid var(--border);border-radius:3px;
   background:var(--surface2);
 }
-.box.callout-note > .box-title{padding:1.05rem 1.3rem .3rem;}
+.box.callout-note > .box-title{padding:1.05rem 1.3rem .85rem;}
 .box.callout-note > .box-title p{
   display:block;margin:0;padding:0;border:0;border-radius:0;background:none;
   color:var(--gold);
@@ -961,10 +1004,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 
 /* Small native-family refinements. Color remains semantic, while geometry
    keeps related callouts distinguishable even without relying on hue alone. */
-.box.callout-abstract{background:color-mix(in srgb,var(--boxc) 3%,var(--bg));}
-.box.callout-info{background:color-mix(in srgb,var(--boxc) 3.5%,var(--bg));}
-.box.callout-tip{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
-.box.callout-example{background:color-mix(in srgb,var(--boxc) 3%,var(--bg));}
+/* Estas quatro vinham com proporcao fixa e venciam a regra da familia, o
+   que prendia o preenchimento no valor calibrado para o tema claro. Passam
+   ao mesmo token: a diferenca entre os tipos vem do acento, nao daqui. */
+.box:is(.callout-abstract,.callout-info,.callout-tip,.callout-example){
+  background:color-mix(in srgb,var(--boxc) var(--tab-mix),var(--bg));
+}
 .box.callout-success{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
 .box.callout-question{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
 .box.callout-failure{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
@@ -1258,6 +1303,90 @@ document.querySelectorAll('.content p').forEach(function(paragraph){
       by.parentNode.insertBefore(meta,by.nextSibling);
     }
   }
+})();
+</script>
+<script>
+/* Visor de figura. Arrasta com um dedo ou com o mouse; a pinca de dois
+   dedos e a roda dao zoom. Fecha no botao, no Esc ou no toque fora. */
+(function(){
+  var alvo = document.querySelectorAll('.content img');
+  if (!alvo.length) return;
+  var visor = document.createElement('div');
+  visor.id = 'lupa';
+  visor.innerHTML =
+    '<button id="lupa-fechar" aria-label="Fechar">\u00d7</button>' +
+    '<span id="lupa-dica">arraste para mover \u00b7 pin\u00e7a ou roda para ampliar</span>';
+  document.body.appendChild(visor);
+  // O <img> existe fora do documento ate a primeira abertura: com src
+  // vazio mas presente no DOM ele conta como imagem quebrada na checagem
+  // de render, mesmo escondido por CSS.
+  var img = document.createElement('img');
+  img.alt = '';
+  var esc = 1, x = 0, y = 0, base = 1;
+
+  function aplica(){
+    img.style.transform =
+      'translate(-50%,-50%) translate(' + x + 'px,' + y + 'px) scale(' + esc + ')';
+  }
+  function abre(src, alt){
+    img.src = src; img.alt = alt || '';
+    if (!img.isConnected) visor.insertBefore(img, visor.firstChild);
+    img.onload = function(){
+      // Comeca enquadrando a figura inteira; dai o leitor amplia onde quiser.
+      var cx = innerWidth / img.naturalWidth, cy = innerHeight / img.naturalHeight;
+      base = Math.min(cx, cy) * 0.94;
+      esc = base; x = 0; y = 0; aplica();
+    };
+    visor.setAttribute('open', '');
+    document.body.style.overflow = 'hidden';
+  }
+  function fecha(){
+    visor.removeAttribute('open');
+    document.body.style.overflow = '';
+  }
+  alvo.forEach(function(n){
+    n.addEventListener('click', function(){ abre(n.currentSrc || n.src, n.alt); });
+  });
+  visor.querySelector('#lupa-fechar').addEventListener('click', fecha);
+  visor.addEventListener('click', function(e){ if (e.target === visor) fecha(); });
+  addEventListener('keydown', function(e){ if (e.key === 'Escape') fecha(); });
+
+  var arrastando = false, px = 0, py = 0, dedos = {}, dist0 = 0, esc0 = 1;
+  visor.addEventListener('pointerdown', function(e){
+    if (e.target === img) {
+      dedos[e.pointerId] = [e.clientX, e.clientY];
+      var ids = Object.keys(dedos);
+      if (ids.length === 1) { arrastando = true; px = e.clientX; py = e.clientY; }
+      else if (ids.length === 2) {
+        arrastando = false;
+        var a = dedos[ids[0]], b = dedos[ids[1]];
+        dist0 = Math.hypot(a[0]-b[0], a[1]-b[1]); esc0 = esc;
+      }
+      img.setPointerCapture(e.pointerId);
+    }
+  });
+  visor.addEventListener('pointermove', function(e){
+    if (!(e.pointerId in dedos)) return;
+    dedos[e.pointerId] = [e.clientX, e.clientY];
+    var ids = Object.keys(dedos);
+    if (ids.length >= 2) {
+      var a = dedos[ids[0]], b = dedos[ids[1]];
+      var d = Math.hypot(a[0]-b[0], a[1]-b[1]);
+      if (dist0) { esc = Math.max(base * 0.5, Math.min(esc0 * d / dist0, base * 12)); aplica(); }
+    } else if (arrastando) {
+      x += e.clientX - px; y += e.clientY - py;
+      px = e.clientX; py = e.clientY; aplica();
+    }
+  });
+  function solta(e){ delete dedos[e.pointerId]; arrastando = false; dist0 = 0; }
+  visor.addEventListener('pointerup', solta);
+  visor.addEventListener('pointercancel', solta);
+  visor.addEventListener('wheel', function(e){
+    if (!visor.hasAttribute('open')) return;
+    e.preventDefault();
+    esc = Math.max(base * 0.5, Math.min(esc * (e.deltaY < 0 ? 1.12 : 0.89), base * 12));
+    aplica();
+  }, {passive:false});
 })();
 </script>
 </body>

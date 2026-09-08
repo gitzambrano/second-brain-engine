@@ -185,53 +185,85 @@ Exportadores convertem links de seção, removem `## Conexões` e limpam wikilin
 
 ## Callouts / caixas de destaque
 
-Sintaxe do Obsidian. O tipo escrito no source é a única coisa que define a aparência — nada é inferido de título, número, emoji ou palavra do corpo. Blockquote sem `[!tipo]` é citação, nunca caixa.
+Sintaxe do Obsidian. Blockquote sem `[!tipo]` é citação, nunca caixa.
+
+Antes de escolher o tipo, decida se o bloco precisa mesmo de caixa. Caixa é para o que **interrompe** a leitura de propósito: um experimento, uma evidência, uma ficha, um número. O que continua o argumento é prosa. Se a estrutura normal do texto — parágrafo, subtítulo, lista, tabela — já resolve, não crie caixa.
+
+**Escolhido que vai ter caixa, o padrão é `note`.** Ela emoldura sem gritar, e é o que serve para a maioria dos casos: ressalva, contexto, digressão. Os outros tipos existem para quando o bloco tem uma função *específica* que a tabela abaixo nomeia. Na dúvida entre `note` e qualquer outro, use `note`.
+
+### A tabela
+
+Escolha pela **função do bloco no argumento**, nunca pela cor que você quer ver.
+
+| Tipo | Use quando o bloco é | Não use para | Título | Corpo | Quanto usar |
+| --- | --- | --- | --- | --- | --- |
+| `note` | ressalva, contexto, nota filosófica ou metodológica, digressão lateral | evidência, experimento, entidade, métrica | curto, ou nenhum | prosa livre | **o padrão** — na dúvida, este |
+| `info` | evidência empírica: estudo, dado medido, observação documentada, resultado de terceiros | opinião, exemplo inventado, "informação interessante" | o rótulo da evidência (`Evidência`, `Estudo seminal`) | citação + resultado; `####` opcional para o achado | com cautela: dez seguidas viram muro |
+| `example` | experimento mental, caso trabalhado, cenário hipotético, aplicação | evidência real, dado empírico | o rótulo numerado (`Experimento Mental IV`) | `####` com o nome do caso, depois a narrativa | com cautela, pelo mesmo motivo |
+| `abstract` | mapa conceitual, definição formal, framework, síntese estrutural | resumo qualquer, nota solta | o nome do mapa ou da definição | pode conter tabela ou lista | raro: um por seção, no máximo |
+| `tip` | ideia, insight, proposta, intuição destacável | explicação comum, evidência | o rótulo da ideia | prosa curta | raro |
+| `todo` | pessoa, organização ou obra que merece ficha | tarefa (não existe tarefa em essay) | **nome da entidade** | primeiro `####` = metadados (datas · país · instituição); depois, a relevância | um por entidade citada de fato |
+| `warning` | um número-chave e só | atenção genérica, alerta textual | **o próprio valor** (`39%`, `0,12 ft/s`) | explicação; `---` separa a nota de fonte | raro: o número tem de carregar a seção |
+| `success` aninhado | veredicto da caixa que o contém | conclusão de seção | `Veredicto` | o desfecho em uma ou duas frases | um por caixa que faz teste |
+| `success` solto | resultado confirmado, fora de caixa | qualquer boa notícia | o rótulo do resultado | prosa curta | raro |
+| `question` | objeção, tensão, pergunta em aberto que estrutura o que vem depois | pergunta retórica, FAQ | a pergunta, com `?` | o desenvolvimento da tensão | raro |
+| `failure` | hipótese rejeitada, teste que falhou, alternativa descartada | erro de digitação, crítica leve | o que falhou | por que falhou | raro |
+| `danger` | invalidez, risco crítico, erro conceitual grave | ênfase forte qualquer | o risco | a consequência | rarísssimo |
+| `bug` | defeito de implementação, falha de software | erro de raciocínio | o defeito | reprodução e efeito | rarísssimo |
+| `quote` | citação que merece destaque editorial | toda citação; prosa comum | nenhum, ou o contexto | texto entre `“ ”`; atribuição na linha seguinte | quando a citação sustenta o argumento |
+
+Regra de proporção: até **6 caixas por mil palavras**. Acima disso a página vira mostruário e a prosa perde o fio. Um essay inteiramente sem caixa é resultado válido e comum — `xadrez-computacional` tem uma só em 23 mil palavras.
+
+Regra de variedade: se o essay passa de oito caixas, use **mais de um tipo**. Oito caixas iguais em fila achatam a leitura tanto quanto oito cores diferentes a estilhaçam.
+
+### Forma do bloco
 
 ```markdown
 > [!example] Experimento Mental III
 > #### O Cérebro Dividido
 > Texto da caixa.
+>
+> > [!success] Veredicto
+> > O desfecho.
 ```
 
-### Qual tipo usar
+- **O título é autoral.** É o rótulo que o texto já tinha; não invente, não encurte, não traduza. Sem rótulo, escreva `> [!tipo]` sozinho.
+- **`####` é o subtítulo da caixa.** `##` e `###` dentro dela quebram o Sumário.
+- **Dentro da caixa vale Markdown normal**: parágrafos, listas, tabelas, matemática, código e caixas aninhadas.
+- **Aspas tipográficas `“ ”` separam citação de atribuição.** Sem elas não há atribuição destacada — e nunca acrescente aspas que o autor não escreveu.
 
-| Quando o bloco é… | Tipo | Família visual |
-| --- | --- | --- |
-| nota filosófica, metodológica ou contextual | `note` | moldura fina, tinta neutra |
-| evidência empírica, dado, observação | `info` | faixa de rótulo no topo |
-| mapa conceitual, definição, framework | `abstract` | faixa de rótulo no topo |
-| experimento mental, exemplo trabalhado, cenário | `example` | faixa de rótulo, mais leve |
-| ideia, insight, proposta | `tip` | faixa de rótulo, mais leve |
-| pessoa, organização ou obra que merece ficha | `todo` | ficha, filete lateral |
-| número-chave, métrica, estatística | `warning` | número em corpo grande |
-| veredicto de uma caixa | `success`, aninhado dentro dela | rodapé, herda a cor da caixa |
-| resultado confirmado, fora de caixa | `success` | verde contido |
-| objeção, tensão, pergunta aberta | `question` | filete lateral |
-| hipótese rejeitada, teste falho | `failure` | filete tracejado |
-| risco crítico, invalidez | `danger` | filete forte |
-| defeito de implementação | `bug` | filete duplo, rótulo mono |
-| citação com destaque editorial | `quote` | fundo cinza, filete discreto |
+Quatro tipos têm forma própria:
 
-**`note` é o padrão: na dúvida, use ele.** Metade das caixas do corpus é `note`, e é assim que deve ser — ela emoldura sem gritar. `info` e `example` ganham faixa de rótulo e servem para evidência e experimento; use com cautela, porque dez seguidas viram um muro. Os demais são ênfase rara.
+```markdown
+> [!todo] Thomas Hobbes
+> #### 1588 – 1679 · Inglaterra
+> Por que ele importa para este argumento.
 
-A cor vem do tema, nunca do tipo: azul no claro, dourado no escuro, ferrugem só na família negativa (`failure`, `danger`, `bug`). No PDF a paleta fecha em dois ouros — um para a família editorial, outro para a negativa.
+> [!warning] 39%
+> O que o número mede.
+> ---
+> [McKinsey, *Diversity Matters Even More*, 2023](https://exemplo)
 
-### Como escrever
+> [!info] Evidência
+> #### Pacientes frontais e a metamorfose do caráter
+> Estudo, amostra, resultado.
 
-- **Título** é autoral: é o rótulo que o texto já tinha. Não invente, não encurte, não reescreva. Sem rótulo, use `> [!tipo]` sozinho.
-- **`todo`**: título = nome da entidade; primeiro `####` = linha de metadados (datas, país, instituição).
-- **`warning`**: título = o valor em destaque; `---` separa o corpo da nota de fonte.
-- **`success` aninhado** vira o rodapé da caixa que o contém e herda a cor dela.
-- **Citação** separa texto e atribuição pelas aspas tipográficas `“ ”`. Sem elas não há atribuição destacada — e nunca acrescente aspas que o autor não escreveu.
-- Dentro da caixa vale Markdown normal: parágrafos, listas, tabelas, matemática, código e caixas aninhadas.
+> [!quote]
+> “A vida é o modo pelo qual a matéria encontrou de contemplar a si mesma.”
+>
+> — atribuído a Carl Sagan
+```
+
+No `todo` o título é o **nome** e o `####` é a linha de metadados. No `warning` o título é o **próprio número** e o `---` separa a explicação da fonte. No `quote` a atribuição vem depois de uma linha em branco, começando por travessão.
 
 ### O que não fazer
 
 - alias (`tldr`, `summary`, `hint`, `important`, `caution`, `cite`, …) ou tipo inventado — é erro, não há fallback;
+- escolher o tipo pela cor que ele produz;
 - promover prosa comum a caixa só para dar destaque;
-- converter prosa em `[!quote]`;
-- `##` ou `###` dentro da caixa (quebra o Sumário);
-- esperar que o renderer imprima `NOTA`, `EXEMPLO` ou `CITAÇÃO` — o único título visível é o seu.
+- usar `note` como depósito de tudo que sobrou;
+- usar `warning` como "atenção" — ele é reservado a número;
+- repetir o mesmo rótulo em dezenas de caixas: isso é um molde, não um destaque.
 
 ## Dois tipos de essay
 
@@ -389,7 +421,9 @@ Lista plana de fontes já processadas:
    *Figura 3. Curva de calibração do modelo contra os placares observados.*
    ```
 
-   Numeração sequencial dentro do essay, começando em 1. Num mosaico, a legenda vem depois da última imagem do grupo e descreve o conjunto. A legenda é uma frase curta que diz o que a figura mostra — não repita o alt nem explique o argumento, que é papel da prosa. `fix_lint.py` avisa quando falta.
+   Numeração sequencial dentro do essay, começando em 1. Num mosaico, a legenda
+   vem depois da última imagem do grupo e descreve o conjunto. Uma figura
+   desdobrada em painéis usa letra: `*Figura 29 (a). …*`. A legenda é uma frase curta que diz o que a figura mostra — não repita o alt nem explique o argumento, que é papel da prosa. `fix_lint.py` avisa quando falta.
 
 ## Conversão de fontes (HTML/PDF/DOCX → Markdown)
 

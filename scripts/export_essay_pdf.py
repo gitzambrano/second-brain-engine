@@ -231,6 +231,17 @@ def strip_italic_from_headings(text):
     return re.sub(r'^(#{2,3}) (.+)$', _strip_heading, text, flags=re.MULTILINE)
 
 
+def drop_scene_dots(body):
+    """Remove a linha de pontos de cena do corpo destinado ao PDF.
+
+    E o separador de cena do source. No PDF cada capitulo ja abre com o seu
+    proprio filete, entao os pontos so repetem a divisao. Sai apenas na
+    renderizacao — o markdown continua com eles.
+    """
+    return re.sub(r"^[ \t]*·(?:[ \t]*·)+[ \t]*$\n?", "", body,
+                  flags=re.M)
+
+
 def convert_section_separators(body):
     """`---` antes de heading some; a linha do capitulo vem do proprio `##`.
 
@@ -392,6 +403,11 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
     \global\advance\sb@needlen by -\ht\tw@
     \global\advance\sb@needlen by -\dp\tw@
   \endgroup
+  % O bloco medido cobre filete, rotulo e titulo. Reservar so isso deixava
+  % o capitulo abrir com uma linha de corpo no pe da pagina, que o auditor
+  % de layout marca como titulo orfao. Uma linha a mais leva o conjunto
+  % inteiro para a pagina seguinte quando nao cabe.
+  \global\advance\sb@needlen by \baselineskip
   \global\sb@chapterneedtrue
   \sbneedspace{\sb@needlen}%
   \global\sb@chapterneedfalse
@@ -591,6 +607,12 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \arrayrulecolor{tableborder}
 \setlength{\heavyrulewidth}{0.8pt}
 \setlength{\lightrulewidth}{0.4pt}
+% O booktabs afasta a regua da celula por padrao. Com o cabecalho tingido
+% essa folga virava faixa branca entre a tinta e a regua, em cima e embaixo.
+% Zerada, a tinta encosta na regua; o respiro interno da celula continua
+% vindo do \arraystretch.
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
 \usepackage{etoolbox}
 % A longtable que comeca no pe da pagina imprime o cabecalho, descobre que
 % nenhuma linha do corpo cabe, quebra a pagina e reimprime o cabecalho — o
@@ -707,7 +729,7 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
   \begingroup\colorlet{wbtype}{#1}\def\wbstyle{tab}%
   \begin{tcolorbox}[enhanced,breakable,
     colback=boxbg,colframe=#1,boxrule=.55pt,
-    arc=0pt,outer arc=0pt,left=10pt,right=10pt,top=0pt,bottom=10pt,parbox=false]%
+    arc=0pt,outer arc=0pt,left=10pt,right=10pt,top=10pt,bottom=10pt,parbox=false]%
 }{\end{tcolorbox}\endgroup}
 
 % Same tab family, but with top breathing room when source has no title.
@@ -807,7 +829,7 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
   }{%
     \par\vspace{2pt}\noindent{\fontsize{10.2pt}{12.6pt}\selectfont\sffamily\bfseries\color{wbtype}%
       \addfontfeatures{LetterSpace=5}\MakeUppercase{#1}}%
-    \par\nobreak\vspace{8pt}\nobreak
+    \par\nobreak\vspace{2pt}\nobreak
   }}}}%
 }
 \newcommand{\wbinnerbegin}{%
@@ -815,7 +837,10 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
   \fontsize{11.6pt}{14pt}\selectfont\bfseries\color{sbink}\noindent\ignorespaces}
 \newcommand{\wbinnerend}{\par\endgroup\nobreak\vspace{10pt}\nobreak}
 \newcommand{\wbentitymeta}[1]{%
-  \par\noindent{\fontsize{9.5pt}{11.8pt}\selectfont\ttfamily\color{wbtype}%
+  % A Consolas entra com fator de ~0,87, entao o corpo pedido sai menor que o
+  % nominal: 11,8pt aqui rende os ~10,3pt que a linha precisa para nao
+  % encolher demais sob o nome da ficha.
+  \par\noindent{\fontsize{11.8pt}{14pt}\selectfont\ttfamily\color{wbtype}%
     \addfontfeatures{LetterSpace=9}\MakeUppercase{#1}}%
   \par\nobreak\vspace{8pt}\nobreak}
 \newcommand{\wbstatdivider}{%
@@ -1000,6 +1025,24 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \titlespacing*{\subsection}{0pt}{0pt}{0.45em}
 \titlespacing*{\subsubsection}{0pt}{1.2em}{0.35em}
 \titlespacing*{\paragraph}{0pt}{0.9em}{0.25em}
+% O `##` de capitulo mede o proprio bloco de abertura e reserva o espaco
+% dele. O `###` e o `####` nao tinham guarda nenhuma: bastava o titulo caber
+% no pe da pagina para ele ficar la sozinho, com o corpo comecando so na
+% pagina seguinte. Reservar o titulo mais tres linhas empurra o conjunto.
+% Formula de display de uma linha nao quebra sozinha: uma cadeia longa de
+% `\text{...} \longrightarrow ...` vazava a margem direita. `\sbfit` encolhe
+% apenas quando a largura natural passa da coluna; dentro dela, a formula
+% sai no corpo normal.
+\newcommand{\sbfit}[1]{%
+  \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{$\displaystyle #1$}}
+
+\let\sboldsubsubsection\subsubsection
+\renewcommand{\subsubsection}{%
+  \sbneedspace{3.6\baselineskip}\sboldsubsubsection}
+\let\sboldparagraph\paragraph
+\renewcommand{\paragraph}{%
+  \sbneedspace{3.2\baselineskip}\sboldparagraph}
+
 \setlength{\parskip}{0.6em}
 \setlength{\parindent}{0pt}
 \onehalfspacing
@@ -1368,6 +1411,7 @@ def prepare_for_pandoc(filepath):
     body = remove_h1_and_byline(body)
     
     # Separadores de secao com largura proporcional ao nivel do titulo
+    body = drop_scene_dots(body)
     body = convert_section_separators(body)
 
     # Pagina 1 = titulo + Sumario; ensaio comeca na pagina 2

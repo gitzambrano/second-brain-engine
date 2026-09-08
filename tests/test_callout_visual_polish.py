@@ -6,14 +6,19 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_html_tab_is_flush_and_uses_exact_frame_color():
     s = (ROOT / 'scripts/essay_template.html').read_text(encoding='utf-8')
     assert 'border:1px solid var(--boxc);' in s
-    assert 'display:inline-block;margin:-1px 0 0 -1px;' in s
-    assert 'background:color-mix(in srgb,var(--boxc) 14%,transparent);' in s
-    assert 'border-bottom:2px solid var(--boxc);' in s
+    # A faixa nao tem borda em cima nem a esquerda: quem faz esses dois
+    # lados e a moldura da caixa, entao ela nao precisa de recuo negativo
+    # (que o `overflow:hidden` cortava, deixando duas linhas coincidentes).
+    assert 'display:inline-block;margin:0;' in s
+    assert 'border:1px solid var(--boxc);border-top:0;border-left:0;' in s
+    # O rotulo fecha a direita e embaixo com filete proprio.
+    assert 'background:color-mix(in srgb,var(--boxc) 15%,transparent);' in s
     assert 'color:var(--boxc);' in s
     assert 'font-size:.72rem;font-weight:600' in s
-    # `example`/`tip` levam o filete mais fino e a tinta mais clara.
+    # `info`/`abstract` levam o tint cheio; `example`/`tip`, um mais leve —
+    # mas nunca igual ao da caixa, senao o rotulo deixa de se destacar.
     assert '.box:is(.callout-example,.callout-tip) > .box-title p{' in s
-    assert 'border-bottom-width:1px;' in s
+    assert 'background:color-mix(in srgb,var(--boxc) 9%,transparent);' in s
 
 
 def test_pdf_tab_title_is_readable_uppercase_and_breathes():
@@ -30,7 +35,7 @@ def test_pdf_entity_title_and_metadata_are_legible_and_spaced():
     assert r'\newenvironment{wikientity}' in s
     assert r'top=13pt,bottom=10pt' in s
     assert r'\fontsize{14pt}{17pt}\selectfont\bfseries\color{sblink}' in s
-    assert r'\fontsize{9.5pt}{11.8pt}\selectfont\ttfamily\color{wbtype}' in s
+    assert r'\fontsize{11.8pt}{14pt}\selectfont\ttfamily\color{wbtype}' in s
     assert r'\vspace{8pt}\nobreak' in s
 
 

@@ -503,6 +503,20 @@ end
 -- Para: figure centering, references wrapping, styled captions
 -- ------------------------------------------------------------------
 
+-- Display de uma linha so recebe a caixa que encolhe. A condicao e
+-- estrutural (tem quebra de linha? tem ambiente de alinhamento?), nunca
+-- sobre o que a formula significa.
+-- Display de uma linha recebe a caixa que encolhe. A condicao e estrutural
+-- (tem quebra de linha? tem ambiente de alinhamento?), nunca sobre o que a
+-- formula significa: com `\\` ou `\begin{...}` a formula ja sabe se dobrar,
+-- e o `\resizebox` estragaria o alinhamento.
+function Math(el)
+  if el.mathtype ~= 'DisplayMath' then return nil end
+  if el.text:find('\\\\', 1, true) then return nil end
+  if el.text:find('\\begin', 1, true) then return nil end
+  return pandoc.RawInline('latex', '\\sbfit{' .. el.text .. '}')
+end
+
 function Para(el)
   -- 1) Paragraph contains an Image (standalone or with inline caption text)
   local has_image = false
@@ -665,20 +679,19 @@ function Table(el)
   local num_cols = #el.colspecs
   if num_cols == 0 then return el end
 
-  -- Contract-approved visual exception: 8% gold fill in existing PDF header
-  -- cells only. No column width, padding, font, border or pagination changes.
+  -- Tint of 8% gold on the header row only. `\\rowcolor` goes once, at the
+  -- head of the first cell: `\\cellcolor` per cell was emitted inside the
+  -- cell paragraph and painted only the line it sat on, so a header that
+  -- wrapped to two lines kept white above and below the tint.
   if el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
-        if cell.contents and #cell.contents > 0 then
-          local first = cell.contents[1]
-          if first.t == 'Plain' or first.t == 'Para' then
-            table.insert(first.content, 1, pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}'))
-          else
-            table.insert(cell.contents, 1, pandoc.RawBlock('latex', '\\cellcolor{sbink!8!white}%'))
-          end
+        local marca = pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}')
+        if cell.contents and #cell.contents > 0
+           and (cell.contents[1].t == 'Plain' or cell.contents[1].t == 'Para') then
+          table.insert(cell.contents[1].content, 1, marca)
         else
-          cell.contents = {pandoc.Plain({pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}')})}
+          table.insert(cell.contents, 1, pandoc.Plain({marca}))
         end
       end
     end

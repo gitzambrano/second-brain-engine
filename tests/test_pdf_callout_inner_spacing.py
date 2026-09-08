@@ -20,7 +20,7 @@ def test_every_pdf_box_has_top_padding_at_least_equal_to_bottom():
 
 
 def test_titled_tab_keeps_its_band_flush_and_breathes_below_it():
-    assert "top=0pt,bottom=10pt,parbox=false" in PDF
+    assert "top=10pt,bottom=10pt,parbox=false" in PDF
     assert r"\vspace{14pt}\nobreak" in PDF   # faixa -> corpo
 
 

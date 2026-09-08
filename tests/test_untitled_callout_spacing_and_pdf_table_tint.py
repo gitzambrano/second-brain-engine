@@ -21,7 +21,7 @@ def test_html_untitled_box_has_top_breathing_room():
 def test_pdf_titled_and_untitled_tab_top_spacing_are_distinct():
     pdf = (ROOT / "scripts" / "export_essay_pdf.py").read_text(encoding="utf-8")
     assert r"\newenvironment{wikitabuntitled}" in pdf
-    assert "top=0pt,bottom=10pt" in pdf
+    assert "top=10pt,bottom=10pt" in pdf
     assert "top=13pt,bottom=10pt" in pdf
 
 
