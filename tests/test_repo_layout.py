@@ -28,7 +28,6 @@ ROOT_ALLOWLIST = {
     "TESTING.md",
     "pyproject.toml",
     "requirements-ci.txt",
-    "migration_instrunction.md",
 }
 
 

@@ -214,7 +214,11 @@ Escolha pela **função do bloco no argumento**, nunca pela cor que você quer v
 
 Regra de proporção: até **6 caixas por mil palavras**. Acima disso a página vira mostruário e a prosa perde o fio. Um essay inteiramente sem caixa é resultado válido e comum — `xadrez-computacional` tem uma só em 23 mil palavras.
 
-Regra de variedade: se o essay passa de oito caixas, use **mais de um tipo**. Oito caixas iguais em fila achatam a leitura tanto quanto oito cores diferentes a estilhaçam.
+Regra de variedade: se o essay passa de oito caixas, use **mais de um tipo**. Oito caixas iguais em fila achatam a leitura tanto quanto oito cores diferentes a estilhaçam. Quando um tipo só domina a página, o leitor para de ver as caixas — elas viram textura de fundo, e o destaque que justificava cada uma se perde.
+
+Para separar, **use o rótulo que as caixas já têm**. Um essay que repete `Evidência` trinta vezes e `Nota filosófica` seis vezes está dizendo, no próprio título de cada bloco, que ali existem duas funções distintas: a evidência empírica é `info`, a nota filosófica é `note`. A separação já estava escrita; faltava o tipo acompanhar. O mesmo vale para `Intuição de engenharia` (`tip`) convivendo com `Premissa de modelagem` (`note`).
+
+Duas ressalvas. Não invente rótulo nem função para forçar variedade: se as caixas são mesmo todas da mesma espécie, o problema é excesso de caixa, e a correção é devolver parte delas à prosa. E uma sequência uniforme de propósito — um catálogo de obras, uma série de fichas — é coerente por construção e deve ficar como está.
 
 ### Forma do bloco
 

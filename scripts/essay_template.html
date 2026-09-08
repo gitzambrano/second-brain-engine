@@ -61,6 +61,10 @@ $endif$
   --tab-mix:9%;
   --verdict-mix:10%;
   --box-verdict-bg:rgba(176,139,79,.10);
+  /* Cabecalho de tabela: no escuro o cinza de superficie quase some
+     contra o corpo. Um tint de rust separa a primeira linha sem
+     precisar de regra mais pesada. No claro ele nao e necessario. */
+  --th-bg:color-mix(in srgb,var(--rust) 16%,var(--surface2));
   --max-width:700px;
 }
 [data-theme="light"]{
@@ -97,6 +101,7 @@ $endif$
   --tab-mix:3%;
   --verdict-mix:4%;
   --box-verdict-bg:var(--surface2);
+  --th-bg:var(--surface2);
 }
 @media (min-width:901px){
   /* Desktop: coluna larga, mas com teto. 75vw sozinho dava 2580px de linha
@@ -104,8 +109,8 @@ $endif$
      em 1180px; figuras, tabelas e blocos de código continuam podendo usar a
      largura antiga, que é onde ela servia para alguma coisa. */
   :root{
-    --wide-width:75vw;
-    --max-width:min(75vw,1180px);
+    --wide-width:70.5vw;
+    --max-width:min(70.5vw,1109px);
   }
   /* Claro por padrão no desktop; data-theme="dark" devolve o editorial
      escuro para quem preferir. Playfair permanece em todos os temas */
@@ -143,6 +148,7 @@ $endif$
   --tab-mix:3%;
   --verdict-mix:4%;
     --box-verdict-bg:var(--surface2);
+    --th-bg:var(--surface2);
   }
 }
 
@@ -684,7 +690,7 @@ table{
   border-collapse:collapse;margin:2rem 0;font-size:.95rem;
 }
 th{
-  background:var(--surface2);color:var(--gold);text-align:left;
+  background:var(--th-bg);color:var(--gold);text-align:left;
   font-family:'JetBrains Mono',Consolas,monospace;font-weight:500;
   font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
   padding:.85rem 1.1rem;border-bottom:1px solid var(--border);
@@ -879,7 +885,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
      funcionam como hierarquia; a 375px viravam 10-12px, abaixo do que se le
      confortavelmente. Só o piso sobe — a hierarquia continua. */
   th{font-size:.82rem;}
-  .quote p{font-size:1rem;}
+  .quote p{font-size:.93rem;}
+  .quote-text p{font-size:.95rem;}
   .box-verdict p{font-size:.96rem;}
   /* Vozes de rótulo — versalete espacejado em monoespaçada. A 375px elas
      caíam para 9,9-11,5px, e o espacejamento de .2em piora ainda mais a
@@ -889,7 +896,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
   .label-solo{font-size:.74rem;}
   .card-meta{font-size:.78rem;}
   .pq-cite{font-size:.9rem;}
-  .quote-attribution{font-size:.88rem;}
+  .quote-attribution{font-size:.85rem;}
   .pull-quote.epigraph p:last-child{font-size:.78rem;}
 }
 
@@ -1031,7 +1038,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .box.callout-bug{border-left-style:double;}
 
 @media (max-width:640px){
-  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{padding:0 0 .6rem;}
+  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{padding:0 0 1.15rem;}
   .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
     padding:.56rem .95rem .53rem;font-size:.80rem;letter-spacing:.12em;
   }
