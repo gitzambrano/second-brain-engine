@@ -270,19 +270,6 @@ body{
 /* ------------------------------------------------------------------ */
 .content{max-width:var(--max-width);margin:0 auto;padding:2.8rem 1.2rem 5rem;}
 
-/* Escape da coluna de prosa para o que é figura, e não frase. Só vale quando
-   a tela é larga o bastante para haver o que escapar: abaixo disso a coluna
-   já ocupa quase tudo e o breakout não teria para onde ir. */
-@media (min-width:1400px){
-  /* Apenas figuras podem escapar da coluna de prosa. Tabelas permanecem na
-     coluna e, quando largas, rolam dentro do próprio elemento. */
-  .content > figure{
-    max-width:min(var(--wide-width),1500px);
-    margin-left:50%;
-    transform:translateX(-50%);
-  }
-}
-
 h1,h2,h3,h4,h5,h6{font-family:var(--font-display);color:var(--text-bright);line-height:1.25;}
 .content h1{display:none;} /* titulo vive no masthead */
 
@@ -679,8 +666,8 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
    ainda ocupe a coluna toda. */
 table{
   display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
-  width:max-content;min-width:100%;max-width:100%;
-  border-collapse:collapse;margin:2rem 0;font-size:.95rem;
+  width:max-content;min-width:0;max-width:100%;
+  border-collapse:collapse;margin:2rem auto;font-size:.95rem;
 }
 th{
   background:var(--th-bg);color:var(--gold);text-align:left;
@@ -771,7 +758,7 @@ mjx-container > mjx-assistive-mml{
   white-space:nowrap;
 }
 
-figure{margin:2.2rem 0;text-align:center;}
+figure{max-width:100%;margin:2.2rem auto;text-align:center;}
 figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--border);}
 figcaption{margin-top:.7rem;font-size:.84em;color:var(--text-dim);font-style:italic;}
 /* O Markdown do corpus preserva a legenda como o parágrafo em itálico logo
