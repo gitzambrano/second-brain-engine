@@ -41,7 +41,6 @@ $endif$
   --callout-abstract:#B08B4F;
   --callout-info:#98938A;
   --callout-todo:#B18A4A;
-  --callout-tip:#B08B4F;
   --callout-success:#63A37B;
   --callout-question:#B08B4F;
   --callout-warning:#B08B4F;
@@ -87,7 +86,6 @@ $endif$
   --callout-abstract:#2F5FB0;
   --callout-info:#6E7684;
   --callout-todo:#7B5C22;
-  --callout-tip:#2F5FB0;
   --callout-success:#2F7951;
   --callout-question:#2F5FB0;
   --callout-warning:#2F5FB0;
@@ -104,13 +102,10 @@ $endif$
   --th-bg:var(--surface2);
 }
 @media (min-width:901px){
-  /* Desktop: coluna larga, mas com teto. 75vw sozinho dava 2580px de linha
-     num monitor de 3440px — largura de planilha, não de leitura. A prosa para
-     em 1180px; figuras, tabelas e blocos de código continuam podendo usar a
-     largura antiga, que é onde ela servia para alguma coisa. */
+  /* Desktop: coluna de leitura ampla com teto para monitores ultrawide. */
   :root{
-    --wide-width:70.5vw;
-    --max-width:min(70.5vw,1109px);
+    --wide-width:74vw;
+    --max-width:min(74vw,1185px);
   }
   /* Claro por padrão no desktop; data-theme="dark" devolve o editorial
      escuro para quem preferir. Playfair permanece em todos os temas */
@@ -134,7 +129,6 @@ $endif$
   --callout-abstract:#2F5FB0;
   --callout-info:#6E7684;
   --callout-todo:#7B5C22;
-  --callout-tip:#2F5FB0;
   --callout-success:#2F7951;
   --callout-question:#2F5FB0;
   --callout-warning:#2F5FB0;
@@ -586,13 +580,12 @@ li::marker{color:color-mix(in srgb,var(--gold-dim) 70%,var(--text-dim));}
 .box.callout-abstract{--boxc:var(--callout-abstract);}
 .box.callout-info{--boxc:var(--callout-info);}
 .box.callout-todo{--boxc:var(--callout-todo);border-left-style:dashed;}
-.box.callout-tip{--boxc:var(--callout-tip);}
 .box.callout-success{--boxc:var(--callout-success);border-left-width:5px;}
 .box.callout-question{--boxc:var(--callout-question);}
 .box.callout-warning{--boxc:var(--callout-warning);}
-.box.callout-failure{--boxc:var(--callout-failure);border-left-style:dashed;}
-.box.callout-danger{--boxc:var(--callout-danger);border-left-width:5px;}
-.box.callout-bug{--boxc:var(--callout-bug);border-left-style:double;}
+.box.callout-failure{--boxc:var(--callout-failure);}
+.box.callout-danger{--boxc:var(--callout-danger);}
+.box.callout-bug{--boxc:var(--callout-bug);}
 .box.callout-example{--boxc:var(--callout-example);}
 .box > h3,.box > h4,.box > h5,.box > h6{
   padding:0 1.3rem;color:var(--text-bright);line-height:1.3;
@@ -695,6 +688,7 @@ th{
   font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
   padding:.85rem 1.1rem;border-bottom:1px solid var(--border);
 }
+@media (min-width:901px){th{font-size:.76rem;}}
 td{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55;}
 /* Divisor vertical entre colunas (padrao adotado do white paper de
    referencia): so ENTRE colunas, nunca nas bordas externas da tabela. */
@@ -907,18 +901,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 /* ------------------------------------------------------------------ */
 
 /* TAB EDITORIAL — experiment, idea, evidence, conceptual map. */
-.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract){
+.box:is(.callout-example,.callout-info,.callout-abstract){
   border:1px solid var(--boxc);
   border-radius:0;
   background:color-mix(in srgb,var(--boxc) var(--tab-mix),var(--bg));
   overflow:hidden;
 }
-.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{
+.box:is(.callout-example,.callout-info,.callout-abstract) > .box-title{
   /* `line-height:0` no contentor: o rotulo e `inline-block` e sentava sobre a
      linha de texto do pai, o que abria um fio sem tinta entre ele e a moldura. */
   margin:0;padding:0 0 1.15rem;line-height:0;
 }
-.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
+.box:is(.callout-example,.callout-info,.callout-abstract) > .box-title p{
   display:inline-block;margin:0;
   padding:.5rem 1.05rem .44rem;
   /* Sem borda em cima nem a esquerda: quem faz esses dois lados e a propria
@@ -928,20 +922,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
   background:color-mix(in srgb,var(--boxc) 15%,transparent);
   color:var(--boxc);
   font-family:'JetBrains Mono',Consolas,monospace;
-  font-size:.72rem;font-weight:600;line-height:1.35;
+  font-size:13.6px;font-weight:600;line-height:1.35;
   letter-spacing:.15em;text-transform:uppercase;
   font-variant:normal;
 }
-/* `info`/`abstract` afirmam um fato e a faixa vem cheia; `example`/`tip`
-   propoem um cenario e vem so contornada. Mesma cor, mesma tipografia,
-   mesma medida — o que muda e o preenchimento. */
-.box:is(.callout-example,.callout-tip) > .box-title p{
+/* `info`/`abstract` afirmam um fato e a faixa vem cheia; `example`
+   propõe um cenário e vem só contornada. Mesma cor, mesma tipografia,
+   mesma medida — o que muda é o preenchimento. */
+.box.callout-example > .box-title p{
   background:color-mix(in srgb,var(--boxc) 9%,transparent);
 }
-.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > :is(h3,h4,h5,h6):first-of-type{
+.box:is(.callout-example,.callout-info,.callout-abstract) > :is(h3,h4,h5,h6):first-of-type{
   color:var(--boxc);
 }
-.box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title + :is(h3,h4,h5,h6){
+.box:is(.callout-example,.callout-info,.callout-abstract) > .box-title + :is(h3,h4,h5,h6){
   margin-top:0;
 }
 
@@ -1014,14 +1008,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 /* Estas quatro vinham com proporcao fixa e venciam a regra da familia, o
    que prendia o preenchimento no valor calibrado para o tema claro. Passam
    ao mesmo token: a diferenca entre os tipos vem do acento, nao daqui. */
-.box:is(.callout-abstract,.callout-info,.callout-tip,.callout-example){
+.box:is(.callout-abstract,.callout-info,.callout-example){
   background:color-mix(in srgb,var(--boxc) var(--tab-mix),var(--bg));
 }
 .box.callout-success{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
 .box.callout-question{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
-.box.callout-failure{background:color-mix(in srgb,var(--boxc) 4%,var(--surface));}
-.box.callout-danger{background:color-mix(in srgb,var(--boxc) 7%,var(--surface));border-left-width:6px;}
-.box.callout-bug{background:color-mix(in srgb,var(--boxc) 5%,var(--surface));}
+.box:is(.callout-failure,.callout-danger,.callout-bug){
+  background:color-mix(in srgb,var(--boxc) 5%,var(--surface));
+  border-left-width:2px;border-left-style:solid;
+}
 
 .box:is(.callout-success,.callout-question,.callout-failure,.callout-danger,.callout-bug) > .box-title{
   padding:1.05rem 1.3rem .38rem;
@@ -1033,13 +1028,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 /* State families keep their semantic rails and remain visibly distinct. */
 .box.callout-success{border-left-style:solid;}
 .box.callout-question{border-left-style:solid;}
-.box.callout-failure{border-left-style:dashed;}
-.box.callout-danger{border-left-style:solid;}
-.box.callout-bug{border-left-style:double;}
 
 @media (max-width:640px){
-  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title{padding:0 0 1.15rem;}
-  .box:is(.callout-example,.callout-tip,.callout-info,.callout-abstract) > .box-title p{
+  .box:is(.callout-example,.callout-info,.callout-abstract) > .box-title{padding:0 0 1.15rem;}
+  .box:is(.callout-example,.callout-info,.callout-abstract) > .box-title p{
     padding:.56rem .95rem .53rem;font-size:.80rem;letter-spacing:.12em;
   }
   .box.callout-note > .box-title,

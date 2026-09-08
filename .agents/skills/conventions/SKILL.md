@@ -201,7 +201,6 @@ Escolha pela **função do bloco no argumento**, nunca pela cor que você quer v
 | `info` | evidência empírica: estudo, dado medido, observação documentada, resultado de terceiros | opinião, exemplo inventado, "informação interessante" | o rótulo da evidência (`Evidência`, `Estudo seminal`) | citação + resultado; `####` opcional para o achado | use com cautela |
 | `example` | experimento mental, caso trabalhado, cenário hipotético, aplicação | evidência real, dado empírico | o rótulo numerado (`Experimento Mental IV`) | `####` com o nome do caso, depois a narrativa | use com cautela |
 | `abstract` | mapa conceitual, definição formal, framework, síntese estrutural | resumo qualquer, nota solta | o nome do mapa ou da definição | pode conter tabela ou lista | no máximo um por seção |
-| `tip` | ideia, insight, proposta, intuição destacável | explicação comum, evidência | o rótulo da ideia | prosa curta | raro |
 | `todo` | pessoa, organização ou obra que merece ficha | tarefa | **nome da entidade** | primeiro `####` = metadados; depois, a relevância | uma por entidade citada |
 | `warning` | um número-chave | atenção genérica, alerta textual | **o próprio valor** (`39%`, `0,12 ft/s`) | explicação; `---` separa a nota de fonte | raro |
 | `success` aninhado | veredicto da caixa que o contém | conclusão de seção | `Veredicto` | o desfecho em uma ou duas frases | um por caixa de teste |
