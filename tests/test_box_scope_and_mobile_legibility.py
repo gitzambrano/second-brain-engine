@@ -155,7 +155,12 @@ def test_public_runtime_patch_mantem_paginas_ja_publicadas_consistentes():
         ("th", 0.80),
         ("pre", 0.86),
         ("code", 0.86),
-        (".quote p", 0.98),
+        # A citacao tem piso menor que a prosa de proposito: a 375px o
+        # corpo cai de 17,5px para 16,5px e a citacao precisa cair
+        # junto, ou cresce em proporcao e compete com o texto.
+        (".quote p", 0.92),
+        (".quote-text p", 0.94),
+        (".quote-attribution", 0.84),
         (".box-verdict p", 0.94),
         (".box-badge", 0.76),
         (".verdict-tag", 0.74),
@@ -166,7 +171,12 @@ def test_public_runtime_patch_mantem_paginas_ja_publicadas_consistentes():
     ],
 )
 def test_pisos_de_corpo_no_celular(selector, minimum):
-    """As vozes menores da folha caíam para 9,9-12px a 375px de largura."""
+    """As vozes menores da folha caíam para 9,9-12px a 375px de largura.
+
+    O piso protege contra o corpo pequeno demais; ele nao é um alvo. Onde
+    a voz precisa guardar proporcao com a prosa — citacao e atribuicao —
+    o piso fica logo abaixo do valor escolhido, e nao no limite da prosa.
+    """
     css = TEMPLATE.read_text(encoding="utf-8")
     block = css.split("@media (max-width:640px){", 1)[1].split("\n}", 1)[0]
     m = re.search(re.escape(selector) + r"\{[^}]*font-size:([\d.]+)(rem|em)", block)
