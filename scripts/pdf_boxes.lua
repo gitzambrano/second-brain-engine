@@ -514,6 +514,10 @@ function Math(el)
   if el.mathtype ~= 'DisplayMath' then return nil end
   if el.text:find('\\\\', 1, true) then return nil end
   if el.text:find('\\begin', 1, true) then return nil end
+  -- `\tag` so vale dentro de ambiente de equacao numerada; dentro
+  -- do `\resizebox` do \sbfit o amsmath aborta com "\tag not
+  -- allowed here".
+  if el.text:find('\\tag', 1, true) then return nil end
   return pandoc.RawInline('latex', '\\sbfit{' .. el.text .. '}')
 end
 
