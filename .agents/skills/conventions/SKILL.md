@@ -187,9 +187,9 @@ Exportadores convertem links de seção, removem `## Conexões` e limpam wikilin
 
 Sintaxe do Obsidian. Blockquote sem `[!tipo]` é citação, nunca caixa.
 
-Antes de escolher o tipo, decida se o bloco precisa mesmo de caixa. Caixa é para o que **interrompe** a leitura de propósito: um experimento, uma evidência, uma ficha, um número. O que continua o argumento é prosa. Se a estrutura normal do texto — parágrafo, subtítulo, lista, tabela — já resolve, não crie caixa.
+Use caixa apenas para experimento, evidência, ficha, métrica ou outro bloco que interrompa a leitura deliberadamente. Use prosa quando parágrafo, subtítulo, lista ou tabela bastarem.
 
-**Escolhido que vai ter caixa, o padrão é `note`.** Ela emoldura sem gritar, e é o que serve para a maioria dos casos: ressalva, contexto, digressão. Os outros tipos existem para quando o bloco tem uma função *específica* que a tabela abaixo nomeia. Na dúvida entre `note` e qualquer outro, use `note`.
+`note` é o tipo padrão. Use outro tipo somente para a função definida na tabela.
 
 ### A tabela
 
@@ -198,27 +198,23 @@ Escolha pela **função do bloco no argumento**, nunca pela cor que você quer v
 | Tipo | Use quando o bloco é | Não use para | Título | Corpo | Quanto usar |
 | --- | --- | --- | --- | --- | --- |
 | `note` | ressalva, contexto, nota filosófica ou metodológica, digressão lateral | evidência, experimento, entidade, métrica | curto, ou nenhum | prosa livre | **o padrão** — na dúvida, este |
-| `info` | evidência empírica: estudo, dado medido, observação documentada, resultado de terceiros | opinião, exemplo inventado, "informação interessante" | o rótulo da evidência (`Evidência`, `Estudo seminal`) | citação + resultado; `####` opcional para o achado | com cautela: dez seguidas viram muro |
-| `example` | experimento mental, caso trabalhado, cenário hipotético, aplicação | evidência real, dado empírico | o rótulo numerado (`Experimento Mental IV`) | `####` com o nome do caso, depois a narrativa | com cautela, pelo mesmo motivo |
-| `abstract` | mapa conceitual, definição formal, framework, síntese estrutural | resumo qualquer, nota solta | o nome do mapa ou da definição | pode conter tabela ou lista | raro: um por seção, no máximo |
+| `info` | evidência empírica: estudo, dado medido, observação documentada, resultado de terceiros | opinião, exemplo inventado, "informação interessante" | o rótulo da evidência (`Evidência`, `Estudo seminal`) | citação + resultado; `####` opcional para o achado | use com cautela |
+| `example` | experimento mental, caso trabalhado, cenário hipotético, aplicação | evidência real, dado empírico | o rótulo numerado (`Experimento Mental IV`) | `####` com o nome do caso, depois a narrativa | use com cautela |
+| `abstract` | mapa conceitual, definição formal, framework, síntese estrutural | resumo qualquer, nota solta | o nome do mapa ou da definição | pode conter tabela ou lista | no máximo um por seção |
 | `tip` | ideia, insight, proposta, intuição destacável | explicação comum, evidência | o rótulo da ideia | prosa curta | raro |
-| `todo` | pessoa, organização ou obra que merece ficha | tarefa (não existe tarefa em essay) | **nome da entidade** | primeiro `####` = metadados (datas · país · instituição); depois, a relevância | um por entidade citada de fato |
-| `warning` | um número-chave e só | atenção genérica, alerta textual | **o próprio valor** (`39%`, `0,12 ft/s`) | explicação; `---` separa a nota de fonte | raro: o número tem de carregar a seção |
-| `success` aninhado | veredicto da caixa que o contém | conclusão de seção | `Veredicto` | o desfecho em uma ou duas frases | um por caixa que faz teste |
+| `todo` | pessoa, organização ou obra que merece ficha | tarefa | **nome da entidade** | primeiro `####` = metadados; depois, a relevância | uma por entidade citada |
+| `warning` | um número-chave | atenção genérica, alerta textual | **o próprio valor** (`39%`, `0,12 ft/s`) | explicação; `---` separa a nota de fonte | raro |
+| `success` aninhado | veredicto da caixa que o contém | conclusão de seção | `Veredicto` | o desfecho em uma ou duas frases | um por caixa de teste |
 | `success` solto | resultado confirmado, fora de caixa | qualquer boa notícia | o rótulo do resultado | prosa curta | raro |
 | `question` | objeção, tensão, pergunta em aberto que estrutura o que vem depois | pergunta retórica, FAQ | a pergunta, com `?` | o desenvolvimento da tensão | raro |
 | `failure` | hipótese rejeitada, teste que falhou, alternativa descartada | erro de digitação, crítica leve | o que falhou | por que falhou | raro |
-| `danger` | invalidez, risco crítico, erro conceitual grave | ênfase forte qualquer | o risco | a consequência | rarísssimo |
-| `bug` | defeito de implementação, falha de software | erro de raciocínio | o defeito | reprodução e efeito | rarísssimo |
-| `quote` | citação que merece destaque editorial | toda citação; prosa comum | nenhum, ou o contexto | texto entre `“ ”`; atribuição na linha seguinte | quando a citação sustenta o argumento |
+| `danger` | invalidez, risco crítico, erro conceitual grave | ênfase forte | o risco | a consequência | raríssimo |
+| `bug` | defeito de implementação, falha de software | erro de raciocínio | o defeito | reprodução e efeito | raríssimo |
+| `quote` | citação que merece destaque editorial | toda citação; prosa comum | nenhum, ou o contexto | texto entre `“ ”`; atribuição na linha seguinte | quando sustentar o argumento |
 
-Regra de proporção: até **6 caixas por mil palavras**. Acima disso a página vira mostruário e a prosa perde o fio. Um essay inteiramente sem caixa é resultado válido e comum — `xadrez-computacional` tem uma só em 23 mil palavras.
+Limite: até **6 caixas por mil palavras**.
 
-Regra de variedade: se o essay passa de oito caixas, use **mais de um tipo**. Oito caixas iguais em fila achatam a leitura tanto quanto oito cores diferentes a estilhaçam. Quando um tipo só domina a página, o leitor para de ver as caixas — elas viram textura de fundo, e o destaque que justificava cada uma se perde.
-
-Para separar, **use o rótulo que as caixas já têm**. Um essay que repete `Evidência` trinta vezes e `Nota filosófica` seis vezes está dizendo, no próprio título de cada bloco, que ali existem duas funções distintas: a evidência empírica é `info`, a nota filosófica é `note`. A separação já estava escrita; faltava o tipo acompanhar. O mesmo vale para `Intuição de engenharia` (`tip`) convivendo com `Premissa de modelagem` (`note`).
-
-Duas ressalvas. Não invente rótulo nem função para forçar variedade: se as caixas são mesmo todas da mesma espécie, o problema é excesso de caixa, e a correção é devolver parte delas à prosa. E uma sequência uniforme de propósito — um catálogo de obras, uma série de fichas — é coerente por construção e deve ficar como está.
+Se o essay tiver mais de oito caixas, use mais de um tipo quando houver funções distintas. Use o rótulo existente para definir o tipo. Não invente rótulo ou função para criar variedade. Sequências uniformes de fichas ou catálogos podem manter um único tipo.
 
 ### Forma do bloco
 
@@ -231,7 +227,7 @@ Duas ressalvas. Não invente rótulo nem função para forçar variedade: se as 
 > > O desfecho.
 ```
 
-- **O título é autoral.** É o rótulo que o texto já tinha; não invente, não encurte, não traduza. Sem rótulo, escreva `> [!tipo]` sozinho.
+- **O título é autoral.** Preserve o rótulo existente. Sem rótulo, escreva `> [!tipo]` sozinho.
 - **`####` é o subtítulo da caixa.** `##` e `###` dentro dela quebram o Sumário.
 - **Dentro da caixa vale Markdown normal**: parágrafos, listas, tabelas, matemática, código e caixas aninhadas.
 - **Aspas tipográficas `“ ”` separam citação de atribuição.** Sem elas não há atribuição destacada — e nunca acrescente aspas que o autor não escreveu.
@@ -258,7 +254,7 @@ Quatro tipos têm forma própria:
 > — atribuído a Carl Sagan
 ```
 
-No `todo` o título é o **nome** e o `####` é a linha de metadados. No `warning` o título é o **próprio número** e o `---` separa a explicação da fonte. No `quote` a atribuição vem depois de uma linha em branco, começando por travessão.
+No `todo`, o título é o **nome** e o `####` contém metadados. No `warning`, o título é o **número** e `---` separa a fonte. No `quote`, a atribuição vem depois de uma linha em branco, começando por travessão.
 
 ### O que não fazer
 
@@ -410,10 +406,8 @@ Lista plana de fontes já processadas:
 ## Tratamento de imagens
 
 1. Salve imagens em `wiki/assets/` com o nome `<slug-do-essay>_fig<N>.<ext>`,
-   onde `N` é a ordem de aparição no texto — o nome do arquivo diz sozinho
-   de que essay é a figura e onde ela entra. Nunca use base64 inline.
-   Figura usada por dois essays é copiada, não compartilhada: cada essay
-   é dono das suas.
+   onde `N` é a ordem de aparição no texto. Nunca use base64 inline.
+   Copie a figura quando ela for usada por dois essays.
 2. Extraia figuras relevantes de fontes durante a ingestão.
 3. Use caminho relativo: `../assets/...` em essays e `../../assets/...` em resumos de sources.
 4. Descreva em texto a informação essencial de gráficos e diagramas.
@@ -425,9 +419,7 @@ Lista plana de fontes já processadas:
    *Figura 3. Curva de calibração do modelo contra os placares observados.*
    ```
 
-   Numeração sequencial dentro do essay, começando em 1. Num mosaico, a legenda
-   vem depois da última imagem do grupo e descreve o conjunto. Uma figura
-   desdobrada em painéis usa letra: `*Figura 29 (a). …*`. A legenda é uma frase curta que diz o que a figura mostra — não repita o alt nem explique o argumento, que é papel da prosa. `fix_lint.py` avisa quando falta.
+   Numeração sequencial dentro do essay, começando em 1. Em mosaico, use uma legenda após a última imagem do grupo. Painéis usam letra: `*Figura 29 (a). …*`. A legenda descreve a figura sem repetir o alt ou o argumento.
 
 ## Conversão de fontes (HTML/PDF/DOCX → Markdown)
 
