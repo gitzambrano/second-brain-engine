@@ -51,8 +51,8 @@ Primeira linha do corpo.
 
 
 def test_chapter_immediately_followed_by_explicit_callout_gets_nobreak():
-    from scripts.lib.html_preprocess import transform_markdown
     from scripts.export_essay_pdf import inject_chapter_kickers
+    from scripts.lib.html_preprocess import transform_markdown
 
     src = "## Derek Parfit: e o Fim do Eu Substancial\n\n> [!note] Derek Parfit\n> corpo\n"
     parsed = transform_markdown(src)
