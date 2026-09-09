@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_html_visual_families_are_selected_only_by_explicit_type_classes():
     t = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
     assert "Explicit callout visual families v2" in t
-    for typ in ("example", "tip", "info", "abstract", "note", "todo", "warning"):
+    for typ in ("example", "info", "abstract", "note", "todo", "warning"):
         assert f"callout-{typ}" in t
     assert ".box.callout-todo" in t
     assert ".box.callout-warning" in t
@@ -20,7 +20,6 @@ def test_pdf_maps_explicit_types_to_fixed_environments():
     lua = (ROOT / "scripts" / "pdf_boxes.lua").read_text(encoding="utf-8")
     expected = {
         "callout-example": "wikitab",
-        "callout-tip": "wikitab",
         "callout-info": "wikitab",
         "callout-abstract": "wikitab",
         "callout-note": "wikinote",

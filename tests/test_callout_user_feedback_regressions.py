@@ -56,8 +56,11 @@ def test_template_contract_for_tabs_quotes_verdict_and_tables():
     assert 'color:var(--boxc);margin-bottom:.5rem' in s
     assert 'font-size:2.35rem' in s
     assert '.quote-text p{text-align:justify' in s
-    wide = s.split('@media (min-width:1400px){', 1)[1].split('}', 2)[0]
-    assert '.content > table' not in wide
+    # Tabelas largas rolam dentro da própria tabela, sem regra desktop
+    # separada que force a largura da coluna de leitura.
+    assert 'display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;' in s
+    assert 'width:max-content;min-width:0;max-width:100%;' in s
+    assert '.content > table' not in s
 
 
 def test_pdf_quote_marks_are_discreet_and_verdict_uses_parent_color():
