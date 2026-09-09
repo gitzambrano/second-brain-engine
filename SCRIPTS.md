@@ -62,7 +62,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`build_graph.py`** | Gera a visualização interativa do grafo 2D de conexões em `output/graph/`. | `python scripts/build_graph.py` |
 | **`build_sphere.py`** | Gera a visualização tridimensional interativa em esfera de nós conceituais. | `python scripts/build_sphere.py` |
 | **`stats.py`** | Gera o dashboard analítico de saúde e métricas do corpus em `output/stats/`. | `python scripts/stats.py --save` |
-| **`check_wiki.py`** | Auditoria completa de integridade de wikilinks, tags, órfãos e estrutura de frontmatter. | `python scripts/check_wiki.py` |
+| **`check_wiki.py`** | Auditoria de estrutura, callouts, figuras, referências e sinais editoriais; `--strict` bloqueia CI em erros objetivos. | `python scripts/check_wiki.py --strict` |
 | **`check_references.py`** | Valida integridade e completude das referências bibliográficas dos ensaios. | `python scripts/check_references.py` |
 | **`check_dedupe.py`** | Detecta potenciais duplicidades conceituais e quase-duplicatas na wiki. | `python scripts/check_dedupe.py` |
 | **`check_freshness.py`** | Sinaliza ensaios com alegações temporais antigas que necessitam de revisão. | `python scripts/check_freshness.py` |
