@@ -5,6 +5,7 @@ Um slug de essay deve conter apenas letras ASCII minúsculas e números separado
 por hífens simples. O título (H1) permanece independente, para que alterações
 editoriais não alterem URLs, wikilinks ou artefatos publicados.
 """
+
 from __future__ import annotations
 
 import argparse
