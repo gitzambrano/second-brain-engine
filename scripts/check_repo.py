@@ -171,6 +171,7 @@ def wiki(result: CheckResult) -> None:
         result.skip("SKELETON_NO_ESSAYS", "no essays present; corpus validation skipped")
         return
     for script, extra, parse_json in (
+        ("check_essay_slugs.py", ["--json"], False),
         ("check_wiki.py", ["--json"], True),
         ("check_references.py", ["--json"], True),
         ("check_dedupe.py", ["--json"], True),

@@ -41,6 +41,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | :--- | :--- | :--- |
 | **`set_visibility.py`** | Define o nível de visibilidade de essays (`allow`, `deny`, `hide`, `set-exclusive`) no frontmatter. | `python scripts/set_visibility.py allow dutch-roll` |
 | **`check_visibility_field.py`** | Audita a conformidade e os valores válidos do campo `visibility:` em todos os essays da wiki. | `python scripts/check_visibility_field.py` |
+| **`check_essay_slugs.py`** | Garante que todo arquivo em `wiki/essays/` use um slug ASCII estável em `kebab-case`. | `python scripts/check_essay_slugs.py` |
 | **`visibility.py`** | Leitor utilitário que relata a distribuição de visibilidade do corpus (público, privado, oculto). | `python scripts/visibility.py` |
 | **`build_site.py`** | Compila os essays autorizados para HTML e gera os índices e mapas interativos em `site/`. | `python scripts/build_site.py` |
 | **`check_site_privacy.py`** | **Sentinela estrita de privacidade**: garante que nenhum texto ou link não autorizado chegue a `site/`. | `python scripts/check_site_privacy.py` |
