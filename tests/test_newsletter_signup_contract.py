@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "scripts" / "site_src" / "index.html"
 
