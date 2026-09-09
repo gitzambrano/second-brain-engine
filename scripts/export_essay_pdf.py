@@ -494,6 +494,16 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \usepackage{fvextra}
 \usepackage[most]{tcolorbox}
 \usepackage{hyperref}
+\usepackage{xparse}
+\usepackage{newunicodechar}
+\usepackage{pifont}
+% Unicode prose can contain glyphs absent from Latin Modern Roman. Cardinality
+% belongs to the math font; check/cross marks use the dedicated Dingbats font.
+\newunicodechar{ℵ}{\ensuremath{\aleph}}
+\newunicodechar{₀}{\ensuremath{{}_0}}
+\newunicodechar{₁}{\ensuremath{{}_1}}
+\newunicodechar{✓}{\ding{51}}
+\newunicodechar{✗}{\ding{55}}
 
 % Fallback de símbolos precisa ser portátil. O bloco antigo registrava
 % Segoe UI Emoji incondicionalmente; em Linux a fonte não existe e algumas
@@ -897,14 +907,31 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \renewcommand{\maketitle}{}
 
 % Sumario tipografico — limpo, compacto e sem linhas intermediarias
-\newenvironment{sbtoc}{%
-  \par\vspace{0.6em}%
+\newsavebox{\sbtocmeasurebox}
+\newlength{\sbtocneed}
+\NewDocumentEnvironment{sbtoc}{+b}{%
+  % Measure the real rendered block, including the kicker. This is content-
+  % agnostic: the decision depends only on physical height versus page space.
+  \setbox\sbtocmeasurebox=\vbox{%
+    \hsize=\linewidth
+    \sbkicker{Sumário}%
+    \begingroup
+    \setlength{\parindent}{0pt}%
+    \setlength{\parskip}{0.3em}%
+    #1%
+    \endgroup\par\vspace{0.8em}%
+  }%
+  \setlength{\sbtocneed}{\dimexpr\ht\sbtocmeasurebox+\dp\sbtocmeasurebox\relax}%
+  \ifdim\sbtocneed<\textheight
+    \Needspace{\sbtocneed}%
+  \fi
+  \sbkicker{Sumário}%
   \begingroup
   \setlength{\parindent}{0pt}%
   \setlength{\parskip}{0.3em}%
-}{%
+  #1%
   \endgroup\par\vspace{0.8em}%
-}
+}{}
 % #1 = numeral da goteira, #2 = titulo (inlines do Pandoc, com matematica e
 % enfase preservadas — o filtro nao achata mais em texto). O recuo pendente
 % mantem a segunda linha de um titulo longo alinhada ao texto, nunca sob o
@@ -1347,6 +1374,12 @@ def inject_chapter_kickers(body):
 
         anchor = heading_anchor(line)
         out.append(f'\\hypertarget{{{anchor}}}{{}}')
+        if label == 'Sumário':
+            # The Lua filter converts the following list to sbtoc. That
+            # environment measures and emits its own kicker so the complete
+            # TOC can move together when the remaining page is too short.
+            out.append(heading)
+            continue
         out.append(
             f'\\sbchapterneed{{{label}}}'
             f'{{{_titulo_para_medicao(heading[3:].strip())}}}'

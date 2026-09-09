@@ -109,6 +109,12 @@ def server(built_site):
 def _open(browser, base, surface, shots: Path):
     name, page_path, theme, (width, height) = surface
     context = browser.new_context(viewport={"width": width, "height": height})
+    context.route(
+        "https://gustavo-jose-zambrano.kit.com/**",
+        lambda route: route.fulfill(
+            status=200, content_type="application/javascript", body=""
+        ),
+    )
     context.add_init_script(
         "try{localStorage.setItem('sb-theme',%r)}catch(e){}" % theme
     )

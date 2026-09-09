@@ -704,6 +704,9 @@ pre{
    multiplicava pelo do `pre`: no celular o texto do bloco saía a 9,7px, bem
    abaixo do que o `pre` anuncia. O tamanho do bloco passa a ser só o do `pre`. */
 pre code{background:none;padding:0;font-size:inherit;}
+/* Pandoc may emit a more specific overflow rule for highlighted blocks.
+   Long code must scroll inside its own box instead of widening the document. */
+pre.sourceCode{overflow-x:auto !important;-webkit-overflow-scrolling:touch;}
 
 /* MathJax (saida SVG): equacoes nunca podem empurrar a largura da pagina.
    Display mantem o tamanho e rola internamente; inline escala para caber

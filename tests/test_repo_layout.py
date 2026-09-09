@@ -23,6 +23,7 @@ ROOT_ALLOWLIST = {
     ".gitignore",
     "AGENTS.md",
     "CLAUDE.md",
+    "NEWSLETTER.md",
     "README.md",
     "SCRIPTS.md",
     "TESTING.md",

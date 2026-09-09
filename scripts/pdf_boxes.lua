@@ -518,7 +518,7 @@ function Math(el)
   -- do `\resizebox` do \sbfit o amsmath aborta com "\tag not
   -- allowed here".
   if el.text:find('\\tag', 1, true) then return nil end
-  return pandoc.RawInline('latex', '\\sbfit{' .. el.text .. '}')
+  return pandoc.RawInline('latex', '\\makebox[\\linewidth][c]{\\sbfit{' .. el.text .. '}}')
 end
 
 function Para(el)
@@ -683,10 +683,7 @@ function Table(el)
   local num_cols = #el.colspecs
   if num_cols == 0 then return el end
 
-  -- Tint of 8% gold on the header row only. `\\rowcolor` goes once, at the
-  -- head of the first cell: `\\cellcolor` per cell was emitted inside the
-  -- cell paragraph and painted only the line it sat on, so a header that
-  -- wrapped to two lines kept white above and below the tint.
+  -- Header tint is structural and independent of authored labels.
   if el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
@@ -701,17 +698,17 @@ function Table(el)
     end
   end
 
-  local pref = {}   -- largura desejada (maior celula)
-  local floor_ = {} -- largura minima (maior palavra)
+  local pref = {}
+  local floor_ = {}
   for i = 1, num_cols do pref[i] = 0; floor_[i] = 0 end
 
   local function scan(row)
     for c, cell in ipairs(row.cells) do
       if c <= num_cols then
         local s = pandoc.utils.stringify(cell.contents)
-        local l, w = ulen(s), longest_word(s)
+        local l, word = ulen(s), longest_word(s)
         if l > pref[c] then pref[c] = l end
-        if w > floor_[c] then floor_[c] = w end
+        if word > floor_[c] then floor_[c] = word end
       end
     end
   end
@@ -723,52 +720,65 @@ function Table(el)
     for _, row in ipairs(body.body) do scan(row) end
   end
 
-  -- Capacidade da linha em \small: a mancha tem 172 mm, o Pandoc ja desconta
-  -- 2*	abcolsep por coluna, e sobram cerca de 90 caracteres. E a escala comum
-  -- entre piso e preferencia — subestimar aqui aperta as colunas e faz o piso
-  -- perder a disputa, que era exatamente o defeito da versao anterior.
   local CAP = 90
-
-  -- Uma celula muito longa nao deve engolir a tabela: acima de 55 caracteres o
-  -- texto ja vai quebrar em varias linhas de qualquer forma.
   local total_pref = 0
+  local total_floor = 0
   for i = 1, num_cols do
     pref[i] = math.max(math.min(pref[i], 55), 4)
-    -- Pequena folga sobre o piso: `vislen` e estimativa, nao medicao.
     floor_[i] = math.max(floor_[i] * 1.15, 3)
     total_pref = total_pref + pref[i]
+    total_floor = total_floor + floor_[i]
   end
 
-  -- Reparticao: distribui CAP proporcionalmente a `pref`, eleva ao piso quem
-  -- ficou abaixo dele, e redistribui o que sobra entre as colunas ainda
-  -- livres. Repete ate estabilizar (no maximo uma vez por coluna).
   local w, fixed = {}, {}
-  for i = 1, num_cols do w[i] = CAP * pref[i] / total_pref; fixed[i] = false end
+  for i = 1, num_cols do
+    w[i] = CAP * pref[i] / total_pref
+    fixed[i] = false
+  end
 
   for _ = 1, num_cols do
-    local restante, soma_livre, mudou = CAP, 0, false
+    local remaining, free_pref, changed = CAP, 0, false
     for i = 1, num_cols do
       if not fixed[i] and w[i] < floor_[i] then
-        w[i] = floor_[i]; fixed[i] = true; mudou = true
+        w[i] = floor_[i]
+        fixed[i] = true
+        changed = true
       end
     end
-    if not mudou then break end
+    if not changed then break end
     for i = 1, num_cols do
-      if fixed[i] then restante = restante - w[i] else soma_livre = soma_livre + pref[i] end
+      if fixed[i] then remaining = remaining - w[i]
+      else free_pref = free_pref + pref[i] end
     end
-    if restante <= 0 or soma_livre <= 0 then break end
+    if remaining <= 0 or free_pref <= 0 then break end
     for i = 1, num_cols do
-      if not fixed[i] then w[i] = restante * pref[i] / soma_livre end
+      if not fixed[i] then w[i] = remaining * pref[i] / free_pref end
     end
   end
 
   local total = 0
   for i = 1, num_cols do total = total + w[i] end
-
   local new_colspecs = {}
   for i = 1, num_cols do
     new_colspecs[i] = { el.colspecs[i][1], w[i] / total }
   end
   el.colspecs = new_colspecs
+
+  -- When minimum word widths themselves exceed capacity, allocation cannot
+  -- prevent header collisions. Reduce only those header cells one font step;
+  -- body rows and every unconstrained table remain on the existing path.
+  if total_floor > CAP and el.head and el.head.rows then
+    for _, row in ipairs(el.head.rows) do
+      for _, cell in ipairs(row.cells) do
+        local compact = pandoc.RawInline('latex', '\\footnotesize{}')
+        if cell.contents and #cell.contents > 0
+           and (cell.contents[1].t == 'Plain' or cell.contents[1].t == 'Para') then
+          table.insert(cell.contents[1].content, 1, compact)
+        else
+          table.insert(cell.contents, 1, pandoc.Plain({compact}))
+        end
+      end
+    end
+  end
   return el
 end
