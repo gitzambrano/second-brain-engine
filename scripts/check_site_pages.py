@@ -164,7 +164,17 @@ PROBE = r"""() => {
       .filter(name => !(document.fonts && document.fonts.check('16px "' + name + '"'))),
     tocOverflow: (() => { const el=document.getElementById('sbToc'); return el && !el.hidden && el.scrollWidth > el.clientWidth + 1; })(),
     escaped: [...document.querySelectorAll('table,pre,mjx-container,.sb-toc')]
-      .filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1); })
+      .filter(el => {
+        const r=el.getBoundingClientRect();
+        if (!(r.width > 0 && (r.left < -1 || r.right > innerWidth + 1))) return false;
+        const table=el.closest('table');
+        if (table && el !== table) {
+          const tr=table.getBoundingClientRect();
+          const overflow=getComputedStyle(table).overflowX;
+          if ((overflow === 'auto' || overflow === 'scroll') && tr.left >= -1 && tr.right <= innerWidth + 1) return false;
+        }
+        return true;
+      })
       .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : '')),
     controlsOutside: [...document.querySelectorAll('#sbTheme,#sbTocFab,#sbTocClose')]
       .filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1 || r.top < -1 || r.bottom > innerHeight + 1); })

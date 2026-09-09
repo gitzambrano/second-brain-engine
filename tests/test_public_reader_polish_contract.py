@@ -44,3 +44,4 @@ def test_browser_audit_declares_all_reader_theme_viewport_states():
         assert code in checker
     assert "if data[\"isEssay\"]:" in checker
     assert "if(!localStorage.getItem('sb-theme'))" in checker
+    assert "el.closest('table')" in checker
