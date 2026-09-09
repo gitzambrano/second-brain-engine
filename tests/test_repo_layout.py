@@ -78,12 +78,14 @@ def test_no_unexpected_tracked_files_at_root():
 
 # Os únicos diretórios de topo que o engine versiona. `data/` e `site/` são
 # repositórios à parte, ignorados; `output/`, `wiki/`, `plan/` e `raw/` são
-# corpus e nunca entram aqui.
+# corpus e nunca entram aqui. `docs/` contém documentação versionada do
+# framework, não corpus.
 ROOT_DIR_ALLOWLIST = {
     ".agents",
     ".claude",
     ".codex",
     ".github",
+    "docs",
     "scripts",
     "tests",
 }
