@@ -36,6 +36,11 @@ def test_mobile_toc_keeps_secondary_entries_readable_and_active_state_quiet():
     assert ".content mjx-container:not([display]){display:inline-block;max-width:100%;overflow-x:auto;}" in css
 
 
+def test_mobile_table_headers_reduce_tracking_to_protect_reading_width():
+    template = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
+    assert "th{font-size:.82rem;letter-spacing:.06em;}" in template
+
+
 def test_browser_audit_declares_all_reader_theme_viewport_states():
     checker = (ROOT / "scripts" / "check_site_pages.py").read_text(encoding="utf-8")
     for state in ("mobile-light", "mobile-dark", "desktop-light", "desktop-dark"):
