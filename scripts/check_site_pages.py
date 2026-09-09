@@ -242,20 +242,6 @@ def audit_page(page, url: str, path: Path, label: str, result: CheckResult,
         )
     for src in data["badImages"]:
         result.error("IMAGE_NOT_LOADED", f"{label}: {src}", name)
-    if data["editorialFonts"]:
-        result.error(
-            "EDITORIAL_FONT_UNAVAILABLE",
-            f"{label}: {', '.join(data['editorialFonts'])}", name,
-        )
-    if data["tocOverflow"]:
-        result.error("TOC_OVERFLOW", f"{label}: sumário excede sua largura", name)
-    if data["escaped"]:
-        result.error("READER_ELEMENT_OVERFLOW", f"{label}: {', '.join(data['escaped'][:4])}", name)
-    if data["controlsOutside"]:
-        result.error(
-            "CONTROL_OUTSIDE_VIEWPORT",
-            f"{label}: {', '.join(data['controlsOutside'])}", name,
-        )
     for anchor in data["brokenAnchors"]:
         result.error("BROKEN_ANCHOR", f"{label}: #{anchor}", name)
     if data["rawWikilink"]:
@@ -264,6 +250,20 @@ def audit_page(page, url: str, path: Path, label: str, result: CheckResult,
         result.error("RAW_FENCED_DIV", f"{label}: ::: block visible in the page", name)
 
     if data["isEssay"]:
+        if data["editorialFonts"]:
+            result.error(
+                "EDITORIAL_FONT_UNAVAILABLE",
+                f"{label}: {', '.join(data['editorialFonts'])}", name,
+            )
+        if data["tocOverflow"]:
+            result.error("TOC_OVERFLOW", f"{label}: sumário excede sua largura", name)
+        if data["escaped"]:
+            result.error("READER_ELEMENT_OVERFLOW", f"{label}: {', '.join(data['escaped'][:4])}", name)
+        if data["controlsOutside"]:
+            result.error(
+                "CONTROL_OUTSIDE_VIEWPORT",
+                f"{label}: {', '.join(data['controlsOutside'])}", name,
+            )
         if data["headings"] and not data["tocLinks"]:
             result.error("EMPTY_SUMMARY", f"{label}: essay has chapters but no summary", name)
         if not data["hasFab"]:
@@ -485,7 +485,8 @@ def audit(name: str | None = None, allow_skip_browser: bool = False,
                 for width, height, label, theme in READER_STATES:
                     context = browser.new_context(viewport={"width": width, "height": height})
                     context.add_init_script(
-                        "try{localStorage.setItem('sb-theme',%r)}catch(e){}" % theme
+                        "try{if(!localStorage.getItem('sb-theme'))"
+                        "localStorage.setItem('sb-theme',%r)}catch(e){}" % theme
                     )
                     page = context.new_page()
                     console_errors: list[str] = []

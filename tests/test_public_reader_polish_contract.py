@@ -41,3 +41,5 @@ def test_browser_audit_declares_all_reader_theme_viewport_states():
         assert state in checker
     for code in ("EDITORIAL_FONT_UNAVAILABLE", "TOC_OVERFLOW", "CONTROL_OUTSIDE_VIEWPORT"):
         assert code in checker
+    assert "if data[\"isEssay\"]:" in checker
+    assert "if(!localStorage.getItem('sb-theme'))" in checker

@@ -73,6 +73,10 @@
 html,body{background:var(--bg);}
 body{padding-top:56px;}
 
+/* A equação continua na mesma medida editorial; em uma viewport estreita,
+   qualquer excedente fica contido nela, nunca fora da página. */
+.content mjx-container{max-width:100%;overflow-x:auto;}
+
 /* Public cover: the only intentional visual departure from standalone export. */
 :root:not([data-theme="dark"]) .masthead,
 :root[data-theme="light"] .masthead{
