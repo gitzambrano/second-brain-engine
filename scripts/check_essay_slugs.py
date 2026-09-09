@@ -15,7 +15,6 @@ from pathlib import Path
 
 from repo_paths import ESSAYS_DIR, relative_data
 
-
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
