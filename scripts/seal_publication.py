@@ -39,10 +39,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import build_newsletter_manifest
 import console_encoding  # noqa: F401  (UTF-8 no console; ver o módulo)
 from repo_paths import CODE_ROOT, SCRIPTS_DIR, SITE_ROOT
 
 MANIFEST = "site-manifest.json"
+NEWSLETTER_MANIFEST = ".github/newsletter-manifest.json"
 
 # O que existe no checkout e NÃO vai ao ar. O digest tem de cobrir exatamente o
 # conjunto que o workflow empacota em `_site/`: selar sobre o repositório e
@@ -57,18 +59,12 @@ def _fora_do_artefato(path: Path, root: Path) -> bool:
         return True
     return path.parent == root and path.name in FORA_DA_RAIZ
 
-# Os gates que uma publicação precisa ter passado. `check_site_pages.py` roda
-# sem `--allow-skip-browser` de propósito: aqui ausência de navegador é falha,
-# porque selar sem auditoria visual seria carimbar o que não foi olhado.
 REQUIRED_GATES = (
     ("privacy", ["check_site_privacy.py"]),
     ("budget", ["check_site_budget.py"]),
     ("pages", ["check_site_pages.py"]),
 )
 
-# Arquivos de texto têm a quebra de linha normalizada antes do hash. Sem isso o
-# digest calculado no Windows (CRLF no disco) nunca bateria com o recalculado
-# no runner Linux (LF), e o selo reprovaria toda publicação legítima.
 TEXT_SUFFIXES = {".html", ".json", ".js", ".css", ".txt", ".md", ".xml", ".svg"}
 
 
@@ -76,14 +72,10 @@ def artifact_digest(root: Path) -> str:
     """Impressão determinística do conteúdo publicado, menos o próprio manifesto.
 
     O manifesto fica de fora porque é onde o selo é gravado: incluí-lo faria o
-    digest depender de si mesmo.
+    digest depender de si mesmo. Tudo em `.github/`, inclusive o manifesto da
+    newsletter, também fica fora porque nunca entra no artefato Pages.
     """
     h = hashlib.sha256()
-    # Ordenar pelo caminho relativo em POSIX, não pelo `Path`. `WindowsPath`
-    # compara case-folded e `PosixPath` compara byte a byte: com as fontes web
-    # em CamelCase no artefato, selar no Windows e conferir no runner Linux
-    # alimentava o hash em ordens diferentes e o selo reprovava toda
-    # publicação legítima. A chave é a mesma string que já entra no hash.
     arquivos = sorted(
         (p for p in root.rglob("*")
          if p.is_file() and not _fora_do_artefato(p, root)),
@@ -142,6 +134,10 @@ def seal(root: Path, verbose: bool = True) -> int:
     if not manifesto.is_file():
         print(f"FALHA: {MANIFEST} não existe em {root}; rode o build antes de selar")
         return 1
+
+    newsletter = build_newsletter_manifest.build(root / NEWSLETTER_MANIFEST)
+    if verbose:
+        print(f"  newsletter: {newsletter}")
 
     passaram, falharam = run_gates(verbose)
     if falharam:

@@ -53,6 +53,8 @@ Essays acrescentam:
 summary: "Resumo em prosa contínua, entre 200 e 530 caracteres."
 status: draft | revisao | finalizado
 visibility: public     # opcional; ver ## Publicação
+newsletter: true       # opcional; anuncia por e-mail quando o essay já é public
+newsletter_issue: 1    # opcional; incremente apenas para reenvio deliberado
 ```
 
 `summary:`: 200–530 caracteres, uma linha, aspas duplas; descreva o arco do argumento, não apenas o tema.
@@ -93,7 +95,7 @@ Reuse um tipo existente. `Outro` só quando nenhum tipo específico servir.
 
 ## Publicação
 
-`visibility:` controla leitura do texto; `tags:` nunca controla exposição.
+`visibility:` controla leitura do texto; `newsletter:` controla notificação por e-mail; `tags:` nunca controla exposição.
 
 | `visibility:` | Resultado |
 | --- | --- |
@@ -112,6 +114,25 @@ Regras:
 - A saída pública nunca expõe corpo não autorizado, link de leitura restrito ou caminho para `data/`.
 - Apenas assets referenciados por essays `public` podem aparecer na saída pública.
 - Metadata de essays `private` pode aparecer no catálogo e no mapa; essays `hidden` não aparecem.
+
+### Newsletter
+
+`newsletter:` é um campo opcional e independente de `status:`. Ele não publica um texto por si só.
+
+| `newsletter:` | Resultado |
+| --- | --- |
+| `true` + `visibility: public` | essay elegível para anúncio por e-mail após publicação bem-sucedida |
+| ausente, `false` ou valor inválido | nenhum e-mail |
+| `true` com essay não público | nenhum e-mail |
+
+Regras:
+
+- O comportamento padrão é **não enviar**. A ausência de `newsletter:` é válida e segura.
+- `status: draft | revisao | finalizado` não controla envio de newsletter.
+- `newsletter_issue:` é opcional e vale `1` quando ausente. Incremente apenas para um reenvio deliberado do mesmo essay.
+- Editar um essay já anunciado não cria novo envio enquanto `newsletter_issue:` permanecer igual.
+- Nenhuma skill define `newsletter: true` ou incrementa `newsletter_issue:` automaticamente; ambos exigem decisão explícita do Usuário.
+- O e-mail é distribuição; o site continua sendo a superfície canônica de leitura.
 
 ## Byline do essay
 
