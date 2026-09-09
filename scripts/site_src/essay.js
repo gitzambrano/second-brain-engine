@@ -130,6 +130,12 @@
         links.forEach(function (a) {
           a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
         });
+        var active = links.find(function (a) {
+          return a.getAttribute('href') === '#' + entry.target.id;
+        });
+        if (active && !panel.hidden) {
+          active.scrollIntoView({block:'nearest', behavior:'smooth'});
+        }
       });
     }, { rootMargin: '-15% 0px -75% 0px' });
     headings.forEach(function (h) { observer.observe(h); });

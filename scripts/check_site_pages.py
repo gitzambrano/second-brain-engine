@@ -36,6 +36,13 @@ from sanity_common import (
     resolve_chromium,
 )
 
+READER_STATES = (
+    (390, 844, "mobile-light", "light"),
+    (390, 844, "mobile-dark", "dark"),
+    (1440, 900, "desktop-light", "light"),
+    (1440, 900, "desktop-dark", "dark"),
+)
+# Kept for the map/index checks, which are not reading surfaces.
 VIEWPORTS = ((390, 844, "mobile"), (1440, 900, "desktop"))
 
 # A auditoria completa (prosa, âncoras, imagens, console) roda nos dois
@@ -141,7 +148,7 @@ PROBE = r"""() => {
     docWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,
     badImages: [...document.images]
-      .filter(i => !i.complete || i.naturalWidth === 0)
+      .filter(i => !i.complete || i.naturalWidth === 0 || !i.getBoundingClientRect().width || !i.getBoundingClientRect().height)
       .map(i => i.getAttribute('src')),
     brokenAnchors: [...document.querySelectorAll('a[href^="#"]')]
       .map(a => a.getAttribute('href').slice(1))
@@ -152,7 +159,16 @@ PROBE = r"""() => {
     hasFab: !!document.querySelector('.sb-toc-fab'),
     tocLinks: document.querySelectorAll('#sbTocList a').length,
     headings: document.querySelectorAll('.content h2').length,
-    coverTitle: (document.querySelector('.hero-title') || {}).textContent || ''
+    coverTitle: (document.querySelector('.hero-title') || {}).textContent || '',
+    editorialFonts: ['Playfair Display', 'Source Serif 4', 'JetBrains Mono']
+      .filter(name => !(document.fonts && document.fonts.check('16px "' + name + '"'))),
+    tocOverflow: (() => { const el=document.getElementById('sbToc'); return el && !el.hidden && el.scrollWidth > el.clientWidth + 1; })(),
+    escaped: [...document.querySelectorAll('table,pre,mjx-container,.sb-toc')]
+      .filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1); })
+      .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : '')),
+    controlsOutside: [...document.querySelectorAll('#sbTheme,#sbTocFab,#sbTocClose')]
+      .filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1 || r.top < -1 || r.bottom > innerHeight + 1); })
+      .map(el => el.id)
   };
 }"""
 
@@ -226,6 +242,20 @@ def audit_page(page, url: str, path: Path, label: str, result: CheckResult,
         )
     for src in data["badImages"]:
         result.error("IMAGE_NOT_LOADED", f"{label}: {src}", name)
+    if data["editorialFonts"]:
+        result.error(
+            "EDITORIAL_FONT_UNAVAILABLE",
+            f"{label}: {', '.join(data['editorialFonts'])}", name,
+        )
+    if data["tocOverflow"]:
+        result.error("TOC_OVERFLOW", f"{label}: sumário excede sua largura", name)
+    if data["escaped"]:
+        result.error("READER_ELEMENT_OVERFLOW", f"{label}: {', '.join(data['escaped'][:4])}", name)
+    if data["controlsOutside"]:
+        result.error(
+            "CONTROL_OUTSIDE_VIEWPORT",
+            f"{label}: {', '.join(data['controlsOutside'])}", name,
+        )
     for anchor in data["brokenAnchors"]:
         result.error("BROKEN_ANCHOR", f"{label}: #{anchor}", name)
     if data["rawWikilink"]:
@@ -406,7 +436,7 @@ def audit_cover(page, base: str, result: CheckResult) -> None:
 
 
 def audit(name: str | None = None, allow_skip_browser: bool = False,
-          max_seconds: float = 120) -> CheckResult:
+          max_seconds: float = 900) -> CheckResult:
     result = CheckResult("site-pages")
     budget = AuditBudget(max_seconds=max_seconds)
     result.meta["max_seconds"] = max_seconds
@@ -452,8 +482,11 @@ def audit(name: str | None = None, allow_skip_browser: bool = False,
         browser = p.chromium.launch(headless=True, executable_path=executable)
         try:
             with SiteServer(SITE_ROOT) as base:
-                for width, height, label in VIEWPORTS:
+                for width, height, label, theme in READER_STATES:
                     context = browser.new_context(viewport={"width": width, "height": height})
+                    context.add_init_script(
+                        "try{localStorage.setItem('sb-theme',%r)}catch(e){}" % theme
+                    )
                     page = context.new_page()
                     console_errors: list[str] = []
                     failed: list[str] = []
@@ -476,7 +509,9 @@ def audit(name: str | None = None, allow_skip_browser: bool = False,
                                        result, console_errors, failed)
                         except Exception as exc:  # a página falhou, não o processo inteiro
                             result.error("PAGE_TIMEOUT", f"{label}: {exc}", path.name)
-                    for path in maps:
+                    # Maps have their own light/dark interaction audit below; opening
+                    # them for every essay-reader state only spends the corpus budget.
+                    for path in (maps if label == "desktop-light" else ()):
                         if budget.expired:
                             result.error("AUDIT_TIME_BUDGET_EXCEEDED", "orçamento visual esgotado durante os mapas")
                             break
@@ -507,7 +542,7 @@ def audit(name: str | None = None, allow_skip_browser: bool = False,
 
     result.meta["pages"] = len(pages)
     result.meta["maps"] = len(maps)
-    result.meta["viewports"] = len(VIEWPORTS)
+    result.meta["reader_states"] = [state[2] for state in READER_STATES]
     result.meta["geometry_matrix"] = list(GEOMETRY_MATRIX)
     return result
 
@@ -517,8 +552,8 @@ def main() -> int:
     ap.add_argument("page", nargs="?", help="optional page name or stem; default audits all")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--fail-on-warning", action="store_true")
-    ap.add_argument("--max-seconds", type=float, default=120,
-                    help="orçamento total da auditoria visual (padrão: 120)")
+    ap.add_argument("--max-seconds", type=float, default=900,
+                    help="orçamento total da auditoria visual (padrão: 900)")
     ap.add_argument(
         "--allow-skip-browser",
         action="store_true",

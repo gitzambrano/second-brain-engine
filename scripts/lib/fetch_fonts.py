@@ -55,11 +55,15 @@ def _download(url, dest):
 # contínuo que ele usa.
 SITE_CSS_URL = (
     "https://fonts.googleapis.com/css2"
-    "?family=Inter:wght@100..900&display=swap"
+    "?family=Inter:wght@100..900"
+    "&family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700"
+    "&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400"
+    "&family=JetBrains+Mono:wght@400;500;600&display=swap"
 )
+SITE_FONT_FAMILIES = ("Inter", "Playfair Display", "Source Serif 4", "JetBrains Mono")
 
 
-def ensure_local_fonts(output_dir, css_url=None, dirname="_fonts"):
+def ensure_local_fonts(output_dir, css_url=None, dirname="_fonts", required_families=()):
     """Retorna Path do fonts.css local (ou None se offline/falhou)."""
     output_dir = Path(output_dir)
     css_url = css_url or CSS_URL
@@ -71,7 +75,8 @@ def ensure_local_fonts(output_dir, css_url=None, dirname="_fonts"):
     if css_path.exists():
         css_text = css_path.read_text(encoding="utf-8", errors="replace")
         refs = re.findall(r"url\(([^)]+)\)", css_text)
-        if all((font_dir / u).exists() for u in refs):
+        if (all((font_dir / u).exists() for u in refs)
+                and all(f'font-family: "{family}"' in css_text for family in required_families)):
             return css_path
 
     try:

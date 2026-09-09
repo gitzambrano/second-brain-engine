@@ -210,9 +210,12 @@ def ensure_site_fonts(root: Path) -> str:
     Sem rede o passo é pulado e o site volta ao comportamento anterior — a
     fonte é melhoria de tipografia, não pré-requisito de build.
     """
-    from fetch_fonts import SITE_CSS_URL, ensure_local_fonts
+    from fetch_fonts import SITE_CSS_URL, SITE_FONT_FAMILIES, ensure_local_fonts
 
-    css_path = ensure_local_fonts(root / "assets", css_url=SITE_CSS_URL, dirname="fonts")
+    css_path = ensure_local_fonts(
+        root / "assets", css_url=SITE_CSS_URL, dirname="fonts",
+        required_families=SITE_FONT_FAMILIES,
+    )
     if css_path is None:
         print("  fontes: SKIP (sem rede); o site usa a fonte do sistema")
         return ""

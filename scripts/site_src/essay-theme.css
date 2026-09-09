@@ -136,6 +136,10 @@ body{padding-top:56px;}
   background:transparent;color:var(--sb-primary);cursor:pointer;
 }
 .sb-nav button:hover{border-color:var(--sb-primary);}
+.sb-nav button:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--sb-primary) 58%,transparent);
+  outline-offset:2px;
+}
 
 /* Public progress bar injected by render_public_essay.py. */
 body > .sb-progress:not(:has(.sb-progress-fill)){
@@ -182,7 +186,8 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-toc a:hover{color:var(--sb-text) !important;background:var(--sb-primary-soft);}
 .sb-toc a.h3{padding-left:23px;font-size:11.5px;}
 .sb-toc a.active{
-  color:var(--sb-primary) !important;border-left-color:var(--sb-primary);background:var(--sb-primary-soft);
+  color:color-mix(in srgb,var(--sb-text) 92%,var(--sb-primary)) !important;
+  border-left-color:color-mix(in srgb,var(--sb-primary) 42%,transparent);background:transparent;
 }
 
 .sb-tags,.sb-related{
@@ -211,11 +216,14 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 
 @media(max-width:720px){
   .sb-bar{padding-inline:14px;}
-  .sb-nav{gap:10px;}
+  .sb-nav{gap:6px;}
   .sb-nav a{font-size:12px;}
   .sb-brand{font-size:13px;}
+  .sb-nav button{width:44px;height:44px;}
   .sb-toc-fab{width:44px;height:44px;padding:0;justify-content:center;}
   .sb-toc-text{display:none;}
+  .sb-toc a{font-size:13px;padding:8px 11px;}
+  .sb-toc a.h3{font-size:12.5px;padding-left:23px;}
   .sb-related-grid{grid-template-columns:1fr;}
 }
 /* Duas palavras curtas cabem em qualquer telefone. Esconder a segunda tirava
