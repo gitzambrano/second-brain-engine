@@ -20,19 +20,22 @@ select = ["E", "F", "I"]
 # Ruff cobre a árvore inteira (`ruff check .` na CI). As exceções abaixo são
 # nominais e justificadas — não uma lista de arquivos que ninguém olha.
 #
-# Os dois renderizadores de mapa são Python que carrega JavaScript e CSS
-# inteiros como texto: quebrar essas linhas quebraria o payload, não o
-# arrumaria. Os checadores e testes compactos usam uma linha por asserção de
-# propósito, para caber a bateria inteira na tela; E701/E702 aqui é estilo
-# adotado, não descuido.
+# Os renderizadores de mapa e o auditor de páginas carregam JavaScript/CSS
+# inteiros como texto: quebrar essas linhas pode alterar o payload. Alguns
+# testes de contrato também preservam fixtures/expressões longas literalmente
+# porque o conteúdo exato faz parte do comportamento verificado.
 [tool.ruff.lint.per-file-ignores]
 "scripts/build_graph.py" = ["E501"]
 "scripts/build_sphere.py" = ["E501"]
+"scripts/check_site_pages.py" = ["E501"]
 "scripts/check_wiki.py" = ["E501"]
 "scripts/check_html_structure.py" = ["E701", "E702"]
 "scripts/export_essay_html.py" = ["E501"]
 "scripts/export_essay_pdf.py" = ["E501"]
 "tests/conftest.py" = ["E501", "E701", "E702"]
+"tests/test_callout_visual_polish.py" = ["E501"]
+"tests/test_native_callout_visual_semantics.py" = ["E501"]
+"tests/test_wiki_mechanical_contracts.py" = ["E501"]
 "tests/test_wiki_checks.py" = ["E501", "E701", "E702"]
 "tests/test_legacy_feature_regressions.py" = ["E501", "E701", "E702"]
 "tests/test_pdf_export.py" = ["E501", "E701", "E702", "E741"]
