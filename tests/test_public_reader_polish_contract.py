@@ -33,6 +33,7 @@ def test_mobile_toc_keeps_secondary_entries_readable_and_active_state_quiet():
     assert ".sb-toc a.h3{font-size:12.5px" in css
     assert "border-left-color:color-mix(in srgb,var(--sb-primary) 42%,transparent)" in css
     assert "var(--sb-primary-soft)" not in css.split(".sb-toc a.active", 1)[1].split("}", 1)[0]
+    assert ".content mjx-container:not([display]){display:inline-block;max-width:100%;overflow-x:auto;}" in css
 
 
 def test_browser_audit_declares_all_reader_theme_viewport_states():
