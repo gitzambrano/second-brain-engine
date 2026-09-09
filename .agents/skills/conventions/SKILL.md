@@ -299,109 +299,34 @@ Vale para texto novo ou reescrito pela wiki. Texto original importado só muda s
 
 ### Regras gerais
 
-1. **Uma proposição principal por frase.** Prefira frase direta, completa e sem enchimento. Divida a frase quando ela acumular afirmação, ressalva, consequência e comentário lateral. Conexões estreitamente dependentes podem permanecer juntas; concisão não é estilo telegráfico.
+1. Uma proposição principal por frase. Prefira frase direta, completa e sem enchimento; concisão não é estilo telegráfico.
+2. Abra cada parágrafo com o tema e mantenha um tema por parágrafo.
+3. Use o mesmo termo para o mesmo conceito. Mantenha grafia consistente para termos, siglas, unidades e variáveis.
+4. Explicite causa, condição, contraste e sequência quando necessários; use conectores apenas quando ajudarem essa lógica.
+5. Prefira verbos simples e precisos a perífrases e nominalizações.
+6. Corpo argumentativo em prosa; bullets apenas para listas reais.
+7. Não use ponto e vírgula na prosa. Separe em frases ou use outra construção sintática.
+8. Use travessões raramente: no máximo 1 a 2 em todo o corpo de um essay. Não os use como substituto recorrente de vírgulas, parênteses ou dois-pontos.
+9. Parênteses apenas para informação curta. Evite atalhos tipográficos como `/`, `~`, `--`, `5-30`, `Cap.`/`Sec.`, `e.g.` e `i.e.`.
+10. Elimine metadiscurso dispensável: não anuncie o que o texto fará, acabou de fazer ou pretende demonstrar quando a própria argumentação já o mostra.
+11. Evite frases de efeito, tríades, paralelismos e contrastes simétricos usados apenas para ritmo ou ênfase. Use-os somente quando cada elemento expressar uma distinção necessária ao argumento.
+12. Não atribua autoridade a fontes vagas. `Estudos mostram` ou `especialistas afirmam` exigem fonte identificável.
+13. Preserve a voz do autor. Estas regras orientam revisão editorial, não substituição mecânica de estilo.
+14. Escreva apenas o estado final do argumento. Não mencione versões anteriores, correções, pedidos do Usuário ou alternativas fora do texto final.
 
-2. **Um tema por parágrafo.** Abra o parágrafo com o tema e desenvolva esse mesmo ponto. Se o texto muda de mecanismo para consequência, de evidência para interpretação ou para outra ideia independente, considere um novo parágrafo.
-
-3. **Use o mesmo termo para o mesmo conceito.** Mantenha grafia consistente para termos, siglas, unidades e variáveis. Não alterne sinônimos apenas para evitar repetição quando isso puder sugerir conceitos diferentes.
-
-   Evite: usar `ângulo de ataque` e depois `incidência` para a mesma variável sem definir a equivalência.  
-   Prefira: escolher um termo canônico ou explicitar a diferença entre conceitos próximos.
-
-4. **Explicite causa, condição, contraste e sequência quando necessários.** Use conectores apenas quando representarem a relação lógica real.
-
-   Evite: `O rotor acelera. Portanto, a pá avança.` quando a relação causal não foi estabelecida.  
-   Prefira: use `portanto`, `porque`, `embora`, `se` ou `quando` somente quando essa relação fizer parte do argumento.
-
-5. **Prefira verbos simples e precisos a perífrases e nominalizações.**
-
-   Evite: `foi realizada uma avaliação da influência de X`.  
-   Prefira: `avaliamos a influência de X` ou `a análise mede a influência de X`, conforme o agente real da ação.
-
-6. **Corpo argumentativo em prosa; bullets apenas para listas reais.** Use listas para condições, hipóteses, critérios, etapas ou itens independentes. Não fragmente raciocínio contínuo apenas para tornar a página mais escaneável.
-
-7. **Não use ponto e vírgula na prosa.** Separe em frases ou use outra construção sintática.
-
-8. **Use travessões raramente: no máximo 1 a 2 em todo o corpo de um essay.** Não os use como pontuação padrão para comentários laterais.
-
-   Evite: `O modelo — apesar da simplificação — reproduz — em parte — a tendência.`  
-   Prefira: `Apesar da simplificação, o modelo reproduz parte da tendência.`
-
-9. **Use parênteses apenas para informação curta.** Evite colocar argumento dentro deles. Evite também atalhos tipográficos como `/`, `~`, `--`, `5-30`, `Cap.`/`Sec.`, `e.g.` e `i.e.` quando uma formulação normal for mais clara.
-
-10. **Elimine metadiscurso dispensável.** Não anuncie o que o texto fará, acabou de fazer ou pretende demonstrar quando a própria argumentação já mostra isso.
-
-    Evite: `Nesta seção, veremos como o modelo funciona.`  
-    Prefira: `O modelo combina duas hipóteses.`
-
-    Evite: `Como vimos anteriormente, esse resultado é importante.`  
-    Prefira: declare diretamente qual resultado importa e qual é sua consequência.
-
-11. **Evite frases de efeito, tríades, paralelismos e contrastes simétricos usados apenas para ritmo ou ênfase.** Use essas estruturas somente quando cada elemento expressar uma distinção necessária ao argumento.
-
-    Evite: `Não é apenas uma equação; é uma janela para a própria natureza do voo.`  
-    Prefira: descreva o que a equação permite calcular ou compreender.
-
-12. **Não atribua autoridade a fontes vagas.** `Estudos mostram`, `a literatura indica` ou `especialistas afirmam` exigem fonte identificável.
-
-    Evite: `Estudos mostram que a configuração é mais estável.`  
-    Prefira: `Johnson [3] encontrou maior amortecimento de arfagem nessa configuração.`
-
-13. **Preserve a voz do autor.** Corrija clareza, precisão e excessos sem uniformizar o texto em um estilo genérico. Não substitua escolha autoral válida apenas porque outra formulação seria possível.
-
-14. **Escreva apenas o estado final do argumento.** Não mencione versões anteriores, correções, pedidos do Usuário ou alternativas descartadas fora da própria discussão intelectual do essay.
-
-    Evite: `Na versão anterior, esta seção tratava X.`  
-    Prefira: escreva diretamente a versão final.
+`check_wiki.py` cobre as regras mecânicas; `/polish` e `/proofread` cobrem as editoriais.
 
 ### Regras adicionais para essays técnicos
 
-1. **Use português claro, conciso, formal e assertivo.** Precisão técnica tem prioridade sobre ornamentação, mas não elimine explicações necessárias apenas para encurtar o texto.
-
-2. **Não antropomorfize código, modelos, equações ou teorias.** Descreva o mecanismo ou a operação real.
-
-   Evite: `O modelo sabe que a aeronave está próxima do solo.`  
-   Prefira: `O modelo reduz a velocidade induzida quando a razão \(h/R\) diminui.`
-
-   Evite: `A equação tenta compensar o efeito.`  
-   Prefira: `O termo adicional compensa o efeito.`
-
-3. **Prefira voz ativa quando o agente for conhecido.** A voz passiva é aceitável quando o agente é irrelevante, desconhecido ou quando o objeto da ação é deliberadamente o foco.
-
-   Evite: `Foi calculada a derivada usando diferenças centrais.`  
-   Prefira: `O algoritmo calcula a derivada por diferenças centrais.`
-
-4. **Use gerúndio somente quando sua relação temporal, causal ou lógica for clara e necessária.** Não use gerúndio como conexão genérica entre duas afirmações.
-
-   Evite: `A velocidade aumenta, causando uma mudança no regime e produzindo maior estabilidade.`  
-   Prefira: `O aumento de velocidade muda o regime aerodinâmico. Essa mudança aumenta o amortecimento.`
-
-5. **Evite `isso/isto` com referente ambíguo e simplifique cadeias longas de `de/da/do`.** Nomeie novamente o conceito quando houver mais de um referente possível.
-
-   Evite: `Isso modifica sua resposta.`  
-   Prefira: `O aumento do amortecimento modifica a resposta de arfagem.`
-
-6. **Não use linguagem promocional ou superlativos sem medida objetiva.** Evite `revolucionário`, `extraordinário`, `fundamental`, `crucial`, `impressionante` ou `dramático` apenas para intensificar a afirmação.
-
-   Evite: `O método produz uma melhoria dramática.`  
-   Prefira: `O erro RMS cai de 12% para 4%.`
-
-7. **Não aumente a importância de um resultado além do que a evidência permite.** Separe resultado observado, interpretação e alcance.
-
-   Evite: `O resultado demonstra definitivamente a validade do modelo.`  
-   Prefira: `O modelo reproduz os dados deste conjunto dentro de 5%; isso sustenta sua validade neste regime de operação.`
-
-8. **Evite qualificadores vagos quando não representarem incerteza real.** `Possivelmente`, `potencialmente`, `de certa forma`, `em grande medida` e `pode-se dizer` não substituem a origem da incerteza.
-
-   Evite: `O efeito possivelmente decorre da esteira.`  
-   Prefira: `A atribuição à esteira é incerta porque o ensaio não separa os efeitos de interferência e indução.`
-
-   Quando houver incerteza, diga sua origem: hipótese, limitação dos dados, aproximação do modelo, erro de medição ou evidência conflitante.
-
-9. **Não encerre uma seção com conclusão genérica que não acrescente informação.**
-
-   Evite: `Assim, fica claro que compreender esses efeitos é fundamental para o projeto.`  
-   Prefira: encerre com o resultado específico ou avance diretamente para a próxima seção.
+1. Use português claro, conciso, formal e assertivo.
+2. Não antropomorfize código, modelos ou teorias.
+3. Prefira voz ativa quando o agente for conhecido.
+4. Use gerúndio somente quando sua relação temporal, causal ou lógica for clara e necessária; elimine gerúndio ornamental.
+5. Evite `isso/isto` com referente ambíguo e simplifique cadeias longas de `de/da/do`.
+6. Não use linguagem promocional ou superlativos sem medida objetiva. Evite termos como `revolucionário`, `extraordinário`, `fundamental`, `crucial`, `impressionante` ou `dramático` apenas para intensificar a afirmação.
+7. Não aumente a importância de um resultado além do que a evidência permite. Descreva o efeito e sua consequência técnica diretamente.
+8. Evite qualificadores vagos como `possivelmente`, `potencialmente`, `de certa forma`, `em grande medida` ou `pode-se dizer` quando não expressarem incerteza real. Quando houver incerteza, diga sua origem: hipótese, limitação dos dados, aproximação do modelo ou evidência conflitante.
+9. Não encerre uma seção com conclusão genérica que não acrescente informação.
 
 ## Formato do índice (`wiki/index.md`)
 
