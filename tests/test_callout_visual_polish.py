@@ -14,10 +14,10 @@ def test_html_tab_is_flush_and_uses_exact_frame_color():
     # O rotulo fecha a direita e embaixo com filete proprio.
     assert 'background:color-mix(in srgb,var(--boxc) 15%,transparent);' in s
     assert 'color:var(--boxc);' in s
-    assert 'font-size:.72rem;font-weight:600' in s
-    # `info`/`abstract` levam o tint cheio; `example`/`tip`, um mais leve —
+    assert 'font-size:13.6px;font-weight:600' in s
+    # `info`/`abstract` levam o tint cheio; `example`, um mais leve —
     # mas nunca igual ao da caixa, senao o rotulo deixa de se destacar.
-    assert '.box:is(.callout-example,.callout-tip) > .box-title p{' in s
+    assert '.box.callout-example > .box-title p{' in s
     assert 'background:color-mix(in srgb,var(--boxc) 9%,transparent);' in s
 
 
