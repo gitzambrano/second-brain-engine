@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PDF = (ROOT / 'scripts' / 'export_essay_pdf.py').read_text(encoding='utf-8')
