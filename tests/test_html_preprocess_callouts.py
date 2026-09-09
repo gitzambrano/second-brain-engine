@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -7,7 +7,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from lib.html_preprocess import (  # noqa: E402
-    CalloutError, NATIVE_TYPES, lint_source, transform_markdown,
+    NATIVE_TYPES,
+    CalloutError,
+    lint_source,
+    transform_markdown,
 )
 
 
@@ -86,6 +89,7 @@ def test_native_callout_output_has_no_legacy_family_class():
         for family in legacy:
             assert f".{family}" not in out, (typ, family, out)
 
+
 def test_callout_type_never_becomes_visible_badge_text():
     out = transform_markdown("> [!note] Minha observação\n> corpo\n")
     assert "{.box-title}" in out
@@ -128,8 +132,6 @@ def test_quote_callout_uses_last_paragraph_as_legacy_attribution_fallback():
     assert "{.pull-quote .callout-quote}" in out
     assert "{.quote-text}" in out
     assert "{.quote-attribution}" in out
-
-
 
 
 def test_todo_h4_is_entity_metadata_only_when_todo_is_explicit():

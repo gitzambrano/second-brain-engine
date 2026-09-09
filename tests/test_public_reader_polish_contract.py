@@ -1,8 +1,8 @@
 """Behavioral contracts for the public essay reader polish."""
+
 from __future__ import annotations
 
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "scripts" / "site_src"

@@ -19,7 +19,7 @@ Lê:
 
 Gera:
     stdout (relatório) + output/comprehensive_lint_output.txt no escopo corpus;
-    --json para parse programático. Exit 0 sempre, exceto slug inexistente (1).
+    --json para parse programático. Com --strict, CRITICAL/ERROR retornam 1.
 
 Uso:
     python scripts/check_wiki.py                       # corpus inteiro (default)
@@ -33,13 +33,17 @@ Flags:
     --file/-f   caminho do essay (alternativa ao slug)
     --all       força corpus inteiro
     --json      saída JSON para parse programático
+    --strict    bloqueia CI em CRITICAL/ERROR
 """
 
 import argparse
 import json
 import re
+import subprocess
 import sys
+from math import ceil
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import console_encoding  # noqa: F401  (UTF-8 no console; ver o módulo)
 import yaml
@@ -47,7 +51,7 @@ import yaml
 # ---------------------------------------------------------------------------
 # Configuração de caminhos
 # ---------------------------------------------------------------------------
-from repo_paths import CODE_ROOT, OUTPUT_DIR, PLAN_DIR, WIKI_ROOT
+from repo_paths import CODE_ROOT, DATA_ROOT, OUTPUT_DIR, PLAN_DIR, WIKI_ROOT
 
 ROOT_DIR = CODE_ROOT
 ESSAYS_DIR = WIKI_ROOT / "essays"
@@ -56,6 +60,198 @@ ENTITIES_DIR = WIKI_ROOT / "entities"
 SOURCES_DIR = WIKI_ROOT / "sources"
 INSIGHTS_DIR = WIKI_ROOT / "insights"
 HANDOUTS_DIR = WIKI_ROOT / "handouts"
+
+CALLOUT_TYPES = {
+    "note", "info", "example", "abstract", "todo", "warning", "success",
+    "question", "failure", "danger", "bug", "quote",
+}
+CALLOUT_ALIASES = {"tldr", "summary", "hint", "important", "caution", "cite"}
+CALLOUT_HEADER_RE = re.compile(
+    r"^(?:>\s*)+\[!([A-Za-z0-9_-]+)\](?:[+-])?(?:\s+(.*))?$"
+)
+CALLOUT_HEADING_RE = re.compile(r"^(?:>\s*)+#{2,3}\s+")
+FIGURE_RE = re.compile(r"!\[[^\]]*\]\(([^\s\)]+)(?:\s+[^\)]*)?\)")
+
+
+def normalize_url(url: str) -> str:
+    """Normalize URLs only enough to detect duplicate bibliography entries."""
+    parsed = urlsplit(url.rstrip(".,;"))
+    query = "&".join(
+        part for part in parsed.query.split("&")
+        if part and not part.lower().startswith(("utm_", "fbclid="))
+    )
+    return urlunsplit((parsed.scheme.lower(), parsed.netloc.lower(), parsed.path.rstrip("/"), query, ""))
+
+
+def check_callout_contracts(body: str, add) -> None:
+    """Validate native Obsidian callout syntax without rewriting source text."""
+    active_h2 = "(antes do primeiro H2)"
+    abstract_counts: dict[str, int] = {}
+    callout_count = 0
+    for lineno, line in enumerate(strip_fences(body).splitlines(), start=1):
+        h2 = re.match(r"^##\s+(.+)$", line)
+        if h2:
+            active_h2 = h2.group(1).strip()
+        if CALLOUT_HEADING_RE.match(line):
+            add("ERROR", "CALLOUT_HEADING_LEVEL",
+                f"linha {lineno}: ##/### dentro de callout quebra o Sumário; use ####")
+        match = CALLOUT_HEADER_RE.match(line)
+        if not match:
+            continue
+        callout_count += 1
+        kind, title = match.group(1).casefold(), (match.group(2) or "").strip()
+        if kind in CALLOUT_ALIASES:
+            add("ERROR", "CALLOUT_ALIAS", f"linha {lineno}: alias [!{kind}] proibido")
+        elif kind not in CALLOUT_TYPES:
+            add("ERROR", "CALLOUT_TYPE", f"linha {lineno}: tipo [!{kind}] não permitido")
+        if kind == "warning" and not re.search(r"\d", title):
+            add("ERROR", "CALLOUT_WARNING_TITLE",
+                f"linha {lineno}: [!warning] exige número-chave no título")
+        if kind == "todo" and not title:
+            add("ERROR", "CALLOUT_TODO_TITLE",
+                f"linha {lineno}: [!todo] exige o nome da entidade no título")
+        if kind == "abstract":
+            abstract_counts[active_h2] = abstract_counts.get(active_h2, 0) + 1
+        if kind == "note" and re.search(r"\b(mapa conceitual|definição formal|framework)\b", title, re.I):
+            add("WARNING", "CALLOUT_NOTE_SHOULD_ABSTRACT",
+                f"linha {lineno}: título '{title}' sugere [!abstract], não [!note]")
+    limit = max(6, ceil(len(re.findall(r"\b\w+\b", body)) / 1000 * 6))
+    if callout_count > limit:
+        add("WARNING", "CALLOUT_DENSITY",
+            f"{callout_count} callouts para o tamanho do essay (máximo recomendado: {limit})")
+    for section, count in abstract_counts.items():
+        if count > 1:
+            add("WARNING", "CALLOUT_ABSTRACT_PER_SECTION",
+                f"seção '{section}' tem {count} callouts [!abstract] (máximo recomendado: 1)")
+
+
+def check_figure_contracts(body: str, slug: str, add) -> None:
+    """Check figure filename, ordering and adjacent Markdown captions."""
+    lines = strip_fences(body).splitlines()
+    numbers: list[int] = []
+    name_re = re.compile(rf"^{re.escape(slug)}_fig(\d+)\.[A-Za-z0-9]+$")
+    for index, line in enumerate(lines):
+        match = FIGURE_RE.search(line)
+        if not match:
+            continue
+        target = match.group(1).strip("<>")
+        if target.startswith(("http://", "https://", "data:")):
+            continue
+        filename = Path(target).name
+        name_match = name_re.fullmatch(filename)
+        if not name_match:
+            add("WARNING", "FIGURE_FILENAME",
+                f"linha {index + 1}: figura deve se chamar {slug}_figN.ext, recebeu {filename}")
+            continue
+        number = int(name_match.group(1))
+        numbers.append(number)
+        caption_index = index + 1
+        while caption_index < len(lines) and not lines[caption_index].strip():
+            caption_index += 1
+        caption = lines[caption_index].strip() if caption_index < len(lines) else ""
+        caption_match = re.fullmatch(r"\*Figura\s+(\d+)\..+\*", caption)
+        if not caption_match:
+            add("WARNING", "FIGURE_CAPTION_MISSING",
+                f"linha {index + 1}: figura {number} sem legenda '*Figura {number}. ...*'")
+        elif int(caption_match.group(1)) != number:
+            add("WARNING", "FIGURE_CAPTION_NUMBER",
+                f"linha {index + 1}: arquivo fig{number} diverge da legenda Figura {caption_match.group(1)}")
+    if numbers and sorted(numbers) != list(range(1, len(numbers) + 1)):
+        add("WARNING", "FIGURE_SEQUENCE",
+            f"numeração de figuras não sequencial: {sorted(numbers)}")
+
+
+def check_prose_signals(body: str, add) -> None:
+    """Surface editorial signals conservatively; never change prose automatically."""
+    prose = strip_fences(body).split("## Referências", 1)[0]
+    patterns = (
+        ("WARNING", "METADISCOURSE", r"\b(nesta seção|neste ensaio|veremos|examinaremos|percorreremos|a seguir)\b"),
+        ("WARNING", "VAGUE_AUTHORITY", r"\b(estudos mostram|especialistas afirmam|a literatura indica)\b"),
+        ("WARNING", "ANTHROPOMORPHIZATION", r"\b(modelo|llm|equação|teoria)\s+(sabe|quer|tenta|entende|acredita|percebe)\b"),
+        ("INFO", "PROMOTIONAL_LANGUAGE", r"\b(revolucionário|extraordinário|fundamental|crucial|impressionante|dramático)\b"),
+        ("INFO", "VAGUE_UNCERTAINTY", r"\b(possivelmente|potencialmente|de certa forma|em grande medida|pode-se dizer)\b"),
+    )
+    for severity, code, pattern in patterns:
+        found = re.findall(pattern, prose, re.I)
+        if found:
+            add(severity, code, f"{len(found)} ocorrência(s) de sinal editorial: {found[:3]}")
+
+
+def check_reference_contracts(entries: list[str], add) -> None:
+    """Validate bibliography details not covered by the citation-link checker."""
+    numbers = [int(match.group(1)) for entry in entries if (match := re.match(r"^\[(\d+)\]", entry))]
+    if numbers and numbers != list(range(1, len(numbers) + 1)):
+        add("WARNING", "REF_SEQUENCE", f"numeração de referências não sequencial: {numbers}")
+    seen: dict[str, int] = {}
+    for entry in entries:
+        number = re.match(r"^\[(\d+)\]", entry)
+        label = number.group(1) if number else "?"
+        if not re.search(r"\*[^*]+\*", entry):
+            add("WARNING", "REF_TITLE_NOT_ITALIC", f"entrada [{label}] sem título em itálico")
+        links = re.findall(r"\[Link\]\((https?://[^)]+)\)", entry)
+        link = links[-1] if links else None
+        if link and not re.search(r"\[Link\]\(https?://[^)]+\)\s*$", entry):
+            add("WARNING", "REF_LINK_NOT_FINAL", f"entrada [{label}] não termina no [Link](url)")
+        local_urls: set[str] = set()
+        for raw_url in re.findall(r"https?://[^\s)]+", entry):
+            normalized = normalize_url(raw_url)
+            if normalized in local_urls:
+                continue
+            local_urls.add(normalized)
+            if normalized in seen:
+                add("WARNING", "REF_DUPLICATE_URL",
+                    f"entrada [{label}] repete URL normalizada da entrada [{seen[normalized]}]")
+            else:
+                seen[normalized] = int(label) if label.isdigit() else 0
+            if any(token in normalized for token in ("wikipedia.org", "/readme", "github.com")) and "acesso em" not in entry.casefold():
+                add("WARNING", "REF_MUTABLE_NO_ACCESS_DATE",
+                    f"entrada [{label}] usa fonte mutável sem data de acesso")
+
+
+def classify_updated_diff(diff: str) -> str | None:
+    """Classify a Git patch without guessing whether a small edit is substantive."""
+    body_changes = 0
+    updated_changed = False
+    in_frontmatter = False
+    for line in diff.splitlines():
+        if line.startswith(("+++", "---", "@@")):
+            continue
+        if not line.startswith(("+", "-")):
+            continue
+        text = line[1:]
+        if text.strip() == "---":
+            in_frontmatter = not in_frontmatter
+            continue
+        if in_frontmatter:
+            updated_changed = updated_changed or text.startswith("updated:")
+        elif text.strip():
+            body_changes += 1
+    if body_changes >= 12 and not updated_changed:
+        return "BODY_CHANGED_UPDATED_UNCHANGED"
+    if body_changes == 0 and updated_changed:
+        return "UPDATED_CHANGED_WITHOUT_BODY"
+    return None
+
+
+def check_updated_against_git(filepath: Path, add) -> None:
+    """Warn only for clear metadata/body mismatches in the latest data revision."""
+    try:
+        relative = filepath.resolve().relative_to(DATA_ROOT.resolve()).as_posix()
+        proc = subprocess.run(
+            ["git", "-C", str(DATA_ROOT), "diff", "--unified=0", "HEAD^", "HEAD", "--", relative],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
+        )
+    except (OSError, ValueError):
+        return
+    if proc.returncode:
+        return
+    state = classify_updated_diff(proc.stdout)
+    if state == "BODY_CHANGED_UPDATED_UNCHANGED":
+        add("WARNING", "UPDATED_STALE_AFTER_BODY_CHANGE",
+            "a revisão Git mais recente mudou substancialmente o corpo sem alterar updated:")
+    elif state == "UPDATED_CHANGED_WITHOUT_BODY":
+        add("WARNING", "UPDATED_WITHOUT_BODY_CHANGE",
+            "a revisão Git mais recente alterou updated: sem mudança no corpo")
 
 # categorias/pastas incluídas no lint (sources fica de fora: documentos
 # originais imutáveis, nunca editados por nenhuma skill)
@@ -602,6 +798,15 @@ def check_essay(filepath: Path) -> dict:
         for n in sorted(listed - cited):
             add("INFO", "REF_NEVER_CITED",
                 f"Entrada [{n}] em '## Referências' nunca é citada no corpo")
+        check_reference_contracts(ref_entries, add)
+
+    # -----------------------------------------------------------------------
+    # 5a. Contratos mecânicos de callouts, figuras e prosa editorial
+    # -----------------------------------------------------------------------
+    check_callout_contracts(body, add)
+    check_figure_contracts(body, filepath.stem, add)
+    check_prose_signals(body, add)
+    check_updated_against_git(filepath, add)
 
     # -----------------------------------------------------------------------
     # 5b. Numeração de capítulos (H2) e subseções (H3)
@@ -1414,6 +1619,10 @@ def build_parser():
         help="Corpus inteiro, explícito (comportamento padrão sem argumento).",
     )
     p.add_argument("--json", action="store_true", help="Saída em JSON.")
+    p.add_argument(
+        "--strict", action="store_true",
+        help="Retorna código 1 quando houver CRITICAL ou ERROR; útil para CI.",
+    )
     return p
 
 
@@ -1467,6 +1676,21 @@ def main():
         corpus_issues.extend(check_sources_manifest(title_map["essay_titles"]))
         corpus_issues.extend(check_plano())
         corpus_issues.extend(check_insights())
+        try:
+            from check_visibility_field import audit as audit_visibility
+
+            _public, _invalid, visibility_errors = audit_visibility()
+            for message in visibility_errors:
+                corpus_issues.append({
+                    "section": "VISIBILITY", "severity": "ERROR",
+                    "code": "VISIBILITY_INVALID", "message": message,
+                })
+        except ImportError:
+            corpus_issues.append({
+                "section": "VISIBILITY", "severity": "WARNING",
+                "code": "VISIBILITY_CHECK_UNAVAILABLE",
+                "message": "check_visibility_field.py indisponível",
+            })
 
     if args.json:
         output = {
@@ -1475,7 +1699,8 @@ def main():
             "corpus_skipped": corpus_skipped,
         }
         print(json.dumps(output, ensure_ascii=False, indent=2))
-        return
+        all_issues = [i for r in essay_results for i in r["issues"]] + corpus_issues
+        return 1 if args.strict and any(i["severity"] in {"CRITICAL", "ERROR"} for i in all_issues) else 0
 
     # ---- saída human-readable ----
     severity_order = {"CRITICAL": 0, "ERROR": 1, "WARNING": 2, "INFO": 3}
@@ -1547,7 +1772,8 @@ def main():
     print(
         f"\nResumo: {n_critical} CRITICAL, {n_error} ERROR, {n_warning} WARNING, {n_info} INFO"
     )
+    return 1 if args.strict and (n_critical or n_error) else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
