@@ -47,7 +47,7 @@
     <form method="dialog"><button class="subscribe-close" type="submit" aria-label="Fechar">×</button></form>
   </div>
   <div class="subscribe-embed" aria-label="Assinar a newsletter do Second Brain">
-    <script async data-uid="4fd36350af" src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></script>
+    <div id="kitEmbedMount" data-uid="4fd36350af" data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
 </dialog>
 
@@ -114,5 +114,5 @@
 
 <script src="assets/theme.js"></script>
 <script src="assets/site.js"></script>
-<script>(function(){var dialog=document.getElementById("subscribeDialog");var open=document.getElementById("subscribeOpen");if(!dialog||!open||typeof dialog.showModal!=="function")return;open.addEventListener("click",function(){dialog.showModal()});dialog.addEventListener("click",function(event){if(event.target===dialog)dialog.close()})})();</script>
+<script>(function(){var dialog=document.getElementById("subscribeDialog");var open=document.getElementById("subscribeOpen");var mount=document.getElementById("kitEmbedMount");if(!dialog||!open||!mount||typeof dialog.showModal!=="function")return;function loadKit(){if(mount.dataset.loaded)return;var script=document.createElement("script");script.async=true;script.dataset.uid=mount.dataset.uid;script.src=mount.dataset.src;mount.dataset.loaded="1";mount.appendChild(script)}open.addEventListener("click",function(){loadKit();dialog.showModal()});dialog.addEventListener("click",function(event){if(event.target===dialog)dialog.close()})})();</script>
 </body></html>
