@@ -29,6 +29,8 @@ page_path.write_text(html, encoding="utf-8")
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page(viewport={"width":390,"height":844}, device_scale_factor=1, accept_downloads=True)
+    page_errors = []
+    page.on("pageerror", lambda exc: page_errors.append(str(exc)))
     page.goto(page_path.as_uri(), wait_until="load")
     page.wait_for_selector("#graph")
     page.wait_for_selector("#sb-map-switch")
@@ -56,8 +58,20 @@ with sync_playwright() as p:
     assert abs(controls["theme"]["w"] - 36) < 0.1 and abs(controls["theme"]["h"] - 36) < 0.1, controls["theme"]
     assert controls["theme"]["font"] == "21px", controls["theme"]
 
-    shown = page.evaluate("""() => { labelsShown=false; updateLabelVisibility(0.61); const before=labelsShown; updateLabelVisibility(0.62); return {before, after:labelsShown}; }""")
-    assert shown == {"before": False, "after": True}, shown
+    # Exercise the actual D3 wheel-zoom path instead of reaching into lexical
+    # implementation details. The exact mobile/desktop thresholds are covered by
+    # the focused source-contract test; here we verify the browser can zoom past
+    # the mobile threshold with the real canvas and without JavaScript errors.
+    graph = page.locator("#graph")
+    graph.hover()
+    before_zoom = page.evaluate("() => d3.zoomTransform(document.querySelector('#graph')).k")
+    page.mouse.wheel(0, -900)
+    page.wait_for_timeout(350)
+    after_zoom = page.evaluate("() => d3.zoomTransform(document.querySelector('#graph')).k")
+    assert after_zoom > before_zoom, (before_zoom, after_zoom)
+    assert after_zoom > 0.62, after_zoom
+    assert not page_errors, page_errors
+    zoom_state = {"before": before_zoom, "after": after_zoom}
 
     page.locator("#sb-map-switch").screenshot(path=str(out / "graph-mobile-controls.png"))
 
@@ -76,7 +90,8 @@ with sync_playwright() as p:
     assert root.tag.endswith("svg")
     assert any(el.tag.endswith("circle") for el in root.iter())
     assert any(el.tag.endswith("line") for el in root.iter())
+    assert not page_errors, page_errors
 
     browser.close()
 
-print("browser audit PASS", controls, shown, png_path.stat().st_size, svg_path.stat().st_size)
+print("browser audit PASS", controls, zoom_state, png_path.stat().st_size, svg_path.stat().st_size)
