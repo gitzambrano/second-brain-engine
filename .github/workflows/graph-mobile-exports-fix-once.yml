@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 9: normalize stale helper tokens, patch graph/chrome,
+# One-shot repair, revision 10: normalize stale helper tokens, patch graph/chrome,
 # syntax-check generated JavaScript, run focused + browser + repository gates,
 # commit validated source, then self-clean.
 jobs:
@@ -44,13 +44,18 @@ jobs:
               raise SystemExit(f'expected one stale essay helper token, got {text.count(old)}')
           text = text.replace(old, new)
 
-          # Avoid a nested Python-string/JavaScript escape boundary in the HTML
-          # template: join with a character code instead of a backslash escape.
-          old_join = 'return parts.join("\\\\n");'
-          new_join = 'return parts.join(String.fromCharCode(10));'
-          if text.count(old_join) != 1:
-              raise SystemExit(f'expected one SVG join escape, got {text.count(old_join)}')
-          text = text.replace(old_join, new_join)
+          # Replace the SVG join structurally so nested source-code escaping cannot
+          # turn a JavaScript escape into a physical newline in the generated page.
+          start = text.find('return parts.join("')
+          if start < 0:
+              raise SystemExit('SVG join start not found')
+          end = text.find('");', start)
+          if end < 0:
+              raise SystemExit('SVG join end not found')
+          end += len('");')
+          if text.find('return parts.join("', start + 1) >= 0:
+              raise SystemExit('expected exactly one SVG join')
+          text = text[:start] + 'return parts.join(String.fromCharCode(10));' + text[end:]
           helper.write_text(text, encoding='utf-8')
 
           audit = Path('.github/scripts/audit_graph_mobile_exports_once.py')
