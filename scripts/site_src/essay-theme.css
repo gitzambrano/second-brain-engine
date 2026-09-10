@@ -30,10 +30,10 @@
   --sb-bg:#ffffff;
   --sb-surface:#ffffff;
   --sb-surface-soft:#f7f9fc;
-  --sb-text:#172235;
-  --sb-muted:#607087;
-  --sb-line:rgba(23,34,53,.14);
-  --sb-line-strong:rgba(23,34,53,.26);
+  --sb-text:#0a1525;
+  --sb-muted:#5d6c81;
+  --sb-line:rgba(23,34,53,.12);
+  --sb-line-strong:rgba(23,34,53,.24);
   --sb-primary:#2f5fb0;
   --sb-primary-soft:rgba(47,95,176,.09);
   --sb-shadow:0 18px 54px rgba(24,45,78,.12);
@@ -61,10 +61,10 @@
   --sb-bg:#090909;
   --sb-surface:#121212;
   --sb-surface-soft:#181818;
-  --sb-text:#f0ede7;
-  --sb-muted:#aaa39a;
-  --sb-line:rgba(240,237,231,.14);
-  --sb-line-strong:rgba(240,237,231,.25);
+  --sb-text:#ffffff;
+  --sb-muted:#a6a6a6;
+  --sb-line:rgba(255,255,255,.11);
+  --sb-line-strong:rgba(255,255,255,.22);
   --sb-primary:#c9a45c;
   --sb-primary-soft:rgba(201,164,92,.10);
   --sb-shadow:0 24px 70px rgba(0,0,0,.46);
@@ -104,16 +104,17 @@ body{padding-top:68px;}
 #sbThemeToggle,#sbToTop,body > .sb-progress > .sb-progress-fill{display:none !important;}
 
 .sb-bar{
-  position:fixed;inset:0 0 auto 0;z-index:60;height:68px;
+  position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;
+  width:min(1120px,calc(100% - 48px));height:68px;
   display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding:0 clamp(16px,4vw,40px);
+  padding:0;
   border-bottom:1px solid var(--sb-line);
-  background:color-mix(in srgb,var(--sb-bg) 90%,transparent);
+  background:color-mix(in srgb,var(--sb-bg) 86%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 .sb-brand{
-  display:inline-flex;align-items:center;gap:10px;
+  display:inline-flex;align-items:center;gap:11px;
   color:var(--sb-text) !important;font-weight:700;font-size:14px;
   text-decoration:none !important;
 }
@@ -137,18 +138,22 @@ body{padding-top:68px;}
 .sb-nav a{color:var(--sb-muted) !important;font-size:14px;font-weight:500;text-decoration:none !important;}
 .sb-nav a:hover{color:var(--sb-primary) !important;}
 .sb-nav button{
-  width:36px;height:36px;border:1px solid var(--sb-line);border-radius:10px;
+  width:36px;height:36px;display:grid;place-items:center;
+  border:1px solid var(--sb-line);border-radius:10px;
   background:transparent;color:var(--sb-primary);cursor:pointer;
+  transition:border-color .16s cubic-bezier(.22,.61,.36,1);
 }
-.sb-nav button:hover{border-color:var(--sb-line-strong);}
+.sb-nav button:hover{border-color:color-mix(in srgb,var(--sb-primary) 55%,var(--sb-line));}
 .sb-nav button:focus-visible{
   outline:2px solid color-mix(in srgb,var(--sb-primary) 58%,transparent);
   outline-offset:2px;
 }
 .sb-nav .sb-subscribe{
-  width:auto;height:36px;padding:0 12px;
+  width:auto;height:36px;min-height:36px;padding:0 12px;
+  display:inline-flex;align-items:center;justify-content:center;
   border-color:var(--sb-line);border-radius:999px;
-  background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));color:var(--sb-primary);font:650 12.5px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+  background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));color:var(--sb-primary);
+  font:650 12.5px Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 #sbTheme{border-color:var(--sb-line);}
 .sb-subscribe-dialog{
@@ -247,15 +252,16 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-related-card span{color:var(--sb-muted);font-size:12px;line-height:1.45;}
 
 @media(max-width:720px){
-  .sb-bar{height:60px;padding-inline:14px;}
+  .sb-bar{width:min(1120px,calc(100% - 28px));height:60px;padding:0;}
   body{padding-top:60px;}
   body > .sb-progress:not(:has(.sb-progress-fill)){top:60px;}
-  .sb-nav{gap:8px;}
+  .sb-nav{gap:14px;}
   .sb-nav a{font-size:13px;}
   .sb-brand{gap:0;font-size:0;}
   .sb-nav a:first-child{display:none;}
   .sb-nav button{width:36px;height:36px;}
-  .sb-nav #sbTheme{font-size:1.25rem;}
+  .sb-nav #sbTheme > span{display:block;font-size:1.28rem;line-height:1;}
+  .sb-nav .sb-subscribe{height:36px;min-height:36px;padding-inline:10px;font-size:12px;line-height:normal;}
   .sb-subscribe{display:inline-flex;}
   .sb-toc-fab{width:44px;height:44px;padding:0;justify-content:center;}
   .sb-toc-text{display:none;}
@@ -267,6 +273,6 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
    o unico caminho para o mapa na tela onde ele mais importa. */
 @media(max-width:520px){
   .sb-brand{gap:0;font-size:0;}
-  .sb-nav{gap:8px;}
+  .sb-nav{gap:14px;}
   .sb-nav a{font-size:13px;}
 }

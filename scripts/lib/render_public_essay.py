@@ -257,11 +257,11 @@ def site_chrome(essay, related) -> str:
 <header class="sb-bar">
   <a class="sb-brand" href="../index.html"><span class="sb-mark" aria-hidden="true"></span>Second Brain</a>
   <nav class="sb-nav">
-    <a href="../index.html">Essays</a>
+    <a class="active" href="../index.html">Ensaios</a>
     <a href="../graph.html">Grafo</a>
     <button class="sb-subscribe" type="button" id="sbSubscribe" aria-haspopup="dialog"
             aria-controls="sbSubscribeDialog">Assinar</button>
-    <button type="button" id="sbTheme" aria-label="Alternar tema" aria-pressed="false">◐</button>
+    <button type="button" id="sbTheme" aria-label="Alternar tema" aria-pressed="false"><span aria-hidden="true">◐</span></button>
   </nav>
 </header>
 <dialog class="sb-subscribe-dialog" id="sbSubscribeDialog" aria-labelledby="sbSubscribeTitle">

@@ -1987,8 +1987,8 @@ data.nodes.forEach(n => {
 // no zoom (abaixo) e recalculado toda vez que spacing/performance mudam.
 let currentTier = PERFORMANCE_TIERS[resolvePerformanceTier(styleConfig)];
 let labelsShown = false;
-const LABEL_SHOW_AT = 1.40;
-const LABEL_HIDE_AT = 1.32;
+const LABEL_SHOW_AT = 1.16;
+const LABEL_HIDE_AT = 1.10;
 
 // Some com os rótulos quando o tier não é "sempre mostrar" e o zoom está
 // afastado — em wikis de centenas de nós, texto é de longe a coisa mais

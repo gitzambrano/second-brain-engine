@@ -805,7 +805,7 @@ h1, h2, h3 {
   .topnav { gap: 14px; }
   .nav-link { font-size: 13px; }
   .brand > span:last-child { display: none; }
-  .icon-button > span { font-size: 1.2rem; line-height: 1; }
+  .icon-button > span { font-size: 1.28rem; line-height: 1; }
 
   .masthead { padding-block: 30px 24px; }
   .masthead-lede { font-size: 15px; }

@@ -23,8 +23,19 @@ def test_mobile_reader_controls_preserve_compact_36px_visuals():
     css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
     assert ".sb-nav button" in css
     assert "width:36px;height:36px" in css
-    assert ".sb-nav{gap:8px" in css
+    assert ".sb-nav{gap:14px" in css
     assert ".sb-nav button:focus-visible" in css
+
+
+def test_mobile_reader_header_matches_landing_header_rhythm():
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    landing = (SRC / "site.css").read_text(encoding="utf-8")
+    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
+    assert ".sb-nav{gap:14px;}" in css
+    assert ".topnav { gap: 14px; }" in landing
+    assert "calc(100% - 28px)" in css
+    assert '<a class="active" href="../index.html">Ensaios</a>' in source
+    assert '<span aria-hidden="true">◐</span>' in source
 
 
 def test_mobile_toc_keeps_secondary_entries_readable_and_active_state_quiet():
@@ -71,7 +82,7 @@ def test_theme_control_border_matches_the_subscribe_control_presence():
 
 def test_mobile_theme_glyph_grows_without_growing_the_reader_control():
     css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
-    assert ".sb-nav #sbTheme{font-size:1.25rem;}" in css
+    assert ".sb-nav #sbTheme > span{display:block;font-size:1.28rem;line-height:1;}" in css
 
 
 def test_reader_footer_uses_at_least_comfortable_small_text():
