@@ -3,7 +3,7 @@
 > Motor computacional e infraestrutura de agentes para uma wiki pessoal centrada em **ensaios (*essays*), artigos (*white papers*) e estudos aprofundados** em Português do Brasil.
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/Tests-Pytest-green.svg)](TESTING.md)
+[![Tests](https://img.shields.io/badge/Tests-Pytest-green.svg)](docs/TESTING.md)
 [![Atlas](<https://img.shields.io/badge/Atlas-Live%20Site-orange.svg>)](https://gitzambrano.github.io/second-brain-site/)
 
 🔗 **Atalhos rápidos:**
@@ -11,7 +11,7 @@
 - **[Atlas ao Vivo](https://gitzambrano.github.io/second-brain-site/)** — o site público do Second Brain: o ideário de essays, white papers e estudos, com o catálogo completo, o grafo de conexões entre essays, conceitos, entidades e referências, e o globo, que é o mesmo mapa numa esfera. O catálogo e os mapas cobrem a base inteira; o texto só abre para o que foi explicitamente autorizado.
 - **[`AGENTS.md`](./AGENTS.md)** — regras operacionais, routing e convenções de agentes.
 - **[`conventions/SKILL.md`](./.agents/skills/conventions/SKILL.md)** — especificação normativa de formato, estilo e frontmatter.
-- **[`TESTING.md`](./TESTING.md)** — suíte de testes, fixtures e quality gates do repositório.
+- **[`TESTING.md`](./docs/TESTING.md)** — suíte de testes, fixtures e quality gates do repositório.
 
 ---
 
@@ -96,7 +96,7 @@ python scripts/check_repo.py --quick
 python -m pytest -q -m "not html and not pdf and not slow and not browser"
 ```
 
-Esse é o núcleo da CI e não exige Pandoc, LuaLaTeX ou Chromium. Essas dependências só são necessárias para exportação e testes visuais; consulte **[`TESTING.md`](./TESTING.md)**.
+Esse é o núcleo da CI e não exige Pandoc, LuaLaTeX ou Chromium. Essas dependências só são necessárias para exportação e testes visuais; consulte **[`TESTING.md`](./docs/TESTING.md)**.
 
 ---
 
@@ -148,7 +148,7 @@ O routing detalhado e os contratos ficam em **[`AGENTS.md`](./AGENTS.md)** e nas
 
 ## 🛠️ Scripts Mais Utilizados
 
-Todos os scripts executáveis em `scripts/` possuem defaults úteis quando executados sem argumentos (consulte o catálogo completo em **[`SCRIPTS.md`](./SCRIPTS.md)**):
+Todos os scripts executáveis em `scripts/` possuem defaults úteis quando executados sem argumentos (consulte o catálogo completo em **[`SCRIPTS.md`](./docs/SCRIPTS.md)**):
 
 ```bash
 # Diagnóstico e Qualidade
@@ -197,4 +197,4 @@ python -m pytest -q -m "not html and not pdf and not slow and not browser" # su�
 python -m pytest tests/test_site_privacy.py                                # sentinela de privacidade
 ```
 
-Consulte o arquivo **[`TESTING.md`](./TESTING.md)** para a matriz completa de testes e dependências opcionais (Pandoc, LuaLaTeX e Chromium).
+Consulte o arquivo **[`TESTING.md`](./docs/TESTING.md)** para a matriz completa de testes e dependências opcionais (Pandoc, LuaLaTeX e Chromium).

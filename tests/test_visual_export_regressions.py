@@ -33,10 +33,10 @@ def test_unicode_symbols_have_portable_pdf_mapping():
         assert line in exporter
 
 
-def test_display_math_fit_is_centered_without_extra_display_skip():
+def test_display_math_fit_uses_display_delimiters():
     lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
-    assert r"\\makebox[\\linewidth][c]{\\sbfit{" in lua
-    assert r"\\[\\sbfit{" not in lua
+    assert r"\\[\\sbfit{" in lua
+    assert r"\\makebox[\\linewidth][c]{\\sbfit{" not in lua
 
 
 def test_sumario_is_measured_automatically_without_frontmatter_knob():

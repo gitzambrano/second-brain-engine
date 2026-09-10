@@ -14,6 +14,7 @@ from pathlib import Path
 
 from repo_paths import ESSAYS_DIR, PDF_DIR
 from sanity_common import CheckResult, text_contains
+from site_common import title_plain
 
 A4 = (595.28, 841.89)
 SIZE_TOLERANCE_PT = 4.0
@@ -24,6 +25,16 @@ def norm(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text)
     without_marks = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
     return re.sub(r"\s+", " ", without_marks).strip().casefold()
+
+
+def strip_md_inline(text: str) -> str:
+    """Remove Markdown inline markers (*bold*, _italic_, **bold**) before text comparison.
+
+    PDF renderers output the rendered text without the markup delimiters, so
+    '_Teetering_' in the source becomes 'Teetering' in the PDF. Comparing
+    against the raw Markdown title produces spurious TITLE_MISSING failures.
+    """
+    return title_plain(text).strip()
 
 
 def _source_for(pdf: Path) -> Path | None:
@@ -85,8 +96,11 @@ def audit_file(path: Path, result: CheckResult) -> None:
         if source:
             md = source.read_text(encoding="utf-8-sig")
             h1 = re.search(r"(?m)^#\s+(.+)$", md)
-            if h1 and not text_contains(joined_norm, norm(h1.group(1).strip())):
-                result.error("TITLE_MISSING", f"source title not found in PDF: {h1.group(1).strip()}", path.name)
+            if h1:
+                raw_title = h1.group(1).strip()
+                plain_title = strip_md_inline(raw_title)
+                if not text_contains(joined_norm, norm(plain_title)):
+                    result.error("TITLE_MISSING", f"source title not found in PDF: {raw_title}", path.name)
             if "Gustavo Zambrano" in md and not text_contains(joined_norm, norm("Gustavo Zambrano")):
                 result.error("AUTHOR_MISSING", "author missing from rendered PDF", path.name)
             if "## Sumário" in md and not text_contains(joined_norm, norm("Sumário")):

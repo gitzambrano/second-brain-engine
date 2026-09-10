@@ -157,3 +157,54 @@ def test_check_repo_quick_prints_non_ascii_without_crashing(tmp_path):
     # Em nenhuma circunstância deve abortar com traceback de UnicodeEncodeError.
     assert "UnicodeEncodeError" not in result.stderr, result.stderr
     assert result.returncode in (0, 1)  # PASS ou FAIL, nunca crash não tratado
+
+
+@pytest.mark.pdf
+def test_check_pdf_content_handles_inline_markdown_in_title(tmp_path):
+    """Regression: título com ênfase Markdown (_Teetering_) não deve falhar com TITLE_MISSING no PDF."""
+    root = _data_root(tmp_path)
+    md = root / "wiki/essays/teetering.md"
+    md.write_text(
+        """---
+tags: [Aero]
+sources: []
+created: 2026-08-31
+updated: 2026-08-31
+---
+# Dinâmica de Rotor _Teetering_ Controlado
+
+> Ensaio
+> Gustavo Zambrano · Agosto de 2026
+
+## Sumário
+
+- [[#Capítulo]]
+
+## Capítulo
+
+Texto do capítulo.
+
+## Referências
+
+- Referência.
+""",
+        encoding="utf-8",
+    )
+    pdf = root / "output/pdf/teetering.pdf"
+    doc = fitz.open()
+    for i in range(3):
+        page = doc.new_page(width=595.28, height=841.89)
+        if i == 0:
+            page.insert_text((60, 80), "Dinâmica de Rotor Teetering Controlado", fontsize=18)
+            page.insert_text((60, 110), "Gustavo Zambrano", fontsize=12)
+        elif i == 1:
+            page.insert_text((60, 80), "Sumário", fontsize=14)
+        else:
+            page.insert_text((60, 80), "Capítulo", fontsize=14)
+            page.insert_text((60, 100), "Referências", fontsize=14)
+    doc.save(pdf)
+    doc.close()
+
+    result = run_script("check_pdf_content.py", "teetering", "--json", data_root=root)
+    assert result.returncode == 0, result.stdout + result.stderr
+

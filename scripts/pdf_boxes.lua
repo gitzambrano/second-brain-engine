@@ -518,7 +518,7 @@ function Math(el)
   -- do `\resizebox` do \sbfit o amsmath aborta com "\tag not
   -- allowed here".
   if el.text:find('\\tag', 1, true) then return nil end
-  return pandoc.RawInline('latex', '\\makebox[\\linewidth][c]{\\sbfit{' .. el.text .. '}}')
+  return pandoc.RawInline('latex', '\\[\\sbfit{' .. el.text .. '}\\]')
 end
 
 function Para(el)

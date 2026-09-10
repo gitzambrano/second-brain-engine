@@ -222,6 +222,6 @@ Antes de fechar mudança mecânica:
 python scripts/check_repo.py --quick
 ```
 
-Mudança mecânica determinística deve ganhar teste de regressão quando viável. Use o corpus sintético `tests/fixtures/mini-brain/`, nunca `data/`. Matriz completa, marcadores e dependências: `TESTING.md`.
+Mudança mecânica determinística deve ganhar teste de regressão quando viável. Use o corpus sintético `tests/fixtures/mini-brain/`, nunca `data/`. Matriz completa, marcadores e dependências: `docs/TESTING.md`.
 
 `/doctor` é diagnóstico read-only. Todo script executável deve ter default útil sem argumentos.

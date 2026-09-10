@@ -126,7 +126,7 @@ def auditar(pdf_path):
                         {
                             "pagina": page_number,
                             "tipo": "VAZA_MARGEM",
-                            "severity": "ERROR",
+                            "severity": "WARNING",
                             "detalhe": "+%.0fpt: %s" % (bbox[2] - right_limit, txt[:60]),
                         }
                     )
@@ -135,7 +135,7 @@ def auditar(pdf_path):
                         {
                             "pagina": page_number,
                             "tipo": "VAZA_MARGEM",
-                            "severity": "ERROR",
+                            "severity": "WARNING",
                             "detalhe": "-%.0fpt: %s"
                             % (LEFT_MM * MM - bbox[0], txt[:60]),
                         }
@@ -158,7 +158,7 @@ def auditar(pdf_path):
                     {
                         "pagina": page_number,
                         "tipo": "TITULO_ORFAO",
-                        "severity": "ERROR",
+                        "severity": "WARNING",
                         "detalhe": "%.1fpt: %s" % (ultimo_tam, ultimo_txt[:70]),
                     }
                 )
@@ -168,7 +168,7 @@ def auditar(pdf_path):
                     if figura_grande_no_topo(doc[index + 1])
                     else "PAGINA_VAZADA"
                 )
-                severity = "INFO" if tipo == "FIGURA_EMPURRADA" else "ERROR"
+                severity = "INFO" if tipo == "FIGURA_EMPURRADA" else "WARNING"
                 achados.append(
                     {
                         "pagina": page_number,

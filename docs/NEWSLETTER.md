@@ -4,23 +4,24 @@ A newsletter é uma projeção do Second Brain. O site continua sendo a publica�
 
 ## Publicar
 
-No front matter de um essay público:
+No front matter de um essay público, `newsletter_issue` é a **única** autorização de envio:
 
 ```yaml
 visibility: public
-newsletter: true
+newsletter_issue: 1
 ```
 
-Opcionalmente:
+O comportamento padrão é **não enviar** (ausência de `newsletter_issue:`). Adicione `newsletter_issue: 1` para autorizar o anúncio por e-mail da primeira edição.
+
+Campos opcionais de customização do e-mail:
 
 ```yaml
-newsletter_issue: 1
 newsletter_subject: "Novo essay — Título"
 newsletter_summary: "Resumo específico para o e-mail."
 newsletter_preview: "Texto curto exibido pelo cliente de e-mail."
 ```
 
-`newsletter_issue` evita reenvio acidental quando o essay é editado. O padrão é `1`. Só aumente para `2`, `3`, etc. se quiser deliberadamente anunciar uma nova edição do mesmo essay.
+`newsletter_issue` evita reenvio acidental quando o essay é editado. Só aumente para `2`, `3`, etc. se quiser deliberadamente anunciar uma nova edição do mesmo essay. Não existe `newsletter: true` — o número da edição é a única chave que habilita e rastreia o envio.
 
 ### Gatilho de envio
 
@@ -29,11 +30,11 @@ O envio é deliberado e independente de `status:`.
 Um essay entra na fila de newsletter somente quando satisfaz ao mesmo tempo:
 
 1. está publicamente autorizado (`visibility: public`, ou `publish: true` legado);
-2. tem `newsletter: true`;
+2. contém `newsletter_issue: N` (inteiro positivo `1`, `2`, ...);
 3. sua identidade `slug:newsletter_issue` ainda não existia no manifesto anterior;
 4. o deploy do GitHub Pages em `main` terminou com sucesso.
 
-Trocar `status: draft` → `revisao` → `finalizado` não envia e-mail. `status:` mede estado editorial; `visibility:` controla publicação; `newsletter:` controla anúncio por e-mail. Assim um essay pode estar público e em revisão sem gerar newsletter, e pode ser anunciado depois simplesmente adicionando `newsletter: true`.
+Trocar `status: draft` → `revisao` → `finalizado` não envia e-mail. `status:` mede estado editorial; `visibility:` controla publicação pública; `newsletter_issue:` controla anúncio por e-mail. Assim um essay pode estar público e em revisão sem gerar newsletter, e pode ser anunciado depois simplesmente adicionando `newsletter_issue: 1`.
 
 Não há comando extra de publicação: `seal_publication.py` gera automaticamente `site/.github/newsletter-manifest.json`. O manifesto contém apenas metadados públicos e nunca entra no artefato do GitHub Pages.
 

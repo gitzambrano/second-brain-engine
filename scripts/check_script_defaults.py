@@ -125,7 +125,11 @@ def audit_shim(path: Path, result: CheckResult) -> None:
 
 
 def audit_catalog(executables: set[str], result: CheckResult) -> None:
-    catalog_path = CODE_ROOT / "SCRIPTS.md"
+    catalog_path = CODE_ROOT / "docs" / "SCRIPTS.md"
+    if not catalog_path.is_file():
+        catalog_path = SCRIPTS_DIR / "SCRIPTS.md"
+    if not catalog_path.is_file():
+        catalog_path = CODE_ROOT / "SCRIPTS.md"
     if not catalog_path.is_file():
         result.warning("SCRIPT_CATALOG_MISSING", "SCRIPTS.md is absent")
         return
