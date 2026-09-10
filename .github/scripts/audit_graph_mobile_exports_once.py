@@ -70,14 +70,25 @@ with sync_playwright() as p:
     # production-only debug hook for lexical D3 internals.
     page.locator("#sb-map-switch").screenshot(path=str(out / "graph-mobile-controls.png"))
 
+    # Mobile intentionally starts with the bottom-sheet panel collapsed. Open it
+    # through the actual user control before exercising the export buttons.
+    panel = page.locator("#panel")
+    if panel.evaluate("el => el.classList.contains('collapsed')"):
+        page.locator("#panel-toggle").click()
+    page.wait_for_function("!document.querySelector('#panel').classList.contains('collapsed')")
+
+    png_button = page.locator("#btn-export-png")
+    png_button.scroll_into_view_if_needed()
     with page.expect_download(timeout=10000) as dl_info:
-        page.locator("#btn-export-png").click()
+        png_button.click()
     png_path = out / "graph-export-test.png"
     dl_info.value.save_as(str(png_path))
     assert png_path.stat().st_size > 1000, png_path.stat().st_size
 
+    svg_button = page.locator("#btn-export-svg")
+    svg_button.scroll_into_view_if_needed()
     with page.expect_download(timeout=10000) as dl_info:
-        page.locator("#btn-export-svg").click()
+        svg_button.click()
     svg_path = out / "graph-export-test.svg"
     dl_info.value.save_as(str(svg_path))
     svg_text = svg_path.read_text(encoding="utf-8")
