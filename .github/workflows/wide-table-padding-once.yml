@@ -1,0 +1,32 @@
+name: Apply wide-table padding once
+
+on:
+  push:
+    branches:
+      - fix/pdf-reference-table-clipping-2026-09-10
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pdf-reference-table-clipping-2026-09-10
+          fetch-depth: 0
+      - name: Apply refinement
+        run: python .github/scripts/apply_wide_table_padding.py
+      - name: Test
+        run: |
+          python -m pip install -r requirements-ci.txt
+          python -m pytest -q tests/test_visual_export_regressions.py
+      - name: Commit refinement
+        run: |
+          git config user.name second-brain-bot
+          git config user.email actions@users.noreply.github.com
+          git rm .github/workflows/wide-table-padding-once.yml .github/scripts/apply_wide_table_padding.py
+          git add scripts/export_essay_pdf.py scripts/pdf_boxes.lua tests/test_visual_export_regressions.py
+          git commit -m "fix: give wide PDF table headers usable width"
+          git push origin HEAD:fix/pdf-reference-table-clipping-2026-09-10
