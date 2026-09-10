@@ -1000,9 +1000,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     --entity: #e8b657;
     --insight: #b48ce8;
     --reference: #8a8f96;
-    --edge: #9aa0a8;
+    --edge: #858b93;
     --edge-ref: #5a5f66;
-    --edge-opacity: 0.55;
+    --edge-opacity: 0.28;
     --radius-base: 5;
     --radius-scale: 3;
     --label-size: 10px;
