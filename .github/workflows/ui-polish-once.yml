@@ -1,0 +1,196 @@
+name: Apply UI polish once
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/ui-polish-once.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.head_commit.message == 'chore: apply UI polish runner'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply source-of-truth UI changes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=1):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              found = text.count(old)
+              if found != count:
+                  raise SystemExit(f'{path}: expected {count} occurrence(s), found {found}: {old[:80]!r}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          # Landing/header: home is the canonical geometry.
+          replace('scripts/site_src/site.css', '''.brand-mark {
+            width: 31px; height: 31px;
+            display: grid;
+            place-items: center;
+            border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+            border-radius: 9px;''', '''.brand-mark {
+            width: 36px; height: 36px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 10px;''')
+          replace('scripts/site_src/site.css', '''  .nav-link { font-size: 13px; }
+
+  .masthead''', '''  .nav-link { font-size: 13px; }
+            .brand > span:last-child { display: none; }
+            .icon-button > span { font-size: 1.2rem; line-height: 1; }
+
+            .masthead''')
+
+          replace('scripts/site_src/index.html', '.subscribe-cta{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));border-radius:999px;background:var(--accent-soft);color:var(--accent);font:650 12.5px var(--sans);cursor:pointer;transition:border-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease)}', '.subscribe-cta{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--accent) 13%,var(--panel));color:var(--accent);font:650 12.5px var(--sans);cursor:pointer;transition:border-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease)}')
+          replace('scripts/site_src/index.html', '.subscribe-cta:hover{border-color:color-mix(in srgb,var(--accent) 72%,var(--line));background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text-strong)}', '.subscribe-cta:hover{border-color:var(--line-strong);background:color-mix(in srgb,var(--accent) 17%,var(--panel));color:var(--text-strong)}')
+          replace('scripts/site_src/index.html', '@media(max-width:760px){.topnav .nav-link.active{display:none}.subscribe-cta{min-height:32px;padding-inline:10px;font-size:12px}', '@media(max-width:760px){.topnav .nav-link.active{display:none}.subscribe-cta{min-height:36px;padding-inline:10px;font-size:12px}')
+
+          # Public essay chrome: same desktop/mobile geometry and neutral borders.
+          replace('scripts/site_src/essay-theme.css', 'body{padding-top:56px;}', 'body{padding-top:68px;}')
+          replace('scripts/site_src/essay-theme.css', 'position:fixed;inset:0 0 auto 0;z-index:60;height:56px;', 'position:fixed;inset:0 0 auto 0;z-index:60;height:68px;')
+          replace('scripts/site_src/essay-theme.css', '''.sb-mark{
+            display:grid;place-items:center;width:27px;height:27px;
+            border:1px solid color-mix(in srgb,var(--sb-primary) 42%,transparent);
+            border-radius:8px;color:var(--sb-primary);background:var(--sb-primary-soft);''', '''.sb-mark{
+            display:grid;place-items:center;width:36px;height:36px;
+            border:1px solid var(--sb-line);
+            border-radius:10px;color:var(--sb-primary);background:var(--sb-primary-soft);''')
+          replace('scripts/site_src/essay-theme.css', 'background:url("../assets/icon-32.png") center / 18px 18px no-repeat, var(--sb-primary-soft);', 'background:url("../assets/icon-32.png") center / 20px 20px no-repeat, var(--sb-primary-soft);')
+          replace('scripts/site_src/essay-theme.css', '.sb-nav{display:flex;align-items:center;gap:16px;}', '.sb-nav{display:flex;align-items:center;gap:20px;}')
+          replace('scripts/site_src/essay-theme.css', '.sb-nav a{color:var(--sb-muted) !important;font-size:13px;text-decoration:none !important;}', '.sb-nav a{color:var(--sb-muted) !important;font-size:14px;font-weight:500;text-decoration:none !important;}')
+          replace('scripts/site_src/essay-theme.css', '''.sb-nav button{
+            width:32px;height:32px;border:1px solid var(--sb-line);border-radius:9px;''', '''.sb-nav button{
+            width:36px;height:36px;border:1px solid var(--sb-line);border-radius:10px;''')
+          replace('scripts/site_src/essay-theme.css', '''.sb-nav .sb-subscribe{
+            width:auto;height:32px;padding:0 10px;
+            border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));border-radius:999px;
+            background:var(--sb-primary-soft);color:var(--sb-primary);font:650 12px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+          }''', '''.sb-nav .sb-subscribe{
+            width:auto;height:36px;padding:0 12px;
+            border-color:var(--sb-line);border-radius:999px;
+            background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));color:var(--sb-primary);font:650 12.5px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+          }''')
+          replace('scripts/site_src/essay-theme.css', '#sbTheme{border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));}', '#sbTheme{border-color:var(--sb-line);}')
+          replace('scripts/site_src/essay-theme.css', 'position:fixed;top:56px;left:0;right:0;z-index:61;height:2px;background:transparent;', 'position:fixed;top:68px;left:0;right:0;z-index:61;height:2px;background:transparent;')
+          replace('scripts/site_src/essay-theme.css', 'border:1px solid var(--sb-line-strong);border-radius:999px;\n  background:color-mix(in srgb,var(--sb-surface) 96%,transparent);', 'border:1px solid var(--sb-line);border-radius:999px;\n  background:color-mix(in srgb,var(--sb-surface) 96%,transparent);')
+          replace('scripts/site_src/essay-theme.css', '  .sb-bar{padding-inline:14px;}', '  .sb-bar{height:60px;padding-inline:14px;}\n  body{padding-top:60px;}\n  body > .sb-progress:not(:has(.sb-progress-fill)){top:60px;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-nav{gap:6px;}', '  .sb-nav{gap:8px;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-nav a{font-size:12px;}', '  .sb-nav a{font-size:13px;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-brand{font-size:13px;}', '  .sb-brand{gap:0;font-size:0;}\n  .sb-nav a:first-child{display:none;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-nav button{width:44px;height:44px;}', '  .sb-nav button{width:36px;height:36px;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-subscribe{display:none;}', '  .sb-subscribe{display:inline-flex;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-brand{gap:7px;font-size:0;}', '  .sb-brand{gap:0;font-size:0;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-nav{gap:14px;}', '  .sb-nav{gap:8px;}')
+          replace('scripts/site_src/essay-theme.css', '  .sb-nav a{font-size:12.5px;}', '  .sb-nav a{font-size:13px;}')
+
+          replace('scripts/lib/render_public_essay.py', '<span class="sb-mark" aria-hidden="true"></span>Second Brain Atlas</a>', '<span class="sb-mark" aria-hidden="true"></span>Second Brain</a>')
+
+          # Dark note: a dedicated quiet surface, without restyling the callout in the public overlay.
+          replace('scripts/essay_template.html', '  --callout-note:#A2988A;\n', '  --callout-note:#A2988A;\n  --note-bg:color-mix(in srgb,var(--callout-note) 7%,var(--surface2));\n')
+          replace('scripts/essay_template.html', '  --callout-note:#4A5C77;\n', '  --callout-note:#4A5C77;\n  --note-bg:var(--surface2);\n', count=2)
+          replace('scripts/essay_template.html', '''.box.callout-note{
+            border:1px solid var(--border);border-radius:3px;
+            background:var(--surface2);
+          }''', '''.box.callout-note{
+            border:1px solid var(--border);border-radius:3px;
+            background:var(--note-bg,var(--surface2));
+          }''')
+
+          # Graph: labels a little earlier; quieter default edges.
+          replace('scripts/build_graph.py', '        "edge": "#9aa0a8",', '        "edge": "#858b93",')
+          replace('scripts/build_graph.py', '    "edgeOpacity": 0.35,', '    "edgeOpacity": 0.28,')
+          replace('scripts/build_graph.py', 'reference: "#8a8f96", edge: "#9aa0a8", background: "#1b1e21"', 'reference: "#8a8f96", edge: "#858b93", background: "#1b1e21"')
+          replace('scripts/build_graph.py', 'edgeOpacity: 0.35, edgeVisibility:', 'edgeOpacity: 0.28, edgeVisibility:')
+          replace('scripts/build_graph.py', 'const LABEL_SHOW_AT = 1.55;\nconst LABEL_HIDE_AT = 1.45;', 'const LABEL_SHOW_AT = 1.40;\nconst LABEL_HIDE_AT = 1.32;')
+
+          # Public graph chrome: comfortable controls, lower-contrast edges, no panel overlap.
+          replace('scripts/lib/build_public_map.py', '    padding: 9px 15px; border-radius: 999px;', '    min-height: 36px; padding: 9px 15px; border-radius: 999px;', count=2)
+          replace('scripts/lib/build_public_map.py', '    padding: 9px 13px; border-radius: 999px;', '    min-height: 36px; padding: 9px 13px; border-radius: 999px;')
+          replace('scripts/lib/build_public_map.py', '  #panel { padding-bottom: 56px; }', '  #panel { padding-bottom: 60px; }')
+          replace('scripts/lib/build_public_map.py', '    #panel { bottom: 58px; border-radius: 14px; }', '    #panel { bottom: calc(64px + env(safe-area-inset-bottom)); border-radius: 14px; }')
+          replace('scripts/lib/build_public_map.py', '    #sb-back, #sb-map-switch a, #sb-theme { padding: 7px 11px; font-size: 12px; }', '    #sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }')
+          replace('scripts/lib/build_public_map.py', '    --edge: #5b6570;', '    --edge: #a7b0ba;')
+          replace('scripts/lib/build_public_map.py', "          styleConfig.colors.edge = theme === 'light' ? '#8a99aa' : '#9aa0a8';\n          applyStyle(styleConfig, { silent: true });", "          styleConfig.colors.edge = theme === 'light' ? '#a7b0ba' : '#858b93';\n          // Migrate only the old factory opacity; explicit user choices survive.\n          if (styleConfig.edgeOpacity === 0.35) styleConfig.edgeOpacity = 0.28;\n          applyStyle(styleConfig, { silent: true });")
+
+          # Update existing contracts that intentionally encoded the previous UI.
+          replace('tests/test_public_reader_polish_contract.py', 'def test_mobile_reader_controls_preserve_compact_visuals_with_44px_hit_targets():', 'def test_mobile_reader_controls_preserve_compact_36px_visuals():')
+          replace('tests/test_public_reader_polish_contract.py', '    assert "width:44px;height:44px" in css', '    assert "width:36px;height:36px" in css')
+          replace('tests/test_public_reader_polish_contract.py', '    assert ".sb-nav{gap:6px" in css', '    assert ".sb-nav{gap:8px" in css')
+          replace('tests/test_public_reader_polish_contract.py', '    assert ".sb-subscribe{display:none" in css', '    assert ".sb-subscribe{display:inline-flex" in css')
+          replace('tests/test_public_reader_polish_contract.py', '    assert "#sbTheme{border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));}" in css', '    assert "#sbTheme{border-color:var(--sb-line);}" in css')
+
+          Path('tests/test_second_brain_ui_polish.py').write_text(r'''from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "scripts" / "site_src"
+
+
+def test_home_mobile_header_is_compact_and_neutral():
+    css = (SRC / "site.css").read_text(encoding="utf-8")
+    index = (SRC / "index.html").read_text(encoding="utf-8")
+    brand = css.split(".brand-mark {", 1)[1].split("}", 1)[0]
+    assert "width: 36px; height: 36px" in brand
+    assert "border: 1px solid var(--line)" in brand
+    assert ".brand > span:last-child { display: none; }" in css
+    assert ".topnav .nav-link.active{display:none}" in index
+    assert "border:1px solid var(--line)" in index.split(".subscribe-cta{", 1)[1].split("}", 1)[0]
+
+
+def test_public_reader_matches_header_geometry_without_breaking_progress():
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    renderer = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
+    assert "height:68px" in css
+    assert "width:36px;height:36px" in css
+    assert ".sb-nav a:first-child{display:none;}" in css
+    assert ".sb-subscribe{display:inline-flex;}" in css
+    assert "#sbTheme{border-color:var(--sb-line);}" in css
+    assert "position:fixed;top:68px;left:0;right:0;z-index:61;height:2px" in css
+    assert "body > .sb-progress:not(:has(.sb-progress-fill)){top:60px;}" in css
+    assert 'id="sbProgressFill"' in renderer
+    assert ">Second Brain</a>" in renderer
+
+
+def test_dark_note_uses_a_dedicated_surface():
+    template = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
+    assert "--note-bg:color-mix(in srgb,var(--callout-note) 7%,var(--surface2));" in template
+    assert "background:var(--note-bg,var(--surface2));" in template
+
+
+def test_graph_labels_edges_and_bottom_chrome_are_quieter_and_safer():
+    graph = (ROOT / "scripts" / "build_graph.py").read_text(encoding="utf-8")
+    public = (ROOT / "scripts" / "lib" / "build_public_map.py").read_text(encoding="utf-8")
+    assert "const LABEL_SHOW_AT = 1.40;" in graph
+    assert "const LABEL_HIDE_AT = 1.32;" in graph
+    assert '"edgeOpacity": 0.28' in graph
+    assert '"edge": "#858b93"' in graph
+    assert "#a7b0ba" in public and "#858b93" in public
+    assert "min-height: 36px" in public
+    assert "bottom: calc(64px + env(safe-area-inset-bottom))" in public
+    assert "z-index: 8" in public
+''', encoding='utf-8')
+          PY
+      - name: Validate edited sources
+        run: |
+          python -m pip install -q pytest pyyaml
+          python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py scripts/lib/render_public_essay.py scripts/build_site.py
+          python -m pytest -q tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py tests/test_second_brain_ui_polish.py
+      - name: Commit validated source changes
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/site_src/site.css scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/lib/render_public_essay.py scripts/essay_template.html scripts/build_graph.py scripts/lib/build_public_map.py tests/test_public_reader_polish_contract.py tests/test_second_brain_ui_polish.py
+          git diff --cached --check
+          git commit -m "Polish public chrome and graph readability"
+          git push origin HEAD:main
