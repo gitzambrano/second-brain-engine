@@ -9,8 +9,9 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 8: normalize stale helper tokens, patch graph/chrome,
-# run focused + observable browser + repository gates, commit validated source, self-clean.
+# One-shot repair, revision 9: normalize stale helper tokens, patch graph/chrome,
+# syntax-check generated JavaScript, run focused + browser + repository gates,
+# commit validated source, then self-clean.
 jobs:
   fix:
     runs-on: ubuntu-latest
@@ -21,11 +22,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Normalize obsolete export note and helper token
+      - name: Normalize obsolete export note and helper tokens
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
+
           graph = Path('scripts/build_graph.py')
           text = graph.read_text(encoding='utf-8')
           text, n = re.subn(r'\n<!-- canvas2svg .*?-->\n', '\n', text, flags=re.S)
@@ -35,11 +37,29 @@ jobs:
 
           helper = Path('.github/scripts/fix_graph_mobile_exports_once.py')
           text = helper.read_text(encoding='utf-8')
+
           old = 'background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-panel));'
           new = 'background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));'
           if text.count(old) != 1:
               raise SystemExit(f'expected one stale essay helper token, got {text.count(old)}')
-          helper.write_text(text.replace(old, new), encoding='utf-8')
+          text = text.replace(old, new)
+
+          # Avoid a nested Python-string/JavaScript escape boundary in the HTML
+          # template: join with a character code instead of a backslash escape.
+          old_join = 'return parts.join("\\\\n");'
+          new_join = 'return parts.join(String.fromCharCode(10));'
+          if text.count(old_join) != 1:
+              raise SystemExit(f'expected one SVG join escape, got {text.count(old_join)}')
+          text = text.replace(old_join, new_join)
+          helper.write_text(text, encoding='utf-8')
+
+          audit = Path('.github/scripts/audit_graph_mobile_exports_once.py')
+          audit_text = audit.read_text(encoding='utf-8')
+          old_error = 'page.on("pageerror", lambda exc: page_errors.append(str(exc)))'
+          new_error = 'page.on("pageerror", lambda exc: page_errors.append({"message": str(exc), "stack": getattr(exc, "stack", "")}))'
+          if audit_text.count(old_error) != 1:
+              raise SystemExit('pageerror diagnostic hook not found exactly once')
+          audit.write_text(audit_text.replace(old_error, new_error), encoding='utf-8')
           PY
       - name: Apply source fixes
         run: python .github/scripts/fix_graph_mobile_exports_once.py
@@ -51,6 +71,46 @@ jobs:
         run: |
           python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py scripts/lib/render_public_essay.py
           pytest -q tests/test_graph_mobile_exports_regressions.py tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py
+      - name: Syntax-check generated graph JavaScript
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+          import sys
+
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          import build_graph
+
+          nodes = [
+              {"id":"essay:a","title":"Alpha","type":"essay","tags":[],"degree":1,"sizeBytes":100,"sizeLines":10,"x0":-50,"y0":0,"x":-50,"y":0,"htmlFile":None,"url":None,"public":False},
+              {"id":"concept:b","title":"Beta","type":"concept","tags":[],"degree":2,"sizeBytes":80,"sizeLines":8,"x0":0,"y0":25,"x":0,"y":25,"htmlFile":None,"url":None,"public":False},
+              {"id":"entity:c","title":"Gamma","type":"entity","tags":[],"degree":1,"sizeBytes":60,"sizeLines":6,"x0":50,"y0":0,"x":50,"y":0,"htmlFile":None,"url":None,"public":False},
+          ]
+          edges = [
+              {"source":"essay:a","target":"concept:b","kind":"wikilink"},
+              {"source":"concept:b","target":"entity:c","kind":"wikilink"},
+          ]
+          html = build_graph.render_html(nodes, edges, [], {"essays":{}, "mathjax":"", "css":""})
+          out = Path('visual-audit/js-check')
+          out.mkdir(parents=True, exist_ok=True)
+          scripts = []
+          for idx, match in enumerate(re.finditer(r'<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>', html, re.S | re.I)):
+              attrs = match.group('attrs')
+              if re.search(r'type=["\']application/(?:json|ld\+json)["\']', attrs, re.I):
+                  continue
+              body = match.group('body')
+              if not body.strip():
+                  continue
+              path = out / f'inline-{idx}.js'
+              path.write_text(body, encoding='utf-8')
+              scripts.append(path)
+          if not scripts:
+              raise SystemExit('no JavaScript blocks extracted')
+          for path in scripts:
+              subprocess.run(['node', '--check', str(path)], check=True)
+          print(f'node --check PASS: {len(scripts)} inline script(s)')
+          PY
       - name: Browser audit exports and mobile controls
         run: python .github/scripts/audit_graph_mobile_exports_once.py
       - name: Repository quick gate
