@@ -1239,13 +1239,18 @@ def build_title_map():
             # aqui só para não quebrar link antigo ainda não migrado.
             all_titles.add(file.stem)
             all_slugs.add(file.stem)
-            if category == "essays":
+            # Hidden essays remain valid wikilink targets inside the private
+            # corpus, but the generated index intentionally omits them.
+            hidden_essay = category == "essays" and bool(
+                re.search(r"(?mi)^visibility:\s*(?:hidden|oculto)\s*$", content)
+            )
+            if category == "essays" and not hidden_essay:
                 essay_titles.add(file.stem)
             if title:
                 title_to_file[title] = rel_path
                 file_to_title[rel_path] = title
                 all_titles.add(title)
-                if category == "essays":
+                if category == "essays" and not hidden_essay:
                     essay_titles.add(title)
             else:
                 no_h1.append((category, rel_path))

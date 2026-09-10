@@ -41,7 +41,8 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | :--- | :--- | :--- |
 | **`set_visibility.py`** | Define o nível de visibilidade de essays (`allow`, `deny`, `hide`, `set-exclusive`) no frontmatter. | `python scripts/set_visibility.py allow dutch-roll` |
 | **`check_visibility_field.py`** | Audita a conformidade e os valores válidos do campo `visibility:` em todos os essays da wiki. | `python scripts/check_visibility_field.py` |
-| **`check_essay_slugs.py`** | Garante que todo arquivo em `wiki/essays/` use um slug ASCII estável em `kebab-case`. | `python scripts/check_essay_slugs.py` |
+| **`check_essay_slugs.py`** | Garante que todo arquivo em `wiki/essays/` seja o slug ASCII em `kebab-case` de seu H1 completo. | `python scripts/check_essay_slugs.py` |
+| **`rename_essay_files.py`** | Migra os arquivos de essays para o slug completo do H1 e reaponta wikilinks e assets de figuras. | `python scripts/rename_essay_files.py --apply` |
 | **`visibility.py`** | Leitor utilitário que relata a distribuição de visibilidade do corpus (público, privado, oculto). | `python scripts/visibility.py` |
 | **`build_site.py`** | Compila os essays autorizados para HTML e gera os índices e mapas interativos em `site/`. | `python scripts/build_site.py` |
 | **`publish_site.py`** | Comando único de publicação: valida visibilidade, constrói, sela, cria o commit em `site/` e envia para `main`. Exige os três repositórios limpos e sincronizados. | `python scripts/publish_site.py` |

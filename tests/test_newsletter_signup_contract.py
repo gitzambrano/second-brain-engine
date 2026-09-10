@@ -31,7 +31,10 @@ def test_subscribe_opens_compact_dialog_with_expected_kit_embed() -> None:
     assert "Novos ensaios, quando houver." in html
     assert "Receba um e-mail quando eu publicar um novo ensaio no Second Brain." in html
     assert "Sem frequência fixa" in html
-    assert "Spam ou Promoções" in html
+    assert "Ele pode cair em" in html
+    assert "Spam" in html
+    assert "Promoções" in html
+    assert "Não é spam" in html
 
 
 def test_subscribe_header_fits_narrow_mobile_contract() -> None:
