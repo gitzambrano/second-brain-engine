@@ -1,0 +1,39 @@
+name: Fix mobile header visual once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-mobile-header-visual-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply source-of-truth fixes
+        run: python .github/scripts/fix_mobile_header_visual.py
+      - name: Install test dependency
+        run: python -m pip install -q pytest pyyaml
+      - name: Validate targeted contracts
+        run: |
+          python -m py_compile scripts/build_graph.py scripts/lib/render_public_essay.py
+          pytest -q tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py tests/test_callout_user_feedback_regressions.py
+          git diff --check
+      - name: Commit directly to main and remove one-shot helpers
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f .github/workflows/fix-mobile-header-visual-once.yml .github/scripts/fix_mobile_header_visual.py
+          git add scripts/site_src/essay-theme.css scripts/site_src/site.css scripts/lib/render_public_essay.py scripts/build_graph.py tests
+          git diff --cached --check
+          git commit -m "Fix mobile essay header and graph label threshold"
+          git push origin HEAD:main
