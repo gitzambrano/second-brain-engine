@@ -207,6 +207,22 @@ def test_private_path_check_reads_links_not_prose():
     assert flagged('<img src="../output/html/x.png">')
 
 
+def test_private_prose_excludes_local_image_filename_but_keeps_alt_text():
+    """A full-title slug may be long enough to collide with public metadata."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from check_site_privacy import private_prose
+
+    class PrivateEssay:
+        body = (
+            "# Título\n\n![Diagrama preservado]"
+            "(../assets/um-titulo-com-doze-ou-mais-palavras-de-um-essay_privado_fig1.png)"
+        )
+
+    prose = private_prose(PrivateEssay())
+    assert "Diagrama preservado" in prose
+    assert "um-titulo-com-doze" not in prose
+
+
 def test_check_rejects_a_site_whose_essays_are_missing(tmp_path):
     """Regression: `--check` only looked for pages that must NOT be there.
 

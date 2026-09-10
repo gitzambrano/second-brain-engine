@@ -57,6 +57,11 @@ REFERENCES_RE = re.compile(r"(?ms)^##\s+Refer[êe]ncias\s*\n.*?(?=^##\s+|\Z)")
 # assim acusavam vazamento no artefato que as publica de propósito. O texto do
 # link continua sendo prosa e continua sendo comparado; só o alvo sai.
 URL_RE = re.compile(r"<?https?://[^\s<>)\]\"']+>?")
+# O nome de um asset segue `<slug>_figN`. Quando o slug é o H1 inteiro,
+# ele pode ter 12+ palavras e coincidir com o título (que é metadado público)
+# em `index.html` ou no catálogo de busca. O alvo do Markdown não é prosa e
+# não deve compor a impressão digital; o alt continua sendo inspecionado.
+IMAGE_TARGET_RE = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
 
 # A generated link or metadata value must never point into the private
 # repository. Prose may legitimately *mention* these paths — several essays are
@@ -194,7 +199,9 @@ def private_prose(essay) -> str:
       perfeitamente. O TEXTO do link continua sendo prosa e continua comparado;
       só o alvo sai.
     """
-    return URL_RE.sub(" ", REFERENCES_RE.sub("", strip_public_body(essay.body)))
+    prose = REFERENCES_RE.sub("", strip_public_body(essay.body))
+    prose = IMAGE_TARGET_RE.sub(r"\1", prose)
+    return URL_RE.sub(" ", prose)
 
 
 def audit_bodies() -> list[str]:
