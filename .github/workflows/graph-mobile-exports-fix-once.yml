@@ -9,7 +9,8 @@ on:
 permissions:
   contents: write
 
-# Browser gate validates the actual mobile control geometry and file downloads.
+# One-shot repair: patch both graph HTML variants, run focused/browser/repo
+# gates, then commit only the validated source changes and remove the helpers.
 jobs:
   fix:
     runs-on: ubuntu-latest
@@ -22,16 +23,14 @@ jobs:
           python-version: '3.12'
       - name: Apply source fixes
         run: python .github/scripts/fix_graph_mobile_exports_once.py
-      - name: Fix comment-only regression assertion
-        run: sed -i "/assert 'canvas2svg' not in block/d" tests/test_graph_mobile_exports_regressions.py
       - name: Install test dependencies
         run: |
           python -m pip install -q pytest pyyaml playwright
           python -m playwright install --with-deps chromium
       - name: Run focused regressions
         run: |
-          python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py
-          pytest -q tests/test_graph_mobile_exports_regressions.py
+          python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py scripts/lib/render_public_essay.py
+          pytest -q tests/test_graph_mobile_exports_regressions.py tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py
       - name: Browser audit exports and mobile controls
         run: python .github/scripts/audit_graph_mobile_exports_once.py
       - name: Repository quick gate
@@ -48,7 +47,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git rm -f .github/workflows/graph-mobile-exports-fix-once.yml .github/scripts/fix_graph_mobile_exports_once.py .github/scripts/audit_graph_mobile_exports_once.py
           git rm -f .github/workflows/ui-polish-once.yml .github/scripts/apply_ui_polish_once.py .github/scripts/finalize_graph_edge_defaults.py || true
-          git add scripts/build_graph.py scripts/lib/build_public_map.py tests/test_graph_mobile_exports_regressions.py
+          git add scripts/build_graph.py scripts/lib/build_public_map.py scripts/site_src/index.html scripts/site_src/essay-theme.css tests/test_graph_mobile_exports_regressions.py
           git diff --cached --check
           git commit -m "Fix graph mobile controls and exports"
           git push origin HEAD:main
