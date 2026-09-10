@@ -187,7 +187,8 @@ PUBLIC_CHROME = """
     display: inline-flex; gap: 8px;
   }
   #sb-map-switch a {
-    min-height: 36px; padding: 9px 15px; border-radius: 999px;
+    box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+    height: 36px; min-height: 36px; padding: 0 15px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
     color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif;
@@ -195,10 +196,11 @@ PUBLIC_CHROME = """
   }
   #sb-map-switch a:hover, #sb-theme:hover { border-color: rgba(255,255,255,.4); }
   #sb-theme {
-    min-height: 36px; padding: 9px 13px; border-radius: 999px;
+    box-sizing: border-box; width: 36px; height: 36px; min-height: 36px; padding: 0;
+    display: grid; place-items: center; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
-    color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif; cursor: pointer;
+    color: #e8eef7; font: 600 18px/1 Inter, system-ui, sans-serif; cursor: pointer;
   }
   /* In the light Atlas the floating chrome inverts with it. */
   :root[data-theme="light"] #sb-back,
@@ -220,7 +222,8 @@ PUBLIC_CHROME = """
        folha acima do cromo e a unica correcao que nao esconde nenhum dos dois. */
     #panel { bottom: calc(64px + env(safe-area-inset-bottom)); border-radius: 14px; }
     #panel, .panel, aside { padding-bottom: 12px; }
-    #sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }
+    #sb-back, #sb-map-switch a { box-sizing:border-box; height:36px; min-height:36px; padding:0 12px; font-size:13px; }
+    #sb-theme { width:36px; height:36px; min-height:36px; padding:0; font-size:21px; line-height:1; }
   }
   /* Tema claro: o fundo e os controles do mapa seguem o tema do site. O
      fundo do canvas também é pintado por JS (ver script ao final), então

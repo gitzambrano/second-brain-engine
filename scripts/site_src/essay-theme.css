@@ -153,7 +153,7 @@ body{padding-top:68px;}
   box-sizing:border-box;width:auto;height:36px;min-height:36px;padding:0 12px;
   display:inline-flex;align-items:center;justify-content:center;
   border-color:var(--sb-line);border-radius:999px;
-  background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));color:var(--sb-primary);
+  background:var(--sb-primary-soft);color:var(--sb-primary);
   font:650 12.5px/1 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;
 }
 #sbTheme{border-color:var(--sb-line);}

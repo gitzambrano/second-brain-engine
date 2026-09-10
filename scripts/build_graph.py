@@ -983,11 +983,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <!-- d3 vendorado (inline): o arquivo único funciona sem rede — CDN aqui
      quebraria o caso "mandei o arquivo pra alguém abrir offline". -->
 <script>__D3__</script>
-<!-- canvas2svg (mock de CanvasRenderingContext2D que serializa SVG) é
-     carregado SOB DEMANDA, só quando o usuário exporta SVG (ensureC2S()
-     abaixo): são ~50 KB que 99% das sessões nunca usam, e é o único
-     recurso que ainda depende de CDN — exportar SVG offline não funciona,
-     o resto da página sim. -->
 <style>
   :root {
     --bg: #1b1e21;
@@ -1425,12 +1420,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
      confirm() nativo esconderia essa escolha atrás de mais um clique sem
      explicar o porquê; um popover ancorado no botão deixa as duas opções
      visíveis de cara, com a explicação ao lado. */
-  #export-svg-popover { display: none; position: fixed; z-index: 30; flex-direction: column; gap: 8px;
-    min-width: 240px; max-width: 280px; background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
-  #export-svg-popover.open { display: flex; }
-  #export-svg-popover .btn { width: 100%; margin-top: 0; text-align: center; }
-  #export-svg-popover p { font-size: 11px; color: var(--ink-dim); margin: 0 0 2px; line-height: 1.4; }
 
   /* ---- Leitor embutido (MySecondBrain) --------------------------------
      O visual dos essays é EXATAMENTE o do export HTML: o CSS do template
@@ -1523,11 +1512,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="detail" hidden></div>
 </div>
 
-<div id="export-svg-popover">
-  <p>Completo tem glow e gradiente, mas alguns leitores de SVG simples (ex.: Xplore no Android) podem não abrir. Simples é sem os dois — teste se abre.</p>
-  <button class="btn style-primary" id="btn-export-svg-completo">Completo (glow + gradiente)</button>
-  <button class="btn" id="btn-export-svg-simples">Simples (sem glow/gradiente)</button>
-</div>
 
 <div id="modal-overlay">
   <div id="modal">
@@ -1987,8 +1971,8 @@ data.nodes.forEach(n => {
 // no zoom (abaixo) e recalculado toda vez que spacing/performance mudam.
 let currentTier = PERFORMANCE_TIERS[resolvePerformanceTier(styleConfig)];
 let labelsShown = false;
-const LABEL_SHOW_AT = 0.96;
-const LABEL_HIDE_AT = 0.90;
+const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;
+const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;
 
 // Some com os rótulos quando o tier não é "sempre mostrar" e o zoom está
 // afastado — em wikis de centenas de nós, texto é de longe a coisa mais
@@ -3899,392 +3883,107 @@ document.getElementById("btn-fit-screen").addEventListener("click", () => {
 // respeita `dpr` em tudo — sprites, lineWidth, fillText — sem precisar
 // tocar numa linha da função), e o PNG final sai nítido mesmo com bastante
 // zoom, ainda que não seja "infinito" como vetor de verdade.
-const EXPORT_SCALE = 3; // multiplicador sobre o dpr atual da tela
-
-document.getElementById("btn-export-png").addEventListener("click", () => {
-  // Reler o transform direto do comportamento de zoom do D3, não confiar só
-  // na variável `zoomTransform`: ela só é reatribuída dentro do handler
-  // "zoom", então se o clique cair entre o fim de um gesto (pinça/arrasto/
-  // roda) e o próximo evento, ela pode estar um frame atrás do estado real.
-  // `d3.zoomTransform(canvas)` lê o transform que o D3 já mantém associado
-  // ao próprio elemento — é a fonte de verdade, sem essa janela de corrida.
-  zoomTransform = d3.zoomTransform(canvas);
-
-  // Troca temporária de resolução: só o buffer físico (canvas.width/height)
-  // muda, `canvas.style.width/height` (tamanho em tela) fica intocado — o
-  // navegador só escala a exibição pra baixo enquanto isso, sem "pular" o
-  // layout. `dpr` é a mesma variável que resizeCanvas() usa, e draw() já lê
-  // tudo através dela, então não há caminho de desenho separado pra manter.
-  const originalDpr = dpr;
-  const originalCanvasWidth = canvas.width;
-  const originalCanvasHeight = canvas.height;
-  dpr = originalDpr * EXPORT_SCALE;
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
-  clearSpriteCache(); // sprites cacheados no dpr antigo ficariam pequenos/borrados no buffer novo
-
-  draw();
-
-  canvas.toBlob((blob) => {
-    // Restaura o buffer físico pro tamanho de tela normal ANTES de qualquer
-    // outra coisa: canvas.toBlob() já leu o buffer grande pro blob, então
-    // não há mais necessidade dele, e deixar o canvas gigante em memória
-    // entre um export e o próximo é desperdício à toa.
-    dpr = originalDpr;
-    canvas.width = originalCanvasWidth;
-    canvas.height = originalCanvasHeight;
-    clearSpriteCache();
-    draw(); // repinta a tela no dpr normal — sem isto ficaria em branco até o próximo evento
-
-    if (!blob) return; // navegador sem suporte a toBlob (raríssimo) — falha silenciosa, sem travar a UI
-    const url = URL.createObjectURL(blob);
-    const stamp = new Date().toISOString().slice(0, 10);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `grafo-second-brain-${stamp}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }, "image/png");
+let pngExportBusy = false;
+const exportPngBtn = document.getElementById("btn-export-png");
+exportPngBtn.addEventListener("click", () => {
+  if (pngExportBusy) return;
+  pngExportBusy = true;
+  exportPngBtn.setAttribute("aria-busy", "true");
+  requestAnimationFrame(() => {
+    canvas.toBlob((blob) => {
+      pngExportBusy = false;
+      exportPngBtn.removeAttribute("aria-busy");
+      if (!blob) {
+        alert("Não foi possível gerar o PNG neste navegador.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const stamp = new Date().toISOString().slice(0, 10);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `grafo-second-brain-${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, "image/png");
+  });
 });
 
-// ---- Exportar SVG (vetorial, zoom infinito) -------------------------------
-// PNG — mesmo supersampled (ver acima) — é raster: sempre existe um teto de
-// nitidez. Pra zoom de verdade sem perda nenhuma, a saída precisa ser vetor.
-// draw() não serve de base pra isso: ele é o coração de performance do
-// arquivo inteiro (sprites em bitmap, batching de arestas em Path2D, tiers
-// de qualidade, halos com shadowBlur...), tudo pensado pra rodar a 60fps num
-// celular — nada disso é vetorizável sem perder a otimização, e forçar os
-// dois casos de uso (tela + export) pela mesma função misturaria duas
-// preocupações que não têm nada a ver uma com a outra.
-// Por isso drawForSvgExport() é uma função própria, separada, escrita do
-// zero: desenha numa réplica mock do contexto 2D fornecida pela lib
-// canvas2svg (global C2S, carregada no <head>) — ela implementa os mesmos
-// métodos de CanvasRenderingContext2D (translate, arc, fillText,
-// createRadialGradient...) só que, em vez de rasterizar pixels, vai
-// acumulando um grafo de cena e serializa isso como <svg> no final.
-// Gradiente e glow SAEM no export: createRadialGradient() do canvas2svg gera
-// um <radialGradient> de verdade nos <defs> do SVG, não um bitmap — então dá
-// pra reaproveitar a mesma técnica de sombreamento esférico (nodeGradients)
-// e halo (haloGradients) que já existe pra tela, sem abrir mão de nitidez em
-// zoom nenhum. O que fica de fora é só o glow "alto" via shadowBlur — essa
-// propriedade não tem suporte confiável nesta lib — então "alto" e "leve"
-// desenham o mesmo halo em gradiente no export; a diferença de intensidade
-// entre os dois modos só existe na tela.
-// Roda mais devagar que o draw() de tela (sem culling agressivo, sem
-// batching, sem cache de sprite) — tudo bem, só acontece uma vez, no clique
-// de exportar, não a cada frame.
-// Círculo unitário desenhado como dois semicírculos, não um arco 0→2π: o
-// comando de arco elíptico do SVG não representa um círculo fechado (ponto
-// inicial teria que ser igual ao final), e o canvas2svg — como vários outros
-// conversores canvas→svg — trata startAngle===endAngle (depois do módulo 2π)
-// como "nada a desenhar", igual o Canvas nativo faz quando os dois ângulos
-// batem exato. O sintoma real foi esse: halo e nó (os dois únicos lugares
-// que desenhavam círculo fechado) sumiam do SVG inteiro — sobrava só fundo,
-// aresta e texto, que é exatamente a tela quase preta relatada no Xplore.
-function unitCircle(c) {
-  c.beginPath();
-  c.arc(0, 0, 1, 0, Math.PI);
-  c.arc(0, 0, 1, Math.PI, Math.PI * 2);
+// ---- Exportar SVG ---------------------------------------------------------
+// Gera SVG diretamente, sem dependência externa, no mesmo gesto de clique.
+function escapeXml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"
+  }[ch]));
 }
-
-// `simple`: exporta em cor chapada, sem glow nem gradiente — testado pra
-// contornar visualizadores de SVG simples (Xplore no Android é o caso
-// relatado) que engasgam nos <radialGradient> do export "completo", mesmo já
-// sem os três problemas de sintaxe descritos acima (atributo duplicado,
-// notação científica, encoding). Não mexe no styleConfig de verdade: cria
-// uma cópia rasa só pra esta exportação, então o grafo em tela e o próximo
-// export "completo" continuam com o estilo salvo do usuário intactos.
-function drawForSvgExport(simple) {
-  const svgStyle = simple ? Object.assign({}, styleConfig, { glow: "off", gradient: false }) : styleConfig;
-  const c = new C2S(width, height); // tamanho em px CSS — vetor não precisa de dpr/supersampling
-
-  c.fillStyle = (svgStyle.colors && svgStyle.colors.background) || "#1b1e21";
-  c.fillRect(0, 0, width, height);
-
-  // Gradientes construídos uma vez, no espaço unitário (-1..1 / 0..1), e
-  // reaproveitados por tipo em todos os nós — exatamente a mesma técnica de
-  // buildGradients(): o CanvasGradient guarda só os stops, e um
-  // translate+scale por nó (mais abaixo) estica ele pro raio de fato, sem
-  // precisar recriar o objeto a cada nó.
-  const svgNodeGradients = {};
-  const svgHaloGradients = {};
-  if (svgStyle.gradient || svgStyle.glow !== "off") {
-    Object.keys(svgStyle.colors || {}).forEach(type => {
-      if (type === "background" || type === "edge") return;
-      const color = svgStyle.colors[type] || "#888";
-      if (svgStyle.gradient) {
-        const g = c.createRadialGradient(-0.3, -0.35, 0, 0, 0, 1);
-        g.addColorStop(0, mixWhite(color, 0.55));
-        g.addColorStop(1, color);
-        svgNodeGradients[type] = g;
-      }
-      if (svgStyle.glow !== "off") {
-        const h = c.createRadialGradient(0, 0, 0, 0, 0, 1);
-        h.addColorStop(0, hexToRgba(color, 0.5));
-        h.addColorStop(1, hexToRgba(color, 0));
-        svgHaloGradients[type] = h;
-      }
-    });
-  }
-
-  c.save();
-  c.translate(zoomTransform.x, zoomTransform.y);
-  c.scale(zoomTransform.k, zoomTransform.k);
-
-  // Mesmo critério de "dentro da tela" do draw() principal, só que sem culling
-  // por índice espacial: aqui não há orçamento de frame a respeitar.
+function svgNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? String(Math.round(n * 1000) / 1000) : "0";
+}
+function buildSvgExport() {
+  zoomTransform = d3.zoomTransform(canvas);
+  const bg = (styleConfig.colors && styleConfig.colors.background) || "#1b1e21";
+  const edgeColor = (styleConfig.colors && styleConfig.colors.edge) || "#858b93";
   const [wx0, wy0] = zoomTransform.invert([0, 0]);
   const [wx1, wy1] = zoomTransform.invert([width, height]);
   const pad = 80;
-  const inView = (n) => n.x >= wx0 - pad && n.x <= wx1 + pad && n.y >= wy0 - pad && n.y <= wy1 + pad;
+  const inView = n => n && n.x >= wx0 - pad && n.x <= wx1 + pad && n.y >= wy0 - pad && n.y <= wy1 + pad;
+  const parts = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${svgNumber(width)}" height="${svgNumber(height)}" viewBox="0 0 ${svgNumber(width)} ${svgNumber(height)}" preserveAspectRatio="xMidYMid meet">`,
+    `<rect width="100%" height="100%" fill="${escapeXml(bg)}"/>`,
+    `<g transform="translate(${svgNumber(zoomTransform.x)} ${svgNumber(zoomTransform.y)}) scale(${svgNumber(zoomTransform.k)})">`,
+  ];
 
-  // Arestas: um beginPath/stroke por aresta (sem o batching em Path2D do
-  // draw() de tela — aqui não corre a 60fps, então o custo extra não importa,
-  // e evita depender de suporte a Path2D dentro do mock do canvas2svg).
-  if (svgStyle.edgeVisibility !== "off") {
-    c.lineWidth = 1.2 / zoomTransform.k;
-    c.strokeStyle = svgStyle.colors.edge;
+  if (styleConfig.edgeVisibility !== "off") {
     data.edges.forEach(e => {
       const s = endpoint(e.source), t = endpoint(e.target);
       if (!s || !t || !isNodeVisible(s) || !isNodeVisible(t)) return;
       if (!inView(s) && !inView(t)) return;
-      const dim = edgeDimmed(e);
-      c.globalAlpha = dim ? 0.08 : svgStyle.edgeOpacity;
-      // setLineDash pode não existir nesta versão do mock — checar antes de
-      // chamar evita estourar a função inteira por causa de um detalhe
-      // cosmético (linha tracejada vs. sólida) que não é o motivo do export.
-      if (typeof c.setLineDash === "function") {
-        c.setLineDash(e.kind === "reference" ? [3, 3] : []);
-      }
-      c.beginPath();
-      c.moveTo(s.x, s.y);
-      c.lineTo(t.x, t.y);
-      c.stroke();
+      const opacity = edgeDimmed(e) ? 0.08 : styleConfig.edgeOpacity;
+      const dash = e.kind === "reference" ? ' stroke-dasharray="3 3"' : "";
+      parts.push(`<line x1="${svgNumber(s.x)}" y1="${svgNumber(s.y)}" x2="${svgNumber(t.x)}" y2="${svgNumber(t.y)}" stroke="${escapeXml(edgeColor)}" stroke-opacity="${svgNumber(opacity)}" stroke-width="1.2" vector-effect="non-scaling-stroke"${dash}/>`);
     });
-    c.globalAlpha = 1;
   }
 
-  // Nós: halo de glow (se ligado) por trás, depois o próprio nó — em
-  // gradiente esférico se `svgStyle.gradient` estiver ligado, senão cor
-  // chapada. translate+scale por nó pra reaproveitar os gradientes unitários
-  // construídos acima (mesmo truque de drawHalo()/getNodeSprite() na tela).
   data.nodes.forEach(n => {
     if (!isNodeVisible(n) || !inView(n)) return;
     const r = radiusOf(n);
-    const dim = nodeDimmed(n);
-    const type = n.type;
-
-    if (svgStyle.glow !== "off") {
-      c.save();
-      c.globalAlpha = dim ? 0.08 : 1;
-      c.translate(n.x, n.y);
-      c.scale(r * 2.4, r * 2.4);
-      unitCircle(c);
-      c.fillStyle = svgHaloGradients[type] || "transparent";
-      c.fill();
-      c.restore();
-    }
-
-    c.save();
-    c.globalAlpha = dim ? 0.08 : 1;
-    c.translate(n.x, n.y);
-    c.scale(r, r);
-    unitCircle(c);
-    c.fillStyle = svgStyle.gradient ? (svgNodeGradients[type] || typeColorRaw(n)) : typeColorRaw(n);
-    c.fill();
-    // lineWidth compensado pelo scale(r,r): 1px de verdade vira r depois de
-    // escalado, então 1/r devolve a espessura real de contorno pretendida.
-    c.lineWidth = 1 / r;
-    c.strokeStyle = "#0b1220";
-    c.stroke();
-    c.restore();
+    const opacity = nodeDimmed(n) ? 0.08 : 1;
+    const fill = typeColorRaw(n);
+    parts.push(`<circle cx="${svgNumber(n.x)}" cy="${svgNumber(n.y)}" r="${svgNumber(r)}" fill="${escapeXml(fill)}" fill-opacity="${svgNumber(opacity)}" stroke="#0b1220" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
   });
-  c.globalAlpha = 1;
 
-  // Rótulos — o motivo original do pedido: em SVG o texto é elemento <text>
-  // de verdade, então fica nítido em qualquer zoom, ao contrário do PNG.
   if (labelsShown) {
-    c.font = `${svgStyle.labelSize}px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif`;
-    c.textAlign = "center";
-    c.fillStyle = getLabelColor();
+    const labelColor = getLabelColor();
     data.nodes.forEach(n => {
       if (n.type === "reference" || !isNodeVisible(n) || !inView(n)) return;
-      c.globalAlpha = nodeDimmed(n) ? 0.08 : 0.85;
-      c.fillText(n.title, n.x, n.y - (2 + radiusOf(n)));
+      const opacity = nodeDimmed(n) ? 0.08 : (isLightTheme() ? 0.78 : 0.85);
+      const y = n.y - (2 + radiusOf(n));
+      parts.push(`<text x="${svgNumber(n.x)}" y="${svgNumber(y)}" fill="${escapeXml(labelColor)}" fill-opacity="${svgNumber(opacity)}" font-size="${svgNumber(styleConfig.labelSize)}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" text-anchor="middle">${escapeXml(n.title)}</text>`);
     });
-    c.globalAlpha = 1;
   }
 
-  c.restore();
-
-  // getSerializedSvg() devolve width/height fixos em px (o tamanho da tela
-  // de onde foi exportado) e nenhum viewBox — abrir esse arquivo direto
-  // (Chrome, Xplore etc.) mostra o SVG no tamanho físico original, sem
-  // escalar pro viewport do visualizador: um grafo exportado de um celular
-  // de ~400px de largura aparece "pequeno, no canto superior esquerdo" numa
-  // tela grande, porque é isso mesmo que os 400px valem lá.
-  // A primeira tentativa trocou width/height por "100%", mas isso quebrou o
-  // Xplore: visualizadores de SVG simples/nativos (bem diferentes de um
-  // motor de navegador completo) em geral precisam de um width/height NUMÉRICO
-  // pra saber que tamanho de bitmap alocar antes de desenhar — percentual sem
-  // um viewport de referência dá 0 ou indefinido pra eles, o que rende tela
-  // preta/vazia. Por isso width/height voltam a ser o valor em px de origem
-  // (compatível com qualquer visualizador, simples ou não) e quem ganha o
-  // comportamento responsivo é só quem entende `style` (CSS) — ou seja,
-  // navegador de verdade — via `width:100%;height:100%` mais viewBox pra
-  // escalar o conteúdo interno proporcionalmente sem distorcer.
-  let svgString = c.getSerializedSvg(true); // true: entidades nomeadas -> numéricas, exigido por SVG standalone
-
-  // getSerializedSvg() do canvas2svg sai com o atributo xmlns:xlink DUPLICADO
-  // na tag <svg> raiz. A lib tenta corrigir um bug antigo do IE trocando a
-  // primeira ocorrência de xmlns="..." pelo texto xmlns:xlink="..." (ver
-  // canvas2svg.js, comentário "IE search for a duplicate xmnls"), só que o
-  // serializer de DOM usado aqui (confirmado tanto em jsdom quanto no
-  // comportamento de motores modernos) já declara um xmlns:xlink próprio ao
-  // serializar — o "conserto" da lib não remove duplicata nenhuma, só troca
-  // QUAL atributo fica duplicado: em vez de xmlns repetido, sobra
-  // xmlns:xlink repetido. Atributo repetido na mesma tag é proibido pela
-  // regra de unicidade do XML; testado aqui com um parser XML estrito
-  // (xml.etree), o SVG cru do canvas2svg falha com "duplicate attribute".
-  // O Chrome tolera isso porque abre SVG com o parser de HTML, que é
-  // permissivo e ignora repetição de atributo; o Xplore usa um parser XML
-  // de verdade pro visualizador de SVG, que rejeita o arquivo por violar
-  // essa regra — daí o erro e a tela preta relatados, e é isso (não
-  // gradiente, não círculo, não viewBox) que o Xplore realmente reclama.
-  // A correção é varrer a tag <svg> raiz e manter só a primeira ocorrência
-  // de cada atributo, descartando repetições, antes de montar o viewBox.
-  svgString = svgString.replace(/<svg([^>]*)>/, (match, attrs) => {
-    const seen = new Set();
-    const dedupedAttrs = attrs.replace(/\\s+([a-zA-Z_:][-a-zA-Z0-9_:.]*)="[^"]*"/g, (attrMatch, name) => {
-      if (seen.has(name)) return ""; // atributo repetido: descarta, fica só a primeira ocorrência
-      seen.add(name);
-      return attrMatch;
-    });
-    return `<svg${dedupedAttrs} viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%">`;
-  });
-
-  // unitCircle() corta o círculo em dois arcos no ângulo Math.PI (ver comentário
-  // acima) pra evitar o caso startAngle===endAngle que o canvas2svg trata como
-  // "nada a desenhar". O problema é que Math.sin(Math.PI) no ponto de corte não
-  // dá 0 exato — dá 1.2246467991473532e-16, erro de ponto flutuante inerente ao
-  // IEEE 754 — e o canvas2svg serializa esse valor em notação científica dentro
-  // do atributo `d` de todo <path> de nó/halo. Notação científica é válida pela
-  // gramática formal de path data do SVG 1.1, e o parser de HTML do Chrome (que
-  // é quem abre SVG lá) engole isso sem reclamar — mas o Xplore usa um parser de
-  // SVG enxuto, que só entende números decimais simples e rejeita o path inteiro
-  // ao encontrar "e-16": nó e halo somem, e é isso — não gradiente, não viewBox —
-  // que produz a tela quase preta relatada lá.
-  // Como esse "erro" é da ordem de 10^-16 num desenho medido em pixels, arredondar
-  // pra 6 casas decimais elimina a notação científica sem qualquer perda visual
-  // perceptível, e cobre não só o valor do corte do círculo como qualquer outro
-  // número minúsculo que apareça por motivo semelhante em qualquer lugar do SVG.
-  svgString = svgString.replace(/-?\\d*\\.?\\d+e[+-]\\d+/gi, (numStr) => {
-    const rounded = Number(numStr).toFixed(6).replace(/\\.?0+$/, "");
-    return rounded === "" || rounded === "-" ? "0" : rounded;
-  });
-
-  // getSerializedSvg() do canvas2svg nunca escreve o prólogo `<?xml ...?>` — o
-  // próprio exemplo oficial da lib sai puro em "<svg ...>...</svg>" (conferido
-  // na documentação do gliffy/canvas2svg). Os títulos dos nós são em português
-  // e vêm cheios de acento (Consciência, Campeões, Cérebros...), gravados como
-  // bytes UTF-8 crus dentro dos <text> — sem BOM e sem declaração de encoding
-  // no arquivo. Pela gramática formal do XML, ausência de declaração e de BOM
-  // significa "assuma UTF-8", e é isso que o parser de HTML do Chrome faz. Mas
-  // parsers de XML enxutos/legados — a mesma categoria de parser rígido que já
-  // rejeitava atributo duplicado e notação científica — não raro caem pro
-  // charset padrão da plataforma em vez do padrão da spec quando não há
-  // declaração explícita, o que transforma cada acento numa sequência de bytes
-  // inválida pro charset errado: no Xplore isso tende a se somar aos sintomas
-  // já descritos (erro ao abrir / conteúdo não desenhado), então declarar o
-  // encoding explicitamente remove a ambiguidade de vez.
-  svgString = '<?xml version="1.0" encoding="UTF-8"?>\\n' + svgString;
-
-  // Duas limpezas a mais, de baixo risco (não mudam nada visualmente em
-  // Chrome nem no que já testamos) pra reduzir o que um parser de SVG
-  // simples/legado poderia ter de errado nesse arquivo:
-  // 1) canvas2svg escreve os raios/centros de <radialGradient> com sufixo
-  //    "px" (ex.: r="1px"). É um <length> válido pela gramática do SVG, mas
-  //    parsers enxutos costumam só aceitar número puro nesses atributos.
-  //    Como esses valores são sempre em userSpaceOnUse (sem unidade real
-  //    envolvida), tirar o "px" não muda o resultado em nada.
-  svgString = svgString.replace(/([a-zA-Z]+)="(-?[\\d.]+)px"/g, '$1="$2"');
-  // 2) `paint-order` é propriedade de SVG2 — a ordem padrão (fill antes de
-  //    stroke) já é a que canvas2svg segue nos casos onde não escreve o
-  //    atributo, então remover não muda a aparência; só tira algo que um
-  //    parser SVG1.1 pode não reconhecer.
-  svgString = svgString.replace(/ paint-order="[^"]*"/g, "");
-
-  return svgString;
+  parts.push("</g></svg>");
+  return parts.join(String.fromCharCode(10));
 }
 
-function exportSvgFile(simple) {
-  zoomTransform = d3.zoomTransform(canvas); // mesma fonte de verdade usada no export PNG
-  const svgString = drawForSvgExport(simple);
-  const blob = new Blob([svgString], { type: "image/svg+xml" });
+function exportSvgFile() {
+  const svgString = buildSvgExport();
+  const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const stamp = new Date().toISOString().slice(0, 10);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `grafo-second-brain-${stamp}${simple ? "-simples" : ""}.svg`;
+  a.download = `grafo-second-brain-${stamp}.svg`;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-const exportSvgBtn = document.getElementById("btn-export-svg");
-const exportSvgPopover = document.getElementById("export-svg-popover");
-
-function closeExportSvgPopover() { exportSvgPopover.classList.remove("open"); }
-
-function openExportSvgPopover() {
-  // Ancorado no botão, não centralizado: abre logo abaixo dele (ou acima,
-  // se não couber embaixo), e clampa na largura da viewport pra nunca sair
-  // da tela no painel estreito do mobile.
-  exportSvgPopover.classList.add("open");
-  const btnRect = exportSvgBtn.getBoundingClientRect();
-  const popRect = exportSvgPopover.getBoundingClientRect();
-  let left = btnRect.left;
-  left = Math.min(left, window.innerWidth - popRect.width - 10);
-  left = Math.max(left, 10);
-  let top = btnRect.bottom + 8;
-  if (top + popRect.height > window.innerHeight - 10) {
-    top = btnRect.top - popRect.height - 8;
-  }
-  exportSvgPopover.style.left = `${left}px`;
-  exportSvgPopover.style.top = `${top}px`;
-}
-
-exportSvgBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (exportSvgPopover.classList.contains("open")) { closeExportSvgPopover(); return; }
-  openExportSvgPopover();
-});
-// canvas2svg (~50 KB) só existe para o export vetorial: carrega sob demanda
-// da CDN na primeira exportação. Único recurso dependente de rede — exportar
-// SVG offline mostra aviso claro; PNG e todo o resto funcionam offline.
-let c2sPromise = null;
-function ensureC2S() {
-  if (window.C2S) return Promise.resolve();
-  if (!c2sPromise) {
-    c2sPromise = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/canvas2svg@1.0.16/canvas2svg.min.js";
-      s.onload = () => resolve();
-      s.onerror = () => { c2sPromise = null; reject(new Error("sem rede para carregar o canvas2svg")); };
-      document.head.appendChild(s);
-    });
-  }
-  return c2sPromise;
-}
-document.getElementById("btn-export-svg-completo").addEventListener("click", () => { closeExportSvgPopover(); ensureC2S().then(() => exportSvgFile(false)).catch(err => alert("Exportar SVG requer conexão: " + err.message)); });
-document.getElementById("btn-export-svg-simples").addEventListener("click", () => { closeExportSvgPopover(); ensureC2S().then(() => exportSvgFile(true)).catch(err => alert("Exportar SVG requer conexão: " + err.message)); });
-document.addEventListener("click", (e) => {
-  if (exportSvgPopover.classList.contains("open") && !exportSvgPopover.contains(e.target)) closeExportSvgPopover();
-});
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeExportSvgPopover(); });
+document.getElementById("btn-export-svg").addEventListener("click", exportSvgFile);
 
 // Fechar o modal de Estilo sem clicar "Salvar" descarta o rascunho e volta
 // ao estilo realmente salvo (ou ao padrão, se nada foi salvo ainda) — sem
