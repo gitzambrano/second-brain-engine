@@ -25,38 +25,22 @@ Publica o **Second Brain Atlas** no Git independente `site/`. Nenhuma outra skil
 
 ## Gates
 
-Execute nesta ordem:
+Execute o comando único:
 
 ```bash
-python scripts/set_visibility.py
-python scripts/check_visibility_field.py
-python scripts/build_site.py
-python scripts/check_site_privacy.py
-python scripts/check_site_pages.py
-python scripts/check_site_budget.py
-python scripts/seal_publication.py
+python scripts/publish_site.py
 ```
 
 Regras:
 
+- o comando exige `./`, `data/` e `site/` limpos e sincronizados com `origin/main`;
 - qualquer erro bloqueante interrompe a publicação antes do commit;
 - ausência de Chromium é falha neste fluxo, não SKIP;
 - `--allow-skip-browser` não é válido para publicação;
 - o selo é obrigatório e deve corresponder ao conteúdo final e ao commit do engine que o gerou;
 - se `seal_publication.py` indicar engine dirty, não publique até o código gerador estar commitado.
 
-## Deploy
-
-Somente após todos os gates passarem:
-
-```bash
-git -C site status --short
-git -C site add .
-git -C site commit -m "Publicação do site: YYYY-MM-DD"
-git -C site push
-```
-
-O efeito remoto desta skill é **exclusivamente** `site/`. Nunca faça commit ou push de `./` ou `data/` dentro de `/publish`.
+O efeito remoto do comando é **exclusivamente** `site/`. Ele nunca faz commit ou push de `./` ou `data/`.
 
 ## Relato
 

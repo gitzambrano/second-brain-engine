@@ -142,8 +142,7 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 
 - Nunca altere `visibility:` automaticamente; exige decisão explícita do Usuário.
 - Nenhum corpo não autorizado, link de leitura restrito ou caminho para `data/` pode sair.
-- `scripts/build_site.py` só roda sob pedido explícito de publicação.
-- Publicação exige `scripts/check_site_privacy.py`.
+- `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`.
 - Contrato completo de dados: `conventions/SKILL.md`; workflow: `/publish`.
 
 ## Plano de Longo Prazo

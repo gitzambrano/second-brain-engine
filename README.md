@@ -166,9 +166,7 @@ scripts\sync_qmd.bat                         # Windows: equivalente
 # Publicação do Atlas (site/)
 python scripts/set_visibility.py             # Lista ensaios por visibilidade (public/private/hidden)
 python scripts/set_visibility.py allow <slug> # Autoriza publicação de um ensaio
-python scripts/check_visibility_field.py     # Valida o campo de visibilidade no frontmatter
-python scripts/build_site.py                 # Compila os ensaios públicos e os mapas interativos
-python scripts/check_site_privacy.py         # Sentinela de privacidade (zero vazamento de dados privados)
+python scripts/publish_site.py               # Valida, compila, audita, sela e publica o site
 python scripts/serve_site.py                 # Servidor local de pré-visualização do site
 
 # Exportações Standalone

@@ -44,6 +44,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`check_essay_slugs.py`** | Garante que todo arquivo em `wiki/essays/` use um slug ASCII estável em `kebab-case`. | `python scripts/check_essay_slugs.py` |
 | **`visibility.py`** | Leitor utilitário que relata a distribuição de visibilidade do corpus (público, privado, oculto). | `python scripts/visibility.py` |
 | **`build_site.py`** | Compila os essays autorizados para HTML e gera os índices e mapas interativos em `site/`. | `python scripts/build_site.py` |
+| **`publish_site.py`** | Comando único de publicação: valida visibilidade, constrói, sela, cria o commit em `site/` e envia para `main`. Exige os três repositórios limpos e sincronizados. | `python scripts/publish_site.py` |
 | **`check_site_privacy.py`** | **Sentinela estrita de privacidade**: garante que nenhum texto ou link não autorizado chegue a `site/`. | `python scripts/check_site_privacy.py` |
 | **`check_site_pages.py`** | Abre cada página do site construído num navegador real (celular e desktop) e audita overflow, imagens, âncoras, console e vazamento de Markdown, mais uma auditoria própria de `graph.html` e `sphere.html`. Sem navegador é **erro**; `--allow-skip-browser` degrada para SKIP em diagnóstico local. | `python scripts/check_site_pages.py` |
 | **`check_site_budget.py`** | Orçamento de tamanho por artefato público e do site inteiro. | `python scripts/check_site_budget.py` |

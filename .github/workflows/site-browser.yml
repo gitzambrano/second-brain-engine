@@ -1,0 +1,72 @@
+name: Site browser
+
+on:
+  push:
+    paths:
+      - 'scripts/build_site.py'
+      - 'scripts/essay_template.html'
+      - 'scripts/lib/build_cover.py'
+      - 'scripts/lib/build_public_map.py'
+      - 'scripts/lib/render_public_essay.py'
+      - 'scripts/lib/site_common.py'
+      - 'scripts/check_site_pages.py'
+      - 'scripts/check_site_privacy.py'
+      - 'scripts/check_site_budget.py'
+      - 'site_src/**'
+      - 'tests/test_*browser*.py'
+      - 'tests/test_*site*.py'
+      - 'requirements-ci.txt'
+      - '.github/workflows/site-browser.yml'
+  pull_request:
+    paths:
+      - 'scripts/build_site.py'
+      - 'scripts/essay_template.html'
+      - 'scripts/lib/build_cover.py'
+      - 'scripts/lib/build_public_map.py'
+      - 'scripts/lib/render_public_essay.py'
+      - 'scripts/lib/site_common.py'
+      - 'scripts/check_site_pages.py'
+      - 'scripts/check_site_privacy.py'
+      - 'scripts/check_site_budget.py'
+      - 'site_src/**'
+      - 'tests/test_*browser*.py'
+      - 'tests/test_*site*.py'
+      - 'requirements-ci.txt'
+      - '.github/workflows/site-browser.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y pandoc
+      - run: python -m pip install -r requirements-ci.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Build the fixture site and audit it in a real browser
+        run: >-
+          python -m pytest -q -m browser
+          --basetemp="${{ runner.temp }}/site-browser"
+          --junitxml="${{ runner.temp }}/site-browser.xml"
+      - name: Prove the visual gate actually ran
+        if: always()
+        run: |
+          python - "${{ runner.temp }}/site-browser.xml" <<'EOF'
+          import sys, xml.etree.ElementTree as ET
+          raiz = ET.parse(sys.argv[1]).getroot()
+          suites = raiz.iter("testsuite") if raiz.tag == "testsuites" else [raiz]
+          total = sum(int(s.get("tests", 0)) for s in suites)
+          print(f"testes de browser executados: {total}")
+          if total < 1:
+              sys.exit("o gate visual nao executou nenhum teste")
+          EOF
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-screenshots
+          path: ${{ runner.temp }}/site-browser/screenshots/*.png
+          if-no-files-found: warn
