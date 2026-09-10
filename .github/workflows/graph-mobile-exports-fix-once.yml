@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
 
+# Browser gate validates the actual mobile control geometry and file downloads.
 jobs:
   fix:
     runs-on: ubuntu-latest
