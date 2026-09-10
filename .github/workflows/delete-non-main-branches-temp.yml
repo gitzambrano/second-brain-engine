@@ -1,0 +1,30 @@
+name: Delete non-main branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/delete-non-main-branches-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Delete every branch except main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-remote --heads origin \
+            | sed 's#.*refs/heads/##' \
+            | while IFS= read -r branch; do
+                if [ "$branch" != "main" ]; then
+                  echo "Deleting $branch"
+                  git push origin --delete "$branch"
+                fi
+              done
