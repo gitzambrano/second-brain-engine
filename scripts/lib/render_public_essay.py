@@ -267,15 +267,15 @@ def site_chrome(essay, related) -> str:
 <dialog class="sb-subscribe-dialog" id="sbSubscribeDialog" aria-labelledby="sbSubscribeTitle">
   <div class="sb-subscribe-dialog-head">
     <p class="sb-subscribe-eyebrow">Ensaios · Second Brain</p>
-    <h2 id="sbSubscribeTitle">Novos ensaios, quando houver.</h2>
-    <p>Receba um e-mail quando eu publicar um novo ensaio no Second Brain.</p>
+    <h2 id="sbSubscribeTitle">Novos ensaios por e-mail.</h2>
+    <p>Só quando houver publicação nova.</p>
     <form method="dialog"><button class="sb-subscribe-close" type="submit" aria-label="Fechar">×</button></form>
   </div>
   <div class="sb-subscribe-embed" aria-label="Assinar a newsletter do Second Brain">
     <div id="sbKitEmbedMount" data-uid="4fd36350af"
          data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
-  <p class="sb-subscribe-note"><strong>Depois de assinar:</strong> confirme seu endereço no e-mail enviado pelo Kit. Ele pode cair em <strong>Spam</strong> ou <strong>Promoções</strong>; procure por “Second Brain”, marque como “Não é spam” e então confirme.</p>
+  <p class="sb-subscribe-note"><strong>Importante:</strong> confira também a pasta de <strong>Spam</strong> e confirme o e-mail.</p>
 </dialog>
 <div class="sb-progress"><span id="sbProgressFill"></span></div>
 <div class="sb-tags">{tags}</div>

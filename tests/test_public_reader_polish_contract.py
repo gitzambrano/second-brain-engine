@@ -84,11 +84,24 @@ def test_kit_confirmation_note_follows_the_form_instead_of_delaying_it():
     assert source.index('class="sb-subscribe-embed"') < source.index('class="sb-subscribe-note"')
 
 
-def test_essay_subscribe_dialog_explains_spam_confirmation_action():
+def test_essay_subscribe_dialog_keeps_confirmation_copy_concise():
     source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
-    for text in ("Spam", "Promoções", "Não é spam", "então confirme"):
-        assert text in source
+    assert "Spam" in source
+    assert "confirme o e-mail" in source
+    for verbose in ("Promoções", "Não é spam", "então confirme"):
+        assert verbose not in source
     assert 'class="sb-subscribe-note"' in source
+
+
+def test_subscribe_form_field_and_button_share_the_same_width():
+    index = (SRC / "index.html").read_text(encoding="utf-8")
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    assert '.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]' in index
+    assert '.sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]' in css
+    assert "align-self:stretch!important" in index
+    assert "align-self:stretch!important" in css
+    assert "justify-content:center!important" in index
+    assert "justify-content:center!important" in css
 
 
 def test_browser_audit_declares_all_reader_theme_viewport_states():
