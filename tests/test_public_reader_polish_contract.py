@@ -82,7 +82,7 @@ def test_theme_control_border_matches_the_subscribe_control_presence():
 
 def test_mobile_theme_glyph_grows_without_growing_the_reader_control():
     css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
-    assert ".sb-nav #sbTheme > span{display:block;font-size:1.28rem;line-height:1;}" in css
+    assert ".sb-nav #sbTheme > span{width:100%;height:100%;display:grid;place-items:center;font-size:21px;line-height:1;transform:translateY(-.5px);}" in css
 
 
 def test_reader_footer_uses_at_least_comfortable_small_text():
