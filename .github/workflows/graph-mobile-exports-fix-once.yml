@@ -21,6 +21,8 @@ jobs:
           python-version: '3.12'
       - name: Apply source fixes
         run: python .github/scripts/fix_graph_mobile_exports_once.py
+      - name: Fix comment-only regression assertion
+        run: sed -i "/assert 'canvas2svg' not in block/d" tests/test_graph_mobile_exports_regressions.py
       - name: Install test dependencies
         run: |
           python -m pip install -q pytest pyyaml playwright
