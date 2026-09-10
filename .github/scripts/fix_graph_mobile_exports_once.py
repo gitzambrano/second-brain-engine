@@ -1,37 +1,64 @@
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[2]
 GRAPH = ROOT / "scripts" / "build_graph.py"
 PUBLIC = ROOT / "scripts" / "lib" / "build_public_map.py"
+INDEX = ROOT / "scripts" / "site_src" / "index.html"
+ESSAY_CSS = ROOT / "scripts" / "site_src" / "essay-theme.css"
 TEST = ROOT / "tests" / "test_graph_mobile_exports_regressions.py"
 
 
-def replace_once(text: str, old: str, new: str, label: str) -> str:
-    n = text.count(old)
-    if n != 1:
-        raise SystemExit(f"{label}: expected one occurrence, got {n}")
-    return text.replace(old, new, 1)
+def replace_exact(text: str, old: str, new: str, label: str, expected=None) -> str:
+    count = text.count(old)
+    if expected is not None and count != expected:
+        raise SystemExit(f"{label}: expected {expected} occurrence(s), got {count}")
+    if count == 0:
+        raise SystemExit(f"{label}: token not found")
+    return text.replace(old, new)
+
+
+def replace_between_all(text: str, start_marker: str, end_marker: str, replacement: str, label: str) -> tuple[str, int]:
+    out = []
+    pos = 0
+    count = 0
+    while True:
+        start = text.find(start_marker, pos)
+        if start < 0:
+            out.append(text[pos:])
+            break
+        end = text.find(end_marker, start)
+        if end < 0:
+            raise SystemExit(f"{label}: missing end marker after occurrence {count + 1}")
+        out.append(text[pos:start])
+        out.append(replacement)
+        pos = end
+        count += 1
+    if count == 0:
+        raise SystemExit(f"{label}: start marker not found")
+    return "".join(out), count
 
 
 graph = GRAPH.read_text(encoding="utf-8")
-graph = replace_once(
+
+# render_html and render_reader_html intentionally carry parallel JS templates.
+# Patch every copy, not only the first one: leaving the second legacy export path
+# was the cause of the previous regression gate failure.
+graph = replace_exact(
     graph,
     "const LABEL_SHOW_AT = 0.96;\nconst LABEL_HIDE_AT = 0.90;",
     "const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;\nconst LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;",
     "label thresholds",
+    expected=2,
 )
 
-# PNG: never resize/redraw the live canvas. The visible canvas is already HiDPI;
-# toBlob is asynchronous and keeps the interaction surface stable while encoding.
-png_start = graph.index("const EXPORT_SCALE = 3;")
-svg_marker = graph.index("// ---- Exportar SVG", png_start)
 png_block = '''let pngExportBusy = false;
 const exportPngBtn = document.getElementById("btn-export-png");
 exportPngBtn.addEventListener("click", () => {
   if (pngExportBusy) return;
   pngExportBusy = true;
   exportPngBtn.setAttribute("aria-busy", "true");
-  // Let the pressed/busy state paint before the browser starts encoding.
+  // Let the busy state paint before encoding the already-HiDPI live canvas.
   requestAnimationFrame(() => {
     canvas.toBlob((blob) => {
       pngExportBusy = false;
@@ -48,24 +75,26 @@ exportPngBtn.addEventListener("click", () => {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // Keep the object URL alive through the download hand-off on mobile.
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
   });
 });
 
 '''
-graph = graph[:png_start] + png_block + graph[svg_marker:]
+graph, png_count = replace_between_all(
+    graph,
+    "const EXPORT_SCALE = 3;",
+    "// ---- Exportar SVG",
+    png_block,
+    "PNG export blocks",
+)
+if png_count != 2:
+    raise SystemExit(f"PNG export blocks: expected 2, got {png_count}")
 
-# SVG: replace the canvas2svg/CDN path with a self-contained native SVG writer.
-# It runs synchronously inside the user's click, so Android browsers do not lose
-# the user gesture before the download starts.
-svg_start = graph.index("// ---- Exportar SVG")
-svg_end = graph.index("// Fechar o modal de Estilo", svg_start)
 svg_block = r'''// ---- Exportar SVG ---------------------------------------------------------
-// Gera SVG diretamente, sem canvas2svg/CDN. O download acontece no mesmo
-// gesto de clique, o que é importante no Android: downloads disparados depois
-// de uma Promise de rede podem ser bloqueados por perder o gesto do usuário.
+// Gera SVG diretamente, sem dependência externa. O download acontece no mesmo
+// gesto de clique, importante em navegadores Android que podem bloquear um
+// download iniciado somente depois de uma Promise de rede.
 function escapeXml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"
@@ -140,16 +169,40 @@ function exportSvgFile() {
 document.getElementById("btn-export-svg").addEventListener("click", exportSvgFile);
 
 '''
-graph = graph[:svg_start] + svg_block + graph[svg_end:]
+graph, svg_count = replace_between_all(
+    graph,
+    "// ---- Exportar SVG",
+    "// Fechar o modal de Estilo",
+    svg_block,
+    "SVG export blocks",
+)
+if svg_count != 2:
+    raise SystemExit(f"SVG export blocks: expected 2, got {svg_count}")
 
-# Remove the obsolete two-choice popover from the generated HTML template.
-pop_start = graph.index('<div id="export-svg-popover">')
-pop_end = graph.index('</div>', pop_start) + len('</div>')
-graph = graph[:pop_start] + graph[pop_end:]
+# The old two-choice SVG popover is obsolete now. Remove it from both HTML/CSS
+# templates so the native exporter has a single click path and no dead controls.
+graph, css_removed = re.subn(
+    r'\n  #export-svg-popover \{.*?\n  #export-svg-popover p \{[^\n]*\}\n',
+    '\n',
+    graph,
+    flags=re.S,
+)
+graph, html_removed = re.subn(
+    r'\n<div id="export-svg-popover">.*?</div>\n',
+    '\n',
+    graph,
+    flags=re.S,
+)
+if css_removed != 2 or html_removed != 2:
+    raise SystemExit(f"legacy SVG popover cleanup: expected 2 CSS + 2 HTML, got {css_removed} + {html_removed}")
+for obsolete in ("export-svg-popover", "btn-export-svg-completo", "btn-export-svg-simples", "ensureC2S"):
+    if obsolete in graph:
+        raise SystemExit(f"legacy SVG export token still present: {obsolete}")
+
 GRAPH.write_text(graph, encoding="utf-8")
 
 public = PUBLIC.read_text(encoding="utf-8")
-public = replace_once(
+public = replace_exact(
     public,
     '''  #sb-map-switch a {
     min-height: 36px; padding: 9px 15px; border-radius: 999px;
@@ -167,8 +220,9 @@ public = replace_once(
     text-decoration: none; white-space: nowrap;
   }''',
     "map switch controls",
+    expected=1,
 )
-public = replace_once(
+public = replace_exact(
     public,
     '''  #sb-theme {
     min-height: 36px; padding: 9px 13px; border-radius: 999px;
@@ -184,44 +238,71 @@ public = replace_once(
     color: #e8eef7; font: 600 18px/1 Inter, system-ui, sans-serif; cursor: pointer;
   }''',
     "map theme control",
+    expected=1,
 )
-public = replace_once(
+public = replace_exact(
     public,
     '    #sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }',
     '    #sb-back, #sb-map-switch a { box-sizing:border-box; height:36px; min-height:36px; padding:0 12px; font-size:13px; }\n    #sb-theme { width:36px; height:36px; min-height:36px; padding:0; font-size:21px; line-height:1; }',
     "mobile public chrome",
+    expected=1,
 )
 PUBLIC.write_text(public, encoding="utf-8")
+
+# Assinar should use exactly the same soft-accent state as selected view controls.
+index = INDEX.read_text(encoding="utf-8")
+index = replace_exact(
+    index,
+    'background:color-mix(in srgb,var(--accent) 13%,var(--panel));',
+    'background:var(--accent-soft);',
+    "home subscribe selected background",
+    expected=1,
+)
+INDEX.write_text(index, encoding="utf-8")
+
+essay_css = ESSAY_CSS.read_text(encoding="utf-8")
+essay_css = replace_exact(
+    essay_css,
+    'background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-panel));',
+    'background:var(--sb-primary-soft);',
+    "essay subscribe selected background",
+    expected=1,
+)
+ESSAY_CSS.write_text(essay_css, encoding="utf-8")
 
 TEST.write_text(r'''from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GRAPH = (ROOT / "scripts" / "build_graph.py").read_text(encoding="utf-8")
 PUBLIC = (ROOT / "scripts" / "lib" / "build_public_map.py").read_text(encoding="utf-8")
+INDEX = (ROOT / "scripts" / "site_src" / "index.html").read_text(encoding="utf-8")
+ESSAY_CSS = (ROOT / "scripts" / "site_src" / "essay-theme.css").read_text(encoding="utf-8")
 
 
-def test_graph_labels_appear_materially_earlier_on_mobile():
-    assert "const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;" in GRAPH
-    assert "const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;" in GRAPH
+def test_graph_labels_appear_materially_earlier_on_mobile_and_desktop():
+    assert GRAPH.count("const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;") == 2
+    assert GRAPH.count("const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;") == 2
 
 
 def test_png_export_never_resizes_the_live_canvas():
-    block = GRAPH.split('let pngExportBusy = false;', 1)[1].split('// ---- Exportar SVG', 1)[0]
-    assert 'canvas.toBlob' in block
-    assert 'requestAnimationFrame' in block
-    assert 'canvas.width =' not in block
-    assert 'canvas.height =' not in block
-    assert 'EXPORT_SCALE' not in block
+    assert GRAPH.count('let pngExportBusy = false;') == 2
+    for block in GRAPH.split('let pngExportBusy = false;')[1:]:
+        block = block.split('// ---- Exportar SVG', 1)[0]
+        assert 'canvas.toBlob' in block
+        assert 'requestAnimationFrame' in block
+        assert 'canvas.width =' not in block
+        assert 'canvas.height =' not in block
+        assert 'EXPORT_SCALE' not in block
 
 
-def test_svg_export_is_self_contained_and_direct():
-    block = GRAPH.split('// ---- Exportar SVG', 1)[1].split('// Fechar o modal de Estilo', 1)[0]
-    assert 'buildSvgExport' in block
-    assert 'new Blob([svgString]' in block
-    assert 'btn-export-svg").addEventListener("click", exportSvgFile)' in block
-    assert 'ensureC2S' not in block
-    assert 'canvas2svg' not in block
+def test_svg_export_is_self_contained_direct_and_has_no_legacy_popover():
+    assert GRAPH.count('function buildSvgExport()') == 2
+    assert GRAPH.count('new Blob([svgString]') == 2
+    assert GRAPH.count('btn-export-svg").addEventListener("click", exportSvgFile)') == 2
+    assert 'ensureC2S' not in GRAPH
     assert 'export-svg-popover' not in GRAPH
+    assert 'btn-export-svg-completo' not in GRAPH
+    assert 'btn-export-svg-simples' not in GRAPH
 
 
 def test_public_map_switch_text_is_flex_centered_and_theme_glyph_is_not_shrunk():
@@ -232,6 +313,11 @@ def test_public_map_switch_text_is_flex_centered_and_theme_glyph_is_not_shrunk()
     assert 'display: grid; place-items: center;' in PUBLIC
     assert '#sb-theme { width:36px; height:36px; min-height:36px; padding:0; font-size:21px; line-height:1; }' in PUBLIC
     assert '#sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }' not in PUBLIC
+
+
+def test_subscribe_ctas_use_the_selected_soft_accent_state():
+    assert 'background:var(--accent-soft);' in INDEX
+    assert 'background:var(--sb-primary-soft);' in ESSAY_CSS
 ''', encoding="utf-8")
 
-print("patched graph exports, label thresholds, public controls, and regression tests")
+print(f"patched {png_count} PNG and {svg_count} SVG templates; removed {html_removed} legacy popovers")
