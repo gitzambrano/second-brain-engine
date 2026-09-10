@@ -9,8 +9,8 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 4: normalize stale helper tokens, patch graph/chrome,
-# run focused + browser + repository gates, commit validated source, self-clean.
+# One-shot repair, revision 5: normalize stale helper tokens, patch graph/chrome,
+# run focused + real-browser + repository gates, commit validated source, self-clean.
 jobs:
   fix:
     runs-on: ubuntu-latest
