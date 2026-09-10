@@ -9,8 +9,8 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 3: remove the obsolete loader note, patch graph/chrome,
-# run focused + browser + repository gates, then commit validated source and clean up.
+# One-shot repair, revision 4: normalize stale helper tokens, patch graph/chrome,
+# run focused + browser + repository gates, commit validated source, self-clean.
 jobs:
   fix:
     runs-on: ubuntu-latest
@@ -21,17 +21,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Remove obsolete SVG loader note
+      - name: Normalize obsolete export note and helper token
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          p = Path('scripts/build_graph.py')
-          text = p.read_text(encoding='utf-8')
+          graph = Path('scripts/build_graph.py')
+          text = graph.read_text(encoding='utf-8')
           text, n = re.subn(r'\n<!-- canvas2svg .*?-->\n', '\n', text, flags=re.S)
           if n != 1:
               raise SystemExit(f'expected one obsolete canvas2svg head comment, got {n}')
-          p.write_text(text, encoding='utf-8')
+          graph.write_text(text, encoding='utf-8')
+
+          helper = Path('.github/scripts/fix_graph_mobile_exports_once.py')
+          text = helper.read_text(encoding='utf-8')
+          old = 'background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-panel));'
+          new = 'background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one stale essay helper token, got {text.count(old)}')
+          helper.write_text(text.replace(old, new), encoding='utf-8')
           PY
       - name: Apply source fixes
         run: python .github/scripts/fix_graph_mobile_exports_once.py
