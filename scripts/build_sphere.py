@@ -70,10 +70,10 @@ SPHERE_STYLE = {
         "entity": "#e8b657",
         "insights": "#b48ce8",
         "reference": "#8a8f96",
-        "edge": "#9aa0a8",
+        "edge": "#858b93",
         "background": "#1b1e21",
     },
-    "edgeOpacity": 0.35,
+    "edgeOpacity": 0.28,
     "edgeVisibility": "sempre",
     "radiusBase": 4,
     "radiusScale": 2.6,
@@ -343,9 +343,9 @@ SPHERE_HTML_TEMPLATE = """<!DOCTYPE html>
     --entity: #e8b657;
     --insight: #b48ce8;
     --reference: #8a8f96;
-    --edge: #9aa0a8;
+    --edge: #858b93;
     --edge-ref: #5a5f66;
-    --edge-opacity: 0.55;
+    --edge-opacity: 0.28;
     --radius-base: 4;
     --radius-scale: 2.6;
     --label-size: 10px;
@@ -795,8 +795,8 @@ const STYLE_VARS = {
 const STYLE_KEY = "sb-sphere-style-v1";
 const FACTORY_STYLE = data.defaultStyle || {
   colors: { essay: "#4fa8ff", concept: "#5fd3c4", entity: "#e8b657", insights: "#b48ce8",
-    reference: "#8a8f96", edge: "#9aa0a8", background: "#1b1e21" },
-  edgeOpacity: 0.35, edgeVisibility: "sempre", radiusBase: 4, radiusScale: 2.6,
+    reference: "#8a8f96", edge: "#858b93", background: "#1b1e21" },
+  edgeOpacity: 0.28, edgeVisibility: "sempre", radiusBase: 4, radiusScale: 2.6,
   labelSize: 10, glow: "leve", labels: "auto", starfield: true, gradient: true,
   sphereShading: false, tagTint: false, sizeMode: "degree",
   backFade: 0.08, autoRotate: true, rotateSpeed: 1.0,
@@ -1390,7 +1390,7 @@ function draw() {
   ctx.beginPath();
   ctx.arc(width / 2, height / 2, viewRadius(), 0, Math.PI * 2);
   ctx.lineWidth = 1;
-  ctx.strokeStyle = hexToRgba((styleConfig.colors && styleConfig.colors.edge) || "#9aa0a8", 0.16);
+  ctx.strokeStyle = hexToRgba((styleConfig.colors && styleConfig.colors.edge) || "#858b93", 0.16);
   ctx.stroke();
 
   const pad = 80;
@@ -2642,7 +2642,7 @@ function drawSphereForSvgExport(simple) {
   c.beginPath();
   c.arc(width / 2, height / 2, viewRadius(), 0, Math.PI * 2);
   c.lineWidth = 1;
-  c.strokeStyle = hexToRgba((svgStyle.colors && svgStyle.colors.edge) || "#9aa0a8", 0.16);
+  c.strokeStyle = hexToRgba((svgStyle.colors && svgStyle.colors.edge) || "#858b93", 0.16);
   c.stroke();
 
   // Gradientes construídos uma vez no espaço unitário, reaproveitados por
