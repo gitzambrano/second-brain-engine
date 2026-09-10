@@ -48,24 +48,8 @@ if 'local function fit_header_words(inlines)' not in lua:
         raise SystemExit(f'Table marker count={lua.count(marker)}')
     lua = lua.replace(marker, helper + marker, 1)
 
-old = '''  -- Se nem respeitando a maior palavra de cada coluna a tabela cabe no papel,
-  -- a unica saida honesta e reduzir SOMENTE o cabecalho. O corpo continua em
-  -- `\\small`; o header ganha um passo de fonte e continua sem hifenizacao.
-  if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then
-    for _, row in ipairs(el.head.rows) do
-      for _, cell in ipairs(row.cells) do
-        local compact = pandoc.RawInline('latex', '\\\\footnotesize{}')
-        if cell.contents and #cell.contents > 0
-           and (cell.contents[1].t == 'Plain' or cell.contents[1].t == 'Para') then
-          table.insert(cell.contents[1].content, 1, compact)
-        else
-          table.insert(cell.contents, 1, pandoc.Plain({compact}))
-        end
-      end
-    end
-  end
-'''
-new = '''  -- Tabela larga: garante por medicao TeX que nenhuma palavra de cabecalho
+needle = '  if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then\n'
+replacement = '''  -- Tabela larga: garante por medicao TeX que nenhuma palavra de cabecalho
   -- invade a celula vizinha. Palavras que ja cabem conservam tamanho natural.
   if num_cols >= 6 and el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
@@ -77,27 +61,14 @@ new = '''  -- Tabela larga: garante por medicao TeX que nenhuma palavra de cabec
     end
   end
 
-  -- Se nem respeitando a maior palavra de cada coluna a tabela cabe no papel,
-  -- reduz SOMENTE o cabecalho como fallback extremo. Uma tabela apenas larga
-  -- nao e motivo para diminuir tudo: o fit medido acima resolve palavra a palavra.
+  -- O passo menor de fonte fica apenas como fallback para tabelas cujo piso
+  -- de palavras, mesmo medido, excede a capacidade total.
   if total_floor > CAP and el.head and el.head.rows then
-    for _, row in ipairs(el.head.rows) do
-      for _, cell in ipairs(row.cells) do
-        local compact = pandoc.RawInline('latex', '\\\\footnotesize{}')
-        if cell.contents and #cell.contents > 0
-           and (cell.contents[1].t == 'Plain' or cell.contents[1].t == 'Para') then
-          table.insert(cell.contents[1].content, 1, compact)
-        else
-          table.insert(cell.contents, 1, pandoc.Plain({compact}))
-        end
-      end
-    end
-  end
 '''
-if old in lua:
-    lua = lua.replace(old, new, 1)
+if needle in lua:
+    lua = lua.replace(needle, replacement, 1)
 elif 'block.content = fit_header_words(block.content)' not in lua:
-    raise SystemExit('header compact block anchor missing')
+    raise SystemExit('wide header condition anchor missing')
 lua_path.write_text(lua, encoding='utf-8')
 
 test_path = Path('tests/test_visual_export_regressions.py')
