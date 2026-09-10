@@ -133,6 +133,11 @@ def write_webp_sibling(dest: Path) -> Path | None:
 
 
 IMG_TAG_RE = re.compile(r'<img\b[^>]*\bsrc="(\.\./assets/media/[^"]+)"[^>]*>')
+CONTENT_RE = re.compile(
+    r'(<main\b[^>]*\bclass="[^"]*\bcontent\b[^"]*"[^>]*>)(.*?)(</main>)',
+    re.I | re.S,
+)
+ORNAMENT_DIV_RE = re.compile(r'<div class="ornament">.*?</div>\s*', re.I | re.S)
 
 
 def wrap_pictures(html_text: str) -> str:
@@ -154,6 +159,19 @@ def wrap_pictures(html_text: str) -> str:
         )
 
     return IMG_TAG_RE.sub(substitui, html_text)
+
+
+def strip_content_ornaments(html_text: str) -> str:
+    """Omit authored chapter ornaments from the public reading projection.
+
+    The canonical reader already marks chapter transitions with the chapter
+    kicker and its rule. Source Markdown and standalone exports retain the
+    authored ornament; only the public HTML body drops the duplicate cue.
+    """
+    def replace(match: re.Match[str]) -> str:
+        return match.group(1) + ORNAMENT_DIV_RE.sub("", match.group(2)) + match.group(3)
+
+    return CONTENT_RE.sub(replace, html_text)
 
 
 def pandoc(markdown: str, title: str, subtitle: str, author: str,
@@ -241,9 +259,23 @@ def site_chrome(essay, related) -> str:
   <nav class="sb-nav">
     <a href="../index.html">Essays</a>
     <a href="../graph.html">Grafo</a>
+    <button class="sb-subscribe" type="button" id="sbSubscribe" aria-haspopup="dialog"
+            aria-controls="sbSubscribeDialog">Assinar</button>
     <button type="button" id="sbTheme" aria-label="Alternar tema" aria-pressed="false">◐</button>
   </nav>
 </header>
+<dialog class="sb-subscribe-dialog" id="sbSubscribeDialog" aria-labelledby="sbSubscribeTitle">
+  <div class="sb-subscribe-dialog-head">
+    <p class="sb-subscribe-eyebrow">Ensaios · Second Brain</p>
+    <h2 id="sbSubscribeTitle">Novos ensaios, quando houver.</h2>
+    <p>Receba um e-mail quando eu publicar um novo ensaio no Second Brain.</p>
+    <form method="dialog"><button class="sb-subscribe-close" type="submit" aria-label="Fechar">×</button></form>
+  </div>
+  <div class="sb-subscribe-embed" aria-label="Assinar a newsletter do Second Brain">
+    <div id="sbKitEmbedMount" data-uid="4fd36350af"
+         data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
+  </div>
+</dialog>
 <div class="sb-progress"><span id="sbProgressFill"></span></div>
 <div class="sb-tags">{tags}</div>
 {related_block}
@@ -283,6 +315,7 @@ def render(slug: str, output: Path) -> None:
 
     minutos = reading_minutes(plain_text(public_body_for_index(essay, allowed)))
     page = pandoc(body, title, subtitle, author_date, summary, status, minutos)
+    page = strip_content_ornaments(page)
 
     theme = (SITE_SRC_DIR / "essay-theme.css").read_text(encoding="utf-8")
     # A Inter auto-hospedada, quando o build a baixou. As referências do cache

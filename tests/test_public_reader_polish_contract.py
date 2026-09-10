@@ -41,12 +41,36 @@ def test_mobile_table_headers_reduce_tracking_to_protect_reading_width():
     assert "th{font-size:.82rem;letter-spacing:.06em;}" in template
 
 
+def test_dark_reader_gives_chapter_rules_a_quiet_gold_tint():
+    template = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
+    assert ':root[data-theme="dark"] .sb-kicker::after' in template
+    assert "color-mix(in srgb,var(--gold) 34%,var(--border))" in template
+
+
+def test_dark_reader_separates_h3_from_h4_without_changing_light_mode():
+    template = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
+    assert ':root[data-theme="dark"] h3{' in template
+    assert "border-bottom:1px solid color-mix(in srgb,var(--gold) 24%,transparent);" in template
+    assert "font-size:1.3rem;" in template
+
+
+def test_desktop_essay_chrome_keeps_subscribe_available():
+    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    assert 'id="sbSubscribe"' in source
+    assert 'id="sbSubscribeDialog"' in source
+    assert 'id="sbKitEmbedMount"' in source
+    assert ".sb-subscribe" in css
+    assert ".sb-subscribe{display:none" in css
+
+
 def test_browser_audit_declares_all_reader_theme_viewport_states():
     checker = (ROOT / "scripts" / "check_site_pages.py").read_text(encoding="utf-8")
     for state in ("mobile-light", "mobile-dark", "desktop-light", "desktop-dark"):
         assert state in checker
     for code in ("EDITORIAL_FONT_UNAVAILABLE", "TOC_OVERFLOW", "CONTROL_OUTSIDE_VIEWPORT"):
         assert code in checker
+    assert "#sbSubscribe" in checker
     assert "if data[\"isEssay\"]:" in checker
     assert "if(!localStorage.getItem('sb-theme'))" in checker
     assert "el.closest('table')" in checker

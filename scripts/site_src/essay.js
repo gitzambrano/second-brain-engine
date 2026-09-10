@@ -69,6 +69,26 @@
     });
   }
 
+  /* --- Newsletter --------------------------------------------------------- */
+  var subscribe = document.getElementById('sbSubscribe');
+  var subscribeDialog = document.getElementById('sbSubscribeDialog');
+  var kitMount = document.getElementById('sbKitEmbedMount');
+  function loadKit() {
+    if (!kitMount || kitMount.dataset.loaded) return;
+    var script = document.createElement('script');
+    script.async = true;
+    script.dataset.uid = kitMount.dataset.uid;
+    script.src = kitMount.dataset.src;
+    kitMount.dataset.loaded = '1';
+    kitMount.appendChild(script);
+  }
+  if (subscribe && subscribeDialog && typeof subscribeDialog.showModal === 'function') {
+    subscribe.addEventListener('click', function () { loadKit(); subscribeDialog.showModal(); });
+    subscribeDialog.addEventListener('click', function (event) {
+      if (event.target === subscribeDialog) subscribeDialog.close();
+    });
+  }
+
   /* --- Summary ------------------------------------------------------------- */
   var list = document.getElementById('sbTocList');
   var panel = document.getElementById('sbToc');

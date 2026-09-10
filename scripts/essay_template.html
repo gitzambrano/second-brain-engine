@@ -289,6 +289,9 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-display);color:var(--text-bright);line-
   content:"";flex:1;height:1px;
   background:color-mix(in srgb,var(--border) 82%,transparent);
 }
+:root[data-theme="dark"] .sb-kicker::after{
+  background:color-mix(in srgb,var(--gold) 34%,var(--border));
+}
 .content h2#sumário{display:none;}
 /* h3: distingue-se de h2 por PESO, CORPO e cor — não por família.
    O monoespaçado que estava aqui punha um subtítulo com cara de rótulo de
@@ -309,6 +312,12 @@ h4{
   font-size:1.05rem;font-weight:700;
   margin:1.8rem 0 .55rem;
   color:color-mix(in srgb,var(--text-bright) 62%,var(--text-dim));
+}
+:root[data-theme="dark"] h3{
+  font-size:1.3rem;
+  color:color-mix(in srgb,var(--text-bright) 82%,var(--text-dim));
+  border-bottom:1px solid color-mix(in srgb,var(--gold) 24%,transparent);
+  padding-bottom:.38rem;
 }
 h5{
   font-family:var(--font-display);

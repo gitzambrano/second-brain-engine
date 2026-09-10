@@ -176,7 +176,7 @@ PROBE = r"""() => {
         return true;
       })
       .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : '')),
-    controlsOutside: [...document.querySelectorAll('#sbTheme,#sbTocFab,#sbTocClose')]
+    controlsOutside: [...document.querySelectorAll('#sbTheme,#sbSubscribe,#sbTocFab,#sbTocClose')]
       .filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1 || r.top < -1 || r.bottom > innerHeight + 1); })
       .map(el => el.id)
   };
