@@ -1,0 +1,72 @@
+name: Patch subscribe alignment once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/patch-subscribe-align-once.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch canonical popup sources
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('scripts/site_src/index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              '.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;width:100%!important}',
+              '.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;margin:0!important;width:100%!important}'
+          )
+          s = s.replace(
+              '.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important}',
+              '.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;align-self:stretch!important;flex:0 0 auto!important}'
+          )
+          s = s.replace(
+              '.subscribe-embed .formkit-submit{width:100%!important;min-height:44px!important;',
+              '.subscribe-embed .formkit-submit{box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:none!important;align-self:stretch!important;min-height:44px!important;'
+          )
+          s = s.replace('Marque o email como confiável.', 'Marque o email como <u>confiável</u>.')
+          assert '<u>confiável</u>' in s
+          assert 'align-items:stretch!important' in s
+          assert 'padding:0!important;align-self:stretch!important;flex:0 0 auto!important' in s
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('scripts/site_src/essay-theme.css')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              '.sb-subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;width:100%!important;}',
+              '.sb-subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;margin:0!important;width:100%!important;}'
+          )
+          s = s.replace(
+              '.sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important;}',
+              '.sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;align-self:stretch!important;flex:0 0 auto!important;}'
+          )
+          s = s.replace(
+              '.sb-subscribe-embed .formkit-submit{width:100%!important;min-height:44px!important;',
+              '.sb-subscribe-embed .formkit-submit{box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:none!important;align-self:stretch!important;min-height:44px!important;'
+          )
+          assert 'align-items:stretch!important' in s
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('scripts/lib/render_public_essay.py')
+          s = p.read_text(encoding='utf-8').replace('Marque o email como confiável.', 'Marque o email como <u>confiável</u>.')
+          assert '<u>confiável</u>' in s
+          p.write_text(s, encoding='utf-8')
+      - name: Minimal checks and commit
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/lib/render_public_essay.py
+          grep -q '<u>confiável</u>' scripts/site_src/index.html
+          grep -q 'align-items:stretch!important' scripts/site_src/index.html
+          grep -q 'min-width:100%!important' scripts/site_src/index.html
+          git diff --check
+          rm .github/workflows/patch-subscribe-align-once.yml
+          git config user.name second-brain-bot
+          git config user.email actions@users.noreply.github.com
+          git add scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/lib/render_public_essay.py .github/workflows/patch-subscribe-align-once.yml
+          git commit -m 'Fix mobile subscribe alignment and underline trusted'
+          git push
