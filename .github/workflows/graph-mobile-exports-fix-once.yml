@@ -9,8 +9,8 @@ on:
 permissions:
   contents: write
 
-# One-shot repair: patch both graph HTML variants, run focused/browser/repo
-# gates, then commit only the validated source changes and remove the helpers.
+# One-shot repair, revision 2: patch graph/chrome, run focused + browser +
+# repository gates, then commit only validated source changes and self-clean.
 jobs:
   fix:
     runs-on: ubuntu-latest
