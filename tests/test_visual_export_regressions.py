@@ -113,7 +113,14 @@ def test_visual_export_has_no_per_essay_controls_or_known_slugs():
         "epistemologia-e-limites-do-conhecimento",
         "forma-do-universo",
         "definicoes-de-vida",
+        "campeoes-por-acaso-por-que-atletas-de-elite-sao-anomalias-estatisticas",
+        "o-que-e-vida-um-ensaio-nas-fronteiras-da-existencia",
+        "extrapolação",
+        "abrangência",
     ):
-        assert forbidden not in combined
+        assert forbidden not in combined.lower()
+    # O renderer não deve reconhecer hosts DOI; ele deve lidar com qualquer
+    # token longo por propriedades estruturais, independentemente do conteúdo.
+    assert "doi.org/" not in combined.lower()
 
 # Final CI trigger after the PDF-spacing and Kit-fixture gate fixes.
