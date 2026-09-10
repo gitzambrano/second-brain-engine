@@ -1,0 +1,92 @@
+name: Finalize concise newsletter dialog polish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/newsletter-polish-finalize.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply focused source changes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=1):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              found = text.count(old)
+              if found != count:
+                  raise SystemExit(f'{path}: expected {count} occurrence(s), found {found}: {old[:100]!r}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          index_path = Path('scripts/site_src/index.html')
+          before = index_path.read_text(encoding='utf-8')
+          toolbar_before = before.split('<section class="library shell" id="library">', 1)[1]
+
+          replace(
+              'scripts/site_src/index.html',
+              '.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important}',
+              '.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;width:100%!important}\n.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important}\n.subscribe-embed .formkit-submit{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}'
+          )
+          replace('scripts/site_src/index.html', '<h2 id="subscribeTitle">Novos ensaios, quando houver.</h2>', '<h2 id="subscribeTitle">Novos ensaios por e-mail.</h2>')
+          replace('scripts/site_src/index.html', '<p class="subscribe-dialog-lede">Receba um e-mail quando eu publicar um novo ensaio no Second Brain. Sem frequência fixa, sem mensagens entre uma publicação e outra.</p>', '<p class="subscribe-dialog-lede">Só quando houver publicação nova.</p>')
+          replace('scripts/site_src/index.html', '<p class="subscribe-dialog-note"><strong>Depois de assinar:</strong> confirme seu endereço no e-mail enviado pelo Kit. Ele pode cair em <strong>Spam</strong> ou <strong>Promoções</strong>; procure por “Second Brain”, marque como “Não é spam” e então confirme.</p>', '<p class="subscribe-dialog-note"><strong>Importante:</strong> confira também a pasta de <strong>Spam</strong> e confirme o e-mail.</p>')
+
+          after = index_path.read_text(encoding='utf-8')
+          toolbar_after = after.split('<section class="library shell" id="library">', 1)[1]
+          if toolbar_before != toolbar_after:
+              raise SystemExit('landing toolbar/library changed unexpectedly')
+
+          replace('scripts/lib/render_public_essay.py', '<h2 id="sbSubscribeTitle">Novos ensaios, quando houver.</h2>', '<h2 id="sbSubscribeTitle">Novos ensaios por e-mail.</h2>')
+          replace('scripts/lib/render_public_essay.py', '<p>Receba um e-mail quando eu publicar um novo ensaio no Second Brain.</p>', '<p>Só quando houver publicação nova.</p>')
+          replace('scripts/lib/render_public_essay.py', '<p class="sb-subscribe-note"><strong>Depois de assinar:</strong> confirme seu endereço no e-mail enviado pelo Kit. Ele pode cair em <strong>Spam</strong> ou <strong>Promoções</strong>; procure por “Second Brain”, marque como “Não é spam” e então confirme.</p>', '<p class="sb-subscribe-note"><strong>Importante:</strong> confira também a pasta de <strong>Spam</strong> e confirme o e-mail.</p>')
+
+          replace(
+              'scripts/site_src/essay-theme.css',
+              '.sb-subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;}',
+              '.sb-subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;width:100%!important;}\n.sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important;}\n.sb-subscribe-embed .formkit-submit{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;}'
+          )
+
+          tests = Path('tests/test_public_reader_polish_contract.py')
+          text = tests.read_text(encoding='utf-8')
+          old = '''def test_essay_subscribe_dialog_explains_spam_confirmation_action():\n    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")\n    for text in ("Spam", "Promoções", "Não é spam", "então confirme"):\n        assert text in source\n    assert 'class="sb-subscribe-note"' in source\n'''
+          new = '''def test_essay_subscribe_dialog_keeps_confirmation_copy_concise():\n    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")\n    assert "Spam" in source\n    assert "confirme o e-mail" in source\n    for verbose in ("Promoções", "Não é spam", "então confirme"):\n        assert verbose not in source\n    assert 'class="sb-subscribe-note"' in source\n\n\ndef test_subscribe_form_field_and_button_share_the_same_width():\n    index = (SRC / "index.html").read_text(encoding="utf-8")\n    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")\n    assert '.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]' in index\n    assert '.sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]' in css\n    assert "align-self:stretch!important" in index\n    assert "align-self:stretch!important" in css\n    assert "justify-content:center!important" in index\n    assert "justify-content:center!important" in css\n'''
+          if old not in text:
+              raise SystemExit('expected newsletter regression test block not found')
+          tests.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+      - name: Validate focused changes
+        run: |
+          python -m py_compile scripts/lib/render_public_essay.py
+          python -m pip install -q pytest pyyaml
+          pytest -q tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py
+          git diff --check
+          git diff -- scripts/site_src/index.html | grep -q 'Novos ensaios por e-mail'
+          if git diff -- scripts/site_src/index.html | grep -E 'searchbox|data-layout|data-density|tag-toggle'; then
+            echo 'Unexpected library control change' >&2
+            exit 1
+          fi
+      - name: Commit validated source changes and remove temporary runners
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f .github/workflows/newsletter-polish-finalize.yml .github/workflows/newsletter-polish-once.yml
+          git add scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/lib/render_public_essay.py tests/test_public_reader_polish_contract.py
+          git diff --cached --check
+          git commit -m "Polish newsletter dialog and mobile form alignment"
+          git push origin HEAD:main
