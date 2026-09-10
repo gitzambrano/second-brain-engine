@@ -14,7 +14,7 @@
   legibilityStyle.id = 'sb-essay-legibility-fixes';
   legibilityStyle.textContent = [
     '.content h5{font-family:var(--font-display);font-size:1rem;font-weight:700;margin:1.55rem 0 .5rem;color:color-mix(in srgb,var(--text-bright) 58%,var(--text-dim));}',
-    'mjx-container:not([display="true"]){vertical-align:.001em;font-size:90%;}',
+    'mjx-container:not([display="true"]){vertical-align:-.5em;font-size:90%;}',
     '@media (max-width:640px){mjx-container[display="true"]{font-size:90%;}}'
   ].join('\n');
   document.head.appendChild(legibilityStyle);

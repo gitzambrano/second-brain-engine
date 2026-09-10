@@ -125,13 +125,12 @@ def test_h5_tem_estilo_explicito_e_legivel():
     assert "font-weight:700" in block
 
 
-def test_math_inline_fica_levemente_ajustada_na_baseline():
+def test_math_inline_alinha_ao_centro_da_linha_de_prosa():
     css = TEMPLATE.read_text(encoding="utf-8")
     block = css.split('mjx-container:not([display="true"]){', 1)[1].split("}", 1)[0]
-    assert "vertical-align:.001em;" in block
+    assert "vertical-align:-.5em;" in block
     assert "font-size:90%;" in block
-    assert "vertical-align:-.15em;" not in block
-    assert "vertical-align:-.25em;" not in block
+    assert "vertical-align:.001em;" not in block
 
 
 def test_display_math_mobile_reduz_dez_porcento_sem_tocar_inline():
@@ -145,7 +144,7 @@ def test_public_runtime_patch_mantem_paginas_ja_publicadas_consistentes():
     """O site carrega essay.js externamente; ele corrige HTMLs já gerados."""
     js = SITE_ESSAY_JS.read_text(encoding="utf-8")
     assert ".content h5{" in js and "font-size:1rem" in js
-    assert 'mjx-container:not([display="true"]){vertical-align:.001em;font-size:90%;}' in js
+    assert 'mjx-container:not([display="true"]){vertical-align:-.5em;font-size:90%;}' in js
     assert '@media (max-width:640px){mjx-container[display="true"]{font-size:90%;}}' in js
 
 
