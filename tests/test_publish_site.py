@@ -54,3 +54,24 @@ def test_publish_site_does_not_commit_when_build_changes_nothing(monkeypatch, ca
         (sys.executable, str(SCRIPTS / "seal_publication.py")),
     ]
     assert "nada a publicar" in capsys.readouterr().out
+
+
+def test_repositories_ready_auto_commits_dirty_trees(monkeypatch):
+    import publish_site
+
+    calls: list[tuple[str, ...]] = []
+
+    monkeypatch.setattr(publish_site, "run", lambda *command, **_kwargs: calls.append(tuple(command)))
+    monkeypatch.setattr(
+        publish_site,
+        "git_output",
+        lambda *command, cwd: "M file.md" if command[0] == "status" else "0 0",
+    )
+
+    publish_site.repositories_ready()
+
+    add_calls = [c for c in calls if c[:2] == ("git", "add")]
+    commit_calls = [c for c in calls if c[:2] == ("git", "commit")]
+    assert len(add_calls) == 2
+    assert len(commit_calls) == 2
+

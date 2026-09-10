@@ -39,20 +39,43 @@ def git_output(*command: str, cwd: Path) -> str:
 
 
 def repositories_ready() -> None:
-    """Recusa publicar a partir de árvores sujas ou diferentes da nuvem."""
-    repositories = (("engine", CODE_ROOT), ("data", DATA_ROOT), ("site", SITE_ROOT))
-    for label, root in repositories:
+    """Garante que os três repositórios estejam prontos e sincronizados para publicação.
+
+    Salva automaticamente qualquer mudança pendente em engine e data antes de
+    compilar o site, e sincroniza os commits com o GitHub. Não bloqueia por
+    alterações prévias em site, pois o build irá regenerá-lo.
+    """
+    for label, root in (("engine", CODE_ROOT), ("data", DATA_ROOT)):
         if not root.is_dir():
             raise SystemExit(f"{label}: repositório ausente em {root}")
         if git_output("status", "--porcelain", cwd=root):
-            raise SystemExit(f"{label}: há mudanças locais; faça commit ou descarte-as antes de publicar")
+            print(f"{label}: salvando alterações locais automaticamente...")
+            run("git", "add", ".", cwd=root)
+            run(
+                "git",
+                "commit",
+                "-m",
+                f"{label}: atualização automática antes da publicação ({date.today():%Y-%m-%d})",
+                cwd=root,
+            )
         run("git", "fetch", "origin", "--prune", cwd=root)
         counts = git_output("rev-list", "--left-right", "--count", "main...origin/main", cwd=root)
         ahead, behind = (int(part) for part in counts.split())
-        if ahead or behind:
-            raise SystemExit(
-                f"{label}: main local e origin/main divergem (ahead={ahead}, behind={behind}); sincronize antes de publicar"
-            )
+        if behind > 0:
+            print(f"{label}: atualizando {behind} commit(s) da nuvem...")
+            run("git", "pull", "--rebase", "origin", "main", cwd=root)
+        if ahead > 0:
+            print(f"{label}: enviando {ahead} commit(s) para o GitHub...")
+            run("git", "push", "origin", "main", cwd=root)
+
+    if not SITE_ROOT.is_dir():
+        raise SystemExit(f"site: repositório ausente em {SITE_ROOT}")
+    run("git", "fetch", "origin", "--prune", cwd=SITE_ROOT)
+    counts = git_output("rev-list", "--left-right", "--count", "main...origin/main", cwd=SITE_ROOT)
+    ahead, behind = (int(part) for part in counts.split())
+    if behind > 0:
+        print(f"site: atualizando {behind} commit(s) da nuvem...")
+        run("git", "pull", "--rebase", "origin", "main", cwd=SITE_ROOT)
 
 
 def site_has_changes() -> bool:

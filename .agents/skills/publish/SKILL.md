@@ -33,14 +33,12 @@ python scripts/publish_site.py
 
 Regras:
 
-- o comando exige `./`, `data/` e `site/` limpos e sincronizados com `origin/main`;
-- qualquer erro bloqueante interrompe a publicação antes do commit;
+- o comando salva e sincroniza automaticamente qualquer mudança pendente em `./` e `data/` com `origin/main` antes de compilar;
+- mudanças locais prévias em `site/` são regeneradas pelo build sem bloquear o fluxo;
+- qualquer erro bloqueante de compilação ou validação interrompe a publicação antes do commit;
 - ausência de Chromium é falha neste fluxo, não SKIP;
 - `--allow-skip-browser` não é válido para publicação;
-- o selo é obrigatório e deve corresponder ao conteúdo final e ao commit do engine que o gerou;
-- se `seal_publication.py` indicar engine dirty, não publique até o código gerador estar commitado.
-
-O efeito remoto do comando é **exclusivamente** `site/`. Ele nunca faz commit ou push de `./` ou `data/`.
+- o selo é obrigatório e deve corresponder ao conteúdo final e ao commit do engine que o gerou.
 
 ## Relato
 
