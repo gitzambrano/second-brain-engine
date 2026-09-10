@@ -1,6 +1,5 @@
 from pathlib import Path
 import sys
-import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,45 +28,49 @@ page_path.write_text(html, encoding="utf-8")
 
 with sync_playwright() as p:
     browser = p.chromium.launch()
-    page = browser.new_page(viewport={"width":390,"height":844}, device_scale_factor=1)
-    page.goto(page_path.as_uri())
+    page = browser.new_page(viewport={"width":390,"height":844}, device_scale_factor=1, accept_downloads=True)
+    page.goto(page_path.as_uri(), wait_until="load")
     page.wait_for_selector("#graph")
+    page.wait_for_selector("#sb-map-switch")
+    page.wait_for_function("document.querySelectorAll('#sb-map-switch a').length === 2 && !!document.querySelector('#sb-theme')")
     page.wait_for_timeout(500)
 
     controls = page.evaluate("""() => {
-      const box = sel => {
-        const r = document.querySelector(sel).getBoundingClientRect();
-        const s = getComputedStyle(document.querySelector(sel));
-        return {x:r.x,y:r.y,w:r.width,h:r.height,display:s.display,align:s.alignItems,justify:s.justifyContent,font:s.fontSize,line:s.lineHeight};
+      const els = document.querySelectorAll('#sb-map-switch a');
+      const box = el => {
+        if (!el) throw new Error('missing control');
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return {x:r.x,y:r.y,w:r.width,h:r.height,display:s.display,align:s.alignItems,justify:s.justifyContent,font:s.fontSize,line:s.lineHeight,text:el.textContent.trim()};
       };
-      return {graph:box('#sb-map-switch a[href="graph.html"]'), globe:box('#sb-map-switch a[href="sphere.html"]'), theme:box('#sb-theme')};
+      return {graph:box(els[0]), globe:box(els[1]), theme:box(document.querySelector('#sb-theme'))};
     }""")
+    assert controls["graph"]["text"] == "Grafo", controls
+    assert controls["globe"]["text"] == "Globo", controls
     for name in ("graph", "globe"):
         c = controls[name]
         assert abs(c["h"] - 36) < 0.1, (name, c)
         assert c["display"] == "flex", (name, c)
         assert c["align"] == "center" and c["justify"] == "center", (name, c)
+        assert c["line"] == "13px", (name, c)
     assert abs(controls["theme"]["w"] - 36) < 0.1 and abs(controls["theme"]["h"] - 36) < 0.1, controls["theme"]
     assert controls["theme"]["font"] == "21px", controls["theme"]
 
-    # Verify mobile label hysteresis at the new earlier threshold.
     shown = page.evaluate("""() => { labelsShown=false; updateLabelVisibility(0.61); const before=labelsShown; updateLabelVisibility(0.62); return {before, after:labelsShown}; }""")
     assert shown == {"before": False, "after": True}, shown
 
     page.locator("#sb-map-switch").screenshot(path=str(out / "graph-mobile-controls.png"))
 
     with page.expect_download(timeout=10000) as dl_info:
-        page.click("#btn-export-png")
-    dl = dl_info.value
+        page.locator("#btn-export-png").click()
     png_path = out / "graph-export-test.png"
-    dl.save_as(str(png_path))
+    dl_info.value.save_as(str(png_path))
     assert png_path.stat().st_size > 1000, png_path.stat().st_size
 
     with page.expect_download(timeout=10000) as dl_info:
-        page.click("#btn-export-svg")
-    dl = dl_info.value
+        page.locator("#btn-export-svg").click()
     svg_path = out / "graph-export-test.svg"
-    dl.save_as(str(svg_path))
+    dl_info.value.save_as(str(svg_path))
     svg_text = svg_path.read_text(encoding="utf-8")
     root = ET.fromstring(svg_text)
     assert root.tag.endswith("svg")
