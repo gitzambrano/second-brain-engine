@@ -298,6 +298,38 @@ function Code(el)
   return out
 end
 
+-- Referencias podem conter DOI/URL como texto visivel, fora de um Link.
+-- Esses tokens nao tem espacos e o TeX nao cria pontos de quebra em `/`, `:`
+-- ou `.` por conta propria. Insere apenas discretionary breaks invisiveis em
+-- identificadores longos com estrutura de URL/DOI; o texto impresso nao muda.
+local REF_BREAK_SEP = '[:/._%-]'
+
+local function break_reference_tokens(inlines)
+  local out = {}
+  for _, inl in ipairs(inlines) do
+    if inl.t == 'Str' and #inl.text >= 22 and inl.text:find('[:/]') then
+      local text = inl.text
+      local pos = 1
+      while pos <= #text do
+        local s, e = text:find(REF_BREAK_SEP, pos)
+        if not s then
+          table.insert(out, pandoc.Str(text:sub(pos)))
+          break
+        end
+        table.insert(out, pandoc.Str(text:sub(pos, e)))
+        table.insert(out, pandoc.RawInline('latex', '\\allowbreak{}'))
+        pos = e + 1
+      end
+    elseif inl.content then
+      inl.content = break_reference_tokens(inl.content)
+      table.insert(out, inl)
+    else
+      table.insert(out, inl)
+    end
+  end
+  return out
+end
+
 function Link(el)
   -- Link interno (Sumário -> capítulo): o Pandoc, deixado sozinho, escreve
   -- `\hyperref[id]{...}` usando o PRÓPRIO id auto-gerado do heading — que
@@ -584,6 +616,7 @@ function Para(el)
       end
       table.insert(new_content, inl)
     end
+    new_content = break_reference_tokens(new_content)
     return {
       pandoc.RawBlock('latex', '\\begin{sbrefitem}%'),
       pandoc.Plain(new_content),
@@ -669,7 +702,9 @@ end
 
 -- Maior palavra da celula. E o piso duro da coluna: um nome proprio longo
 -- ("Kolmogorov-Smirnov") dentro de um link nao tem onde quebrar, e numa coluna
--- estreita demais ele simplesmente transborda por cima da coluna vizinha.
+-- estreita demais ele simplesmente transborda por cima da coluna vizinha. A
+-- folga de 30% cobre largura real da fonte, padding e erro do estimador visual;
+-- 15% ainda cortava a ultima letra de headers portugueses como "Extrapolacao".
 local function longest_word(s)
   local m = 0
   for w in s:gmatch('%S+') do
@@ -677,6 +712,26 @@ local function longest_word(s)
     if l > m then m = l end
   end
   return m
+end
+
+-- Mantem cada palavra do cabecalho dentro da largura REAL de sua celula.
+-- RawInline abre/fecha a macro ao redor do Str; wrappers como Strong continuam
+-- por fora, portanto a medicao usa exatamente a fonte/peso que sera impressa.
+local function fit_header_words(inlines)
+  local out = {}
+  for _, inl in ipairs(inlines) do
+    if inl.t == 'Str' then
+      table.insert(out, pandoc.RawInline('latex', '\\sbfittext{'))
+      table.insert(out, inl)
+      table.insert(out, pandoc.RawInline('latex', '}'))
+    elseif inl.content then
+      inl.content = fit_header_words(inl.content)
+      table.insert(out, inl)
+    else
+      table.insert(out, inl)
+    end
+  end
+  return out
 end
 
 function Table(el)
@@ -725,7 +780,7 @@ function Table(el)
   local total_floor = 0
   for i = 1, num_cols do
     pref[i] = math.max(math.min(pref[i], 55), 4)
-    floor_[i] = math.max(floor_[i] * 1.15, 3)
+    floor_[i] = math.max(floor_[i] * 1.30, 3)
     total_pref = total_pref + pref[i]
     total_floor = total_floor + floor_[i]
   end
@@ -767,6 +822,20 @@ function Table(el)
   -- When minimum word widths themselves exceed capacity, allocation cannot
   -- prevent header collisions. Reduce only those header cells one font step;
   -- body rows and every unconstrained table remain on the existing path.
+  -- Tabela larga: garante por medicao TeX que nenhuma palavra de cabecalho
+  -- invade a celula vizinha. Palavras que ja cabem conservam tamanho natural.
+  if num_cols >= 6 and el.head and el.head.rows then
+    for _, row in ipairs(el.head.rows) do
+      for _, cell in ipairs(row.cells) do
+        for _, block in ipairs(cell.contents or {}) do
+          if block.content then block.content = fit_header_words(block.content) end
+        end
+      end
+    end
+  end
+
+  -- O passo menor de fonte fica apenas como fallback para tabelas cujo piso
+  -- de palavras, mesmo medido, excede a capacidade total.
   if total_floor > CAP and el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
@@ -779,6 +848,20 @@ function Table(el)
         end
       end
     end
+  end
+
+  -- Tabelas largas perdem uma parcela grande da largura em padding: com sete
+  -- colunas, 5pt por lado consomem 70pt antes de uma unica letra. Reduzir esse
+  -- padding apenas a partir de seis colunas devolve 4pt de largura util a cada
+  -- celula, sem encolher o texto nem afetar tabelas comuns. O grupo limita a
+  -- mudanca a esta longtable; 
+-- \AtBeginEnvironment usa \sbtablecolsep ao abrir o ambiente.
+  if num_cols >= 6 then
+    return {
+      pandoc.RawBlock('latex', '\\begingroup\\setlength{\\sbtablecolsep}{3pt}%'),
+      el,
+      pandoc.RawBlock('latex', '\\endgroup%'),
+    }
   end
   return el
 end

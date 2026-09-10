@@ -70,6 +70,37 @@ def test_pdf_table_headers_prevent_hyphenation_before_breaking_words():
     assert r"\\hyphenpenalty=10000\\exhyphenpenalty=10000\\raggedright" in lua
 
 
+def test_pdf_reference_tokens_get_discretionary_breaks():
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert "local function break_reference_tokens(inlines)" in lua
+    assert "new_content = break_reference_tokens(new_content)" in lua
+    assert r"\\allowbreak{}" in lua
+
+
+def test_pdf_table_word_floor_has_real_font_and_padding_margin():
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert "floor_[i] = math.max(floor_[i] * 1.30, 3)" in lua
+
+
+def test_wide_pdf_tables_reduce_padding_without_affecting_normal_tables():
+    exporter = (SCRIPTS / "export_essay_pdf.py").read_text(encoding="utf-8")
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert r"\newlength{\sbtablecolsep}" in exporter
+    assert r"\setlength{\sbtablecolsep}{5pt}" in exporter
+    assert r"\setlength{\tabcolsep}{\sbtablecolsep}" in exporter
+    assert "if num_cols >= 6 then" in lua
+    assert r"\\setlength{\\sbtablecolsep}{3pt}" in lua
+
+
+def test_wide_pdf_table_header_words_are_measured_and_fit_to_cell():
+    exporter = (SCRIPTS / "export_essay_pdf.py").read_text(encoding="utf-8")
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert r"\newcommand{\sbfittext}" in exporter
+    assert "local function fit_header_words(inlines)" in lua
+    assert "block.content = fit_header_words(block.content)" in lua
+    assert "if num_cols >= 6 and el.head and el.head.rows then" in lua
+
+
 def test_visual_export_has_no_per_essay_controls_or_known_slugs():
     combined = "\n".join(
         (SCRIPTS / name).read_text(encoding="utf-8")
@@ -82,7 +113,14 @@ def test_visual_export_has_no_per_essay_controls_or_known_slugs():
         "epistemologia-e-limites-do-conhecimento",
         "forma-do-universo",
         "definicoes-de-vida",
+        "campeoes-por-acaso-por-que-atletas-de-elite-sao-anomalias-estatisticas",
+        "o-que-e-vida-um-ensaio-nas-fronteiras-da-existencia",
+        "extrapolação",
+        "abrangência",
     ):
-        assert forbidden not in combined
+        assert forbidden not in combined.lower()
+    # O renderer não deve reconhecer hosts DOI; ele deve lidar com qualquer
+    # token longo por propriedades estruturais, independentemente do conteúdo.
+    assert "doi.org/" not in combined.lower()
 
 # Final CI trigger after the PDF-spacing and Kit-fixture gate fixes.

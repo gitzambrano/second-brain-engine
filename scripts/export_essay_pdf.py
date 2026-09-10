@@ -659,11 +659,13 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 % e deixava meia folha em branco. O `\endhead` do Pandoc repete o cabecalho
 % em cada continuacao, entao partir a tabela nao custa legibilidade.
 \BeforeBeginEnvironment{longtable}{\sbneedspace{4\baselineskip}}
+\newlength{\sbtablecolsep}
+\setlength{\sbtablecolsep}{5pt}
 \AtBeginEnvironment{longtable}{%
   \small
   \setlength{\emergencystretch}{3em}%
   \hyphenpenalty=50\exhyphenpenalty=50%
-  \setlength{\tabcolsep}{5pt}%
+  \setlength{\tabcolsep}{\sbtablecolsep}%
   \renewcommand{\arraystretch}{1.25}%
 }
 
@@ -1090,6 +1092,13 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 % sai no corpo normal.
 \newcommand{\sbfit}[1]{%
   \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{$\displaystyle #1$}}
+
+% Mesmo principio para palavras de cabecalho de tabela: mede na fonte corrente
+% e so encolhe se a palavra realmente ultrapassar a largura util da celula.
+% Diferente de reduzir o cabecalho inteiro, preserva legibilidade e permite
+% quebra normal entre palavras como "Poder Filosofico".
+\newcommand{\sbfittext}[1]{%
+  \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{#1}}
 
 \let\sboldsubsubsection\subsubsection
 \renewcommand{\subsubsection}{%
