@@ -16,13 +16,13 @@
 .subscribe-embed{min-width:0;padding:18px 24px 24px}
 .subscribe-embed .formkit-form{max-width:none!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
 .subscribe-embed .formkit-header,.subscribe-embed .formkit-subheader,.subscribe-embed [data-element="header"],.subscribe-embed [data-element="subheader"]{display:none!important}
-.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0!important;width:100%!important}
-.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important}
+.subscribe-embed .formkit-fields{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;margin:0!important;width:100%!important}
+.subscribe-embed .formkit-field,.subscribe-embed [data-element="submit"]{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;align-self:stretch!important;flex:0 0 auto!important}
 .subscribe-embed .formkit-submit{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}
 .subscribe-embed .formkit-field{margin:0!important}
 .subscribe-embed .formkit-input{box-sizing:border-box!important;width:100%!important;min-height:44px!important;margin:0!important;padding:0 13px!important;border:1px solid var(--line-strong)!important;border-radius:10px!important;outline:0!important;background:var(--panel-2)!important;color:var(--text)!important;box-shadow:none!important;font-family:var(--sans)!important;font-size:13.5px!important}
 .subscribe-embed .formkit-input:focus{border-color:color-mix(in srgb,var(--accent) 62%,var(--line))!important}
-.subscribe-embed .formkit-submit{width:100%!important;min-height:44px!important;margin:0!important;padding:0 16px!important;border:1px solid transparent!important;border-radius:10px!important;background:var(--accent)!important;color:var(--bg)!important;box-shadow:none!important;font-family:var(--sans)!important;font-size:13px!important;font-weight:700!important;cursor:pointer!important}
+.subscribe-embed .formkit-submit{box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:none!important;align-self:stretch!important;min-height:44px!important;margin:0!important;padding:0 16px!important;border:1px solid transparent!important;border-radius:10px!important;background:var(--accent)!important;color:var(--bg)!important;box-shadow:none!important;font-family:var(--sans)!important;font-size:13px!important;font-weight:700!important;cursor:pointer!important}
 .subscribe-embed .formkit-submit:hover{background:var(--accent-dim)!important}
 .subscribe-embed .formkit-guarantee{margin:8px 0 0!important;color:var(--faint)!important;font-family:var(--sans)!important;font-size:10.5px!important;line-height:1.4!important}
 .subscribe-embed .formkit-powered-by-convertkit-container{margin-top:6px!important;opacity:.62}
@@ -51,7 +51,7 @@
   <div class="subscribe-embed" aria-label="Assinar a newsletter do Second Brain">
     <div id="kitEmbedMount" data-uid="4fd36350af" data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
-  <p class="subscribe-dialog-note"><u>Confirme</u> o e-mail recebido. Verifique a <u>caixa de spam</u>. Marque o email como confiável. Você não receberá mensagens de spam.</p>
+  <p class="subscribe-dialog-note"><u>Confirme</u> o e-mail recebido. Verifique a <u>caixa de spam</u>. Marque o email como <u>confiável</u>. Você não receberá mensagens de spam.</p>
 </dialog>
 
 <main>

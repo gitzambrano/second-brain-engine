@@ -273,7 +273,7 @@ def site_chrome(essay, related) -> str:
     <div id="sbKitEmbedMount" data-uid="4fd36350af"
          data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
-  <p class="sb-subscribe-note"><u>Confirme</u> o e-mail recebido. Verifique a <u>caixa de spam</u>. Marque o email como confiável. Você não receberá mensagens de spam.</p>
+  <p class="sb-subscribe-note"><u>Confirme</u> o e-mail recebido. Verifique a <u>caixa de spam</u>. Marque o email como <u>confiável</u>. Você não receberá mensagens de spam.</p>
 </dialog>
 <div class="sb-progress"><span id="sbProgressFill"></span></div>
 <div class="sb-tags">{tags}</div>
