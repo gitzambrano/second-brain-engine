@@ -1,0 +1,40 @@
+name: Apply mobile header visual fix once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/mobile-header-visual-fix-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply source patch
+        run: python .github/scripts/mobile_header_visual_fix_once.py
+      - name: Install test dependencies
+        run: python -m pip install -q pytest pyyaml
+      - name: Run focused regressions
+        run: |
+          python -m pytest -q tests/test_public_reader_polish_contract.py
+          python -m pytest -q tests/test_site_theme_contract.py tests/test_callout_user_feedback_regressions.py
+      - name: Repository quick gate
+        run: python scripts/check_repo.py --quick
+      - name: Commit source fix and remove one-shot helpers
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f .github/workflows/mobile-header-visual-fix-once.yml .github/scripts/mobile_header_visual_fix_once.py
+          git add scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/build_graph.py tests
+          git diff --cached --check
+          git commit -m "Align mobile essay header with landing and reveal graph labels earlier"
+          git push origin HEAD:main
