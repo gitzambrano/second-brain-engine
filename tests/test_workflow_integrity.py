@@ -1,28 +1,14 @@
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_workflow_script_paths_exist():
-    missing = []
-    for workflow in (ROOT / ".github/workflows").glob("*.y*ml"):
-        source = workflow.read_text(encoding="utf-8")
-        refs = set(re.findall(r"\bscripts/[A-Za-z0-9_./-]+\.py\b", source))
-        for rel in sorted(refs):
-            if not (ROOT / rel).is_file():
-                missing.append(f"{workflow.name}: {rel}")
-    assert not missing, "workflow references missing scripts:\n" + "\n".join(missing)
+def test_no_remote_ci_workflows_remain_in_engine_or_data():
+    assert not list((ROOT / ".github/workflows").glob("*.y*ml"))
+    assert not list((ROOT / "data/.github/workflows").glob("*.y*ml"))
 
 
-def test_expensive_ci_is_split_and_path_scoped():
-    workflows = ROOT / ".github/workflows"
-    sanity = (workflows / "sanity.yml").read_text(encoding="utf-8")
-    assert "pdf-export:" not in sanity
-    assert "html-export:" not in sanity
-    assert "site-browser:" not in sanity
-
-    for name in ("pdf-export.yml", "html-export.yml", "site-browser.yml"):
-        source = (workflows / name).read_text(encoding="utf-8")
-        assert "paths:" in source, f"{name} must not run for every engine commit"
-        assert "workflow_dispatch:" in source, f"{name} must remain available on demand"
+def test_pages_deploy_relies_on_the_local_seal_not_a_remote_python_gate():
+    source = (ROOT / "site/.github/workflows/pages.yml").read_text(encoding="utf-8")
+    assert "check_artifact.py" not in source
+    assert "upload-pages-artifact" in source
