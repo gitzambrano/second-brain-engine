@@ -9,9 +9,10 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 10: normalize stale helper tokens, patch graph/chrome,
+# One-shot repair, revision 11: normalize stale helper tokens, patch graph/chrome,
 # syntax-check generated JavaScript, run focused + browser + repository gates,
-# commit validated source, then self-clean.
+# commit validated source, then self-clean. Browser export audit opens the mobile
+# panel through the real toggle before exercising PNG and SVG downloads.
 jobs:
   fix:
     runs-on: ubuntu-latest
