@@ -1,0 +1,51 @@
+name: Fix graph mobile controls and exports once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/graph-mobile-exports-fix-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply source fixes
+        run: python .github/scripts/fix_graph_mobile_exports_once.py
+      - name: Install test dependencies
+        run: |
+          python -m pip install -q pytest pyyaml playwright
+          python -m playwright install --with-deps chromium
+      - name: Run focused regressions
+        run: |
+          python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py
+          pytest -q tests/test_graph_mobile_exports_regressions.py
+      - name: Browser audit exports and mobile controls
+        run: python .github/scripts/audit_graph_mobile_exports_once.py
+      - name: Repository quick gate
+        run: python scripts/check_repo.py --quick
+      - name: Upload browser audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: graph-mobile-export-audit
+          path: visual-audit/
+          retention-days: 3
+      - name: Commit source fixes
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f .github/workflows/graph-mobile-exports-fix-once.yml .github/scripts/fix_graph_mobile_exports_once.py .github/scripts/audit_graph_mobile_exports_once.py
+          git rm -f .github/workflows/ui-polish-once.yml .github/scripts/apply_ui_polish_once.py .github/scripts/finalize_graph_edge_defaults.py || true
+          git add scripts/build_graph.py scripts/lib/build_public_map.py tests/test_graph_mobile_exports_regressions.py
+          git diff --cached --check
+          git commit -m "Fix graph mobile controls and exports"
+          git push origin HEAD:main
