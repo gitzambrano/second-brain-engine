@@ -41,3 +41,12 @@ H = np.array([[1.0, 0.0]])
     body, *_rest = prepare_body(source)
 
     assert "H = np.array([[1.0, 0.0]])" in body
+
+
+def test_browser_audit_ignores_wikilink_syntax_only_inside_code():
+    from pathlib import Path
+
+    checker = (Path(__file__).resolve().parents[1] / "scripts" / "check_site_pages.py").read_text(encoding="utf-8")
+
+    assert "cloneNode(true)" in checker
+    assert "querySelectorAll('pre,code')" in checker

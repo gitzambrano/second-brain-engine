@@ -143,7 +143,13 @@ MAP_PROBE = r"""() => {
 
 PROBE = r"""() => {
   const content = document.querySelector('.content') || document.body;
-  const text = content.innerText || '';
+  // ``[[...]]`` is an error in visible prose, but valid source code may use
+  // it for nested arrays (e.g. ``np.array([[1.0]])``). Inspect a detached
+  // copy with both fenced and inline code removed, so the auditor verifies
+  // renderer leakage without asking code samples to avoid their own syntax.
+  const prose = content.cloneNode(true);
+  prose.querySelectorAll('pre,code').forEach(el => el.remove());
+  const text = prose.innerText || '';
   return {
     docWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,
