@@ -1093,6 +1093,13 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 \newcommand{\sbfit}[1]{%
   \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{$\displaystyle #1$}}
 
+% Mesmo principio para palavras de cabecalho de tabela: mede na fonte corrente
+% e so encolhe se a palavra realmente ultrapassar a largura util da celula.
+% Diferente de reduzir o cabecalho inteiro, preserva legibilidade e permite
+% quebra normal entre palavras como "Poder Filosofico".
+\newcommand{\sbfittext}[1]{%
+  \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{#1}}
+
 \let\sboldsubsubsection\subsubsection
 \renewcommand{\subsubsection}{%
   \sbneedspace{3.6\baselineskip}\sboldsubsubsection}

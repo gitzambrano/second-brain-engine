@@ -714,6 +714,26 @@ local function longest_word(s)
   return m
 end
 
+-- Mantem cada palavra do cabecalho dentro da largura REAL de sua celula.
+-- RawInline abre/fecha a macro ao redor do Str; wrappers como Strong continuam
+-- por fora, portanto a medicao usa exatamente a fonte/peso que sera impressa.
+local function fit_header_words(inlines)
+  local out = {}
+  for _, inl in ipairs(inlines) do
+    if inl.t == 'Str' then
+      table.insert(out, pandoc.RawInline('latex', '\\sbfittext{'))
+      table.insert(out, inl)
+      table.insert(out, pandoc.RawInline('latex', '}'))
+    elseif inl.content then
+      inl.content = fit_header_words(inl.content)
+      table.insert(out, inl)
+    else
+      table.insert(out, inl)
+    end
+  end
+  return out
+end
+
 function Table(el)
   local num_cols = #el.colspecs
   if num_cols == 0 then return el end
@@ -802,7 +822,21 @@ function Table(el)
   -- When minimum word widths themselves exceed capacity, allocation cannot
   -- prevent header collisions. Reduce only those header cells one font step;
   -- body rows and every unconstrained table remain on the existing path.
-  if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then
+  -- Tabela larga: garante por medicao TeX que nenhuma palavra de cabecalho
+  -- invade a celula vizinha. Palavras que ja cabem conservam tamanho natural.
+  if num_cols >= 6 and el.head and el.head.rows then
+    for _, row in ipairs(el.head.rows) do
+      for _, cell in ipairs(row.cells) do
+        for _, block in ipairs(cell.contents or {}) do
+          if block.content then block.content = fit_header_words(block.content) end
+        end
+      end
+    end
+  end
+
+  -- O passo menor de fonte fica apenas como fallback para tabelas cujo piso
+  -- de palavras, mesmo medido, excede a capacidade total.
+  if total_floor > CAP and el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
         local compact = pandoc.RawInline('latex', '\\footnotesize{}')

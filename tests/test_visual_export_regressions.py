@@ -60,7 +60,7 @@ def test_sumario_kicker_is_inside_measured_toc_block():
 def test_table_pressure_is_structural_and_header_local():
     lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
     assert "local total_floor = 0" in lua
-    assert "if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then" in lua
+    assert "if total_floor > CAP and el.head and el.head.rows then" in lua
     assert r"\\footnotesize{}" in lua
     assert r"\\begingroup\\footnotesize%" not in lua
 
@@ -90,6 +90,15 @@ def test_wide_pdf_tables_reduce_padding_without_affecting_normal_tables():
     assert r"\setlength{\tabcolsep}{\sbtablecolsep}" in exporter
     assert "if num_cols >= 6 then" in lua
     assert r"\\setlength{\\sbtablecolsep}{3pt}" in lua
+
+
+def test_wide_pdf_table_header_words_are_measured_and_fit_to_cell():
+    exporter = (SCRIPTS / "export_essay_pdf.py").read_text(encoding="utf-8")
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert r"\newcommand{\sbfittext}" in exporter
+    assert "local function fit_header_words(inlines)" in lua
+    assert "block.content = fit_header_words(block.content)" in lua
+    assert "if num_cols >= 6 and el.head and el.head.rows then" in lua
 
 
 def test_visual_export_has_no_per_essay_controls_or_known_slugs():
