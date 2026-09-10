@@ -70,6 +70,18 @@ def test_pdf_table_headers_prevent_hyphenation_before_breaking_words():
     assert r"\\hyphenpenalty=10000\\exhyphenpenalty=10000\\raggedright" in lua
 
 
+def test_pdf_reference_tokens_get_discretionary_breaks():
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert "local function break_reference_tokens(inlines)" in lua
+    assert "new_content = break_reference_tokens(new_content)" in lua
+    assert r"\\allowbreak{}" in lua
+
+
+def test_pdf_table_word_floor_has_real_font_and_padding_margin():
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert "floor_[i] = math.max(floor_[i] * 1.30, 3)" in lua
+
+
 def test_visual_export_has_no_per_essay_controls_or_known_slugs():
     combined = "\n".join(
         (SCRIPTS / name).read_text(encoding="utf-8")
