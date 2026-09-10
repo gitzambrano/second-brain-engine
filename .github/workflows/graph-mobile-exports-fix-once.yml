@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 
-# One-shot repair, revision 5: normalize stale helper tokens, patch graph/chrome,
+# One-shot repair, revision 6: normalize stale helper tokens, patch graph/chrome,
 # run focused + real-browser + repository gates, commit validated source, self-clean.
 jobs:
   fix:
