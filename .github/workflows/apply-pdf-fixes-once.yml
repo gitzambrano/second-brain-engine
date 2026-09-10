@@ -1,0 +1,111 @@
+name: Apply PDF reference/table fixes once
+
+on:
+  push:
+    branches:
+      - fix/pdf-reference-table-clipping-2026-09-10
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pdf-reference-table-clipping-2026-09-10
+          fetch-depth: 0
+
+      - name: Apply generic renderer fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          lua_path = Path('scripts/pdf_boxes.lua')
+          lua = lua_path.read_text(encoding='utf-8')
+
+          marker = "function Link(el)\n"
+          helper = r'''-- Referencias podem conter DOI/URL como texto visivel, fora de um Link.
+-- Esses tokens nao tem espacos e o TeX nao cria pontos de quebra em `/`, `:`
+-- ou `.` por conta propria. Insere apenas discretionary breaks invisiveis em
+-- identificadores longos com estrutura de URL/DOI; o texto impresso nao muda.
+local REF_BREAK_SEP = '[:/._%-]'
+
+local function break_reference_tokens(inlines)
+  local out = {}
+  for _, inl in ipairs(inlines) do
+    if inl.t == 'Str' and #inl.text >= 22 and inl.text:find('[:/]') then
+      local text = inl.text
+      local pos = 1
+      while pos <= #text do
+        local s, e = text:find(REF_BREAK_SEP, pos)
+        if not s then
+          table.insert(out, pandoc.Str(text:sub(pos)))
+          break
+        end
+        table.insert(out, pandoc.Str(text:sub(pos, e)))
+        table.insert(out, pandoc.RawInline('latex', '\\allowbreak{}'))
+        pos = e + 1
+      end
+    elseif inl.content then
+      inl.content = break_reference_tokens(inl.content)
+      table.insert(out, inl)
+    else
+      table.insert(out, inl)
+    end
+  end
+  return out
+end
+
+'''
+          if helper not in lua:
+              if lua.count(marker) != 1:
+                  raise SystemExit(f'Link marker count={lua.count(marker)}')
+              lua = lua.replace(marker, helper + marker, 1)
+
+          old_ref = """      table.insert(new_content, inl)\n    end\n    return {\n      pandoc.RawBlock('latex', '\\\\begin{sbrefitem}%'),\n"""
+          new_ref = """      table.insert(new_content, inl)\n    end\n    new_content = break_reference_tokens(new_content)\n    return {\n      pandoc.RawBlock('latex', '\\\\begin{sbrefitem}%'),\n"""
+          if old_ref in lua:
+              lua = lua.replace(old_ref, new_ref, 1)
+          elif "new_content = break_reference_tokens(new_content)" not in lua:
+              raise SystemExit('reference insertion anchor missing')
+
+          old_floor = "floor_[i] = math.max(floor_[i] * 1.15, 3)"
+          new_floor = "floor_[i] = math.max(floor_[i] * 1.30, 3)"
+          if old_floor in lua:
+              lua = lua.replace(old_floor, new_floor, 1)
+          elif new_floor not in lua:
+              raise SystemExit('table floor anchor missing')
+
+          old_comment = """-- Maior palavra da celula. E o piso duro da coluna: um nome proprio longo\n-- (\"Kolmogorov-Smirnov\") dentro de um link nao tem onde quebrar, e numa coluna\n-- estreita demais ele simplesmente transborda por cima da coluna vizinha.\n"""
+          new_comment = """-- Maior palavra da celula. E o piso duro da coluna: um nome proprio longo\n-- (\"Kolmogorov-Smirnov\") dentro de um link nao tem onde quebrar, e numa coluna\n-- estreita demais ele simplesmente transborda por cima da coluna vizinha. A\n-- folga de 30% cobre largura real da fonte, padding e erro do estimador visual;\n-- 15% ainda cortava a ultima letra de headers portugueses como \"Extrapolacao\".\n"""
+          if old_comment in lua:
+              lua = lua.replace(old_comment, new_comment, 1)
+
+          lua_path.write_text(lua, encoding='utf-8')
+
+          test_path = Path('tests/test_visual_export_regressions.py')
+          test = test_path.read_text(encoding='utf-8')
+          anchor = """def test_pdf_table_headers_prevent_hyphenation_before_breaking_words():\n    lua = (SCRIPTS / \"pdf_boxes.lua\").read_text(encoding=\"utf-8\")\n    assert r\"\\\\hyphenpenalty=10000\\\\exhyphenpenalty=10000\\\\raggedright\" in lua\n\n\n"""
+          addition = anchor + """def test_pdf_reference_tokens_get_discretionary_breaks():\n    lua = (SCRIPTS / \"pdf_boxes.lua\").read_text(encoding=\"utf-8\")\n    assert \"local function break_reference_tokens(inlines)\" in lua\n    assert \"new_content = break_reference_tokens(new_content)\" in lua\n    assert r\"\\\\allowbreak{}\" in lua\n\n\ndef test_pdf_table_word_floor_has_real_font_and_padding_margin():\n    lua = (SCRIPTS / \"pdf_boxes.lua\").read_text(encoding=\"utf-8\")\n    assert \"floor_[i] = math.max(floor_[i] * 1.30, 3)\" in lua\n\n\n"""
+          if "def test_pdf_reference_tokens_get_discretionary_breaks():" not in test:
+              if test.count(anchor) != 1:
+                  raise SystemExit(f'test anchor count={test.count(anchor)}')
+              test = test.replace(anchor, addition, 1)
+              test_path.write_text(test, encoding='utf-8')
+          PY
+
+      - name: Run targeted regressions
+        run: |
+          python -m pip install -r requirements-ci.txt
+          python -m pytest -q tests/test_visual_export_regressions.py
+
+      - name: Commit validated renderer changes
+        run: |
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/apply-pdf-fixes-once.yml
+          git add scripts/pdf_boxes.lua tests/test_visual_export_regressions.py
+          git commit -m "fix: prevent PDF reference and table clipping"
+          git push origin HEAD:fix/pdf-reference-table-clipping-2026-09-10
