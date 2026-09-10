@@ -1,4 +1,4 @@
-name: Apply UI polish once
+name: Finalize graph UI polish
 
 on:
   push:
@@ -11,9 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  apply:
-    if: >-
-      github.event.head_commit.message == 'chore: apply UI polish runner v3'
+  finalize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,18 +20,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply source-of-truth UI changes
-        run: python .github/scripts/apply_ui_polish_once.py
-      - name: Validate edited sources
+      - name: Finalize graph defaults
+        run: python .github/scripts/finalize_graph_edge_defaults.py
+      - name: Validate
         run: |
-          python -m pip install -q pytest pyyaml
-          python -m py_compile scripts/build_graph.py scripts/lib/build_public_map.py scripts/lib/render_public_essay.py scripts/build_site.py
-          python -m pytest -q tests/test_public_reader_polish_contract.py tests/test_site_theme_contract.py
-      - name: Commit validated source changes
+          python -m py_compile scripts/build_graph.py
+          python - <<'PY'
+          from pathlib import Path
+          s = Path('scripts/build_graph.py').read_text(encoding='utf-8')
+          assert '    --edge: #858b93;' in s
+          assert '    --edge-opacity: 0.28;' in s
+          assert 'const LABEL_SHOW_AT = 1.40;' in s
+          assert 'const LABEL_HIDE_AT = 1.32;' in s
+          assert '"edgeOpacity": 0.28' in s
+          PY
+      - name: Commit
         run: |
           git config user.name "second-brain-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add scripts/site_src/site.css scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/lib/render_public_essay.py scripts/essay_template.html scripts/build_graph.py scripts/lib/build_public_map.py tests/test_public_reader_polish_contract.py
+          git add scripts/build_graph.py
           git diff --cached --check
-          git commit -m "Polish public chrome and graph readability"
+          git commit -m "Align graph initial edge defaults"
           git push origin HEAD:main
