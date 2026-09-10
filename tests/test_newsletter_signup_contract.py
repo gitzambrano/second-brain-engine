@@ -16,6 +16,7 @@ def test_subscribe_is_a_compact_header_action() -> None:
 
     assert header < subscribe < main
     assert '>Assinar</button>' in html
+    assert '>Ensaios</a>' in html
     assert 'class="newsletter shell"' not in html
 
 
@@ -27,8 +28,10 @@ def test_subscribe_opens_compact_dialog_with_expected_kit_embed() -> None:
     assert 'data-uid="4fd36350af"' in html
     assert 'src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"' in html
     assert "KIT_API_KEY" not in html
-    assert "Receba novos essays" in html
-    assert "Um e-mail quando eu publicar algo novo." in html
+    assert "Novos ensaios, quando houver." in html
+    assert "Receba um e-mail quando eu publicar um novo ensaio no Second Brain." in html
+    assert "Sem frequência fixa" in html
+    assert "Spam ou Promoções" in html
 
 
 def test_subscribe_header_fits_narrow_mobile_contract() -> None:
@@ -49,3 +52,4 @@ def test_dialog_form_is_single_column_and_full_width() -> None:
     assert "flex-direction:column!important" in html
     assert ".subscribe-embed .formkit-submit{width:100%!important" in html
     assert "width:min(430px,calc(100% - 28px))" in html
+    assert ".subscribe-dialog-note" in html
