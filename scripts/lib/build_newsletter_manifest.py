@@ -1,7 +1,7 @@
 """Build the private site-side newsletter manifest from public essay metadata.
 
 Only essays already authorized for public publication can enter this manifest.
-An essay is eligible when its front matter contains ``newsletter: true``.
+An essay is eligible when its front matter contains ``newsletter_issue: N``.
 The output lives under the site's ``.github/`` directory, so it is available to
 GitHub Actions but is never part of the Pages artifact.
 """
@@ -37,10 +37,12 @@ def collect_newsletter_entries() -> list[dict[str, object]]:
 
     for essay in public:
         meta, _body = parse(essay.path)
-        if meta.get("newsletter") is not True:
+        if "newsletter_issue" not in meta:
             continue
 
-        issue = str(meta.get("newsletter_issue") or "1").strip()
+        issue = str(meta["newsletter_issue"]).strip()
+        if not issue.isdecimal() or int(issue) < 1:
+            continue
         identity = f"{essay.slug}:{issue}"
         summary = str(meta.get("newsletter_summary") or essay.summary).strip()
         subject = str(meta.get("newsletter_subject") or f"Novo essay — {essay.title}").strip()
