@@ -1,0 +1,31 @@
+name: Patch subscribe popup once
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/patch-subscribe-popup-once.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply popup source patch
+        run: python .github/scripts/patch_subscribe_popup_once.py
+      - name: Minimal syntax and diff checks
+        run: |
+          python -m py_compile scripts/lib/render_public_essay.py
+          git diff --check
+          grep -q 'Receba novos ensaios por email.' scripts/site_src/index.html
+          grep -q 'Você não receberá mensagens de spam.' scripts/lib/render_public_essay.py
+      - name: Commit source and self-clean
+        run: |
+          set -euo pipefail
+          git config user.name "second-brain-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f .github/workflows/patch-subscribe-popup-once.yml .github/scripts/patch_subscribe_popup_once.py
+          git add scripts/site_src/index.html scripts/site_src/essay-theme.css scripts/lib/render_public_essay.py
+          git diff --cached --check
+          git commit -m "Polish subscribe popup copy and alignment"
+          git push origin HEAD:main
