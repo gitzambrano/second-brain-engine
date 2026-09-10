@@ -166,7 +166,7 @@ body{padding-top:68px;}
 .sb-subscribe-eyebrow{margin:0 0 5px;color:var(--sb-primary);font:700 9.5px/1 JetBrains Mono,monospace;letter-spacing:.17em;text-transform:uppercase;}
 .sb-subscribe-dialog h2{margin:0 0 7px;color:var(--sb-text);font:600 1.55rem/1.22 Source Serif 4,serif;letter-spacing:-.025em;}
 .sb-subscribe-dialog-head > p:last-of-type{margin:0;color:var(--sb-muted);font:13.5px/1.5 Inter,ui-sans-serif,system-ui,sans-serif;}
-.sb-subscribe-note{margin:-4px 24px 24px!important;padding:0;color:var(--sb-muted)!important;font:11.5px/1.5 Inter,ui-sans-serif,system-ui,sans-serif!important;}
+.sb-subscribe-note{margin:-4px 24px 24px!important;padding:0;color:var(--sb-muted)!important;font:13.5px/1.55 Inter,ui-sans-serif,system-ui,sans-serif!important;}
 .sb-subscribe-note strong{color:var(--sb-text);font-weight:650;}
 .sb-subscribe-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border:1px solid var(--sb-line);border-radius:9px;background:transparent;color:var(--sb-muted);font-size:19px;line-height:1;cursor:pointer;}
 .sb-subscribe-embed{min-width:0;padding:18px 24px 24px;}
@@ -176,7 +176,7 @@ body{padding-top:68px;}
 .sb-subscribe-embed .formkit-field,.sb-subscribe-embed [data-element="submit"]{width:100%!important;max-width:100%!important;margin:0!important;align-self:stretch!important;}
 .sb-subscribe-embed .formkit-submit{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;}
 .sb-subscribe-embed .formkit-field{margin:0!important;}
-.sb-subscribe-embed .formkit-input{width:100%!important;min-height:44px!important;margin:0!important;padding:0 13px!important;border:1px solid var(--sb-line-strong)!important;border-radius:10px!important;outline:0!important;background:var(--sb-surface-soft)!important;color:var(--sb-text)!important;font:13.5px Inter,ui-sans-serif,system-ui,sans-serif!important;}
+.sb-subscribe-embed .formkit-input{box-sizing:border-box!important;width:100%!important;min-height:44px!important;margin:0!important;padding:0 13px!important;border:1px solid var(--sb-line-strong)!important;border-radius:10px!important;outline:0!important;background:var(--sb-surface-soft)!important;color:var(--sb-text)!important;font:13.5px Inter,ui-sans-serif,system-ui,sans-serif!important;}
 .sb-subscribe-embed .formkit-submit{width:100%!important;min-height:44px!important;margin:0!important;padding:0 16px!important;border:1px solid transparent!important;border-radius:10px!important;background:var(--sb-primary)!important;color:var(--sb-bg)!important;font:700 13px Inter,ui-sans-serif,system-ui,sans-serif!important;cursor:pointer!important;}
 
 /* Public progress bar injected by render_public_essay.py. */
