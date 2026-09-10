@@ -1,0 +1,32 @@
+name: Refine table header fix once
+
+on:
+  push:
+    branches:
+      - fix/pdf-reference-table-clipping-2026-09-10
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pdf-reference-table-clipping-2026-09-10
+          fetch-depth: 0
+      - name: Apply refinement
+        run: python .github/scripts/refine_table_header_fix.py
+      - name: Test
+        run: |
+          python -m pip install -r requirements-ci.txt
+          python -m pytest -q tests/test_visual_export_regressions.py
+      - name: Commit refinement
+        run: |
+          git config user.name second-brain-bot
+          git config user.email actions@users.noreply.github.com
+          git rm .github/workflows/refine-table-header-once.yml .github/scripts/refine_table_header_fix.py
+          git add scripts/pdf_boxes.lua tests/test_visual_export_regressions.py
+          git commit -m "fix: compact headers in wide PDF tables"
+          git push origin HEAD:fix/pdf-reference-table-clipping-2026-09-10
