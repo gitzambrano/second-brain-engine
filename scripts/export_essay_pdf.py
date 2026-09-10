@@ -659,11 +659,13 @@ HEADER_TEX = r"""\usepackage{fancyhdr}
 % e deixava meia folha em branco. O `\endhead` do Pandoc repete o cabecalho
 % em cada continuacao, entao partir a tabela nao custa legibilidade.
 \BeforeBeginEnvironment{longtable}{\sbneedspace{4\baselineskip}}
+\newlength{\sbtablecolsep}
+\setlength{\sbtablecolsep}{5pt}
 \AtBeginEnvironment{longtable}{%
   \small
   \setlength{\emergencystretch}{3em}%
   \hyphenpenalty=50\exhyphenpenalty=50%
-  \setlength{\tabcolsep}{5pt}%
+  \setlength{\tabcolsep}{\sbtablecolsep}%
   \renewcommand{\arraystretch}{1.25}%
 }
 

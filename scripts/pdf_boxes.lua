@@ -815,5 +815,19 @@ function Table(el)
       end
     end
   end
+
+  -- Tabelas largas perdem uma parcela grande da largura em padding: com sete
+  -- colunas, 5pt por lado consomem 70pt antes de uma unica letra. Reduzir esse
+  -- padding apenas a partir de seis colunas devolve 4pt de largura util a cada
+  -- celula, sem encolher o texto nem afetar tabelas comuns. O grupo limita a
+  -- mudanca a esta longtable; 
+-- \AtBeginEnvironment usa \sbtablecolsep ao abrir o ambiente.
+  if num_cols >= 6 then
+    return {
+      pandoc.RawBlock('latex', '\\begingroup\\setlength{\\sbtablecolsep}{3pt}%'),
+      el,
+      pandoc.RawBlock('latex', '\\endgroup%'),
+    }
+  end
   return el
 end

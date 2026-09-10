@@ -82,6 +82,16 @@ def test_pdf_table_word_floor_has_real_font_and_padding_margin():
     assert "floor_[i] = math.max(floor_[i] * 1.30, 3)" in lua
 
 
+def test_wide_pdf_tables_reduce_padding_without_affecting_normal_tables():
+    exporter = (SCRIPTS / "export_essay_pdf.py").read_text(encoding="utf-8")
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert r"\newlength{\sbtablecolsep}" in exporter
+    assert r"\setlength{\sbtablecolsep}{5pt}" in exporter
+    assert r"\setlength{\tabcolsep}{\sbtablecolsep}" in exporter
+    assert "if num_cols >= 6 then" in lua
+    assert r"\\setlength{\\sbtablecolsep}{3pt}" in lua
+
+
 def test_visual_export_has_no_per_essay_controls_or_known_slugs():
     combined = "\n".join(
         (SCRIPTS / name).read_text(encoding="utf-8")
