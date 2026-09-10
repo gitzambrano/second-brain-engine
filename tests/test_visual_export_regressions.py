@@ -60,7 +60,7 @@ def test_sumario_kicker_is_inside_measured_toc_block():
 def test_table_pressure_is_structural_and_header_local():
     lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
     assert "local total_floor = 0" in lua
-    assert "if total_floor > CAP and el.head and el.head.rows then" in lua
+    assert "if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then" in lua
     assert r"\\footnotesize{}" in lua
     assert r"\\begingroup\\footnotesize%" not in lua
 

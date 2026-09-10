@@ -802,7 +802,7 @@ function Table(el)
   -- When minimum word widths themselves exceed capacity, allocation cannot
   -- prevent header collisions. Reduce only those header cells one font step;
   -- body rows and every unconstrained table remain on the existing path.
-  if total_floor > CAP and el.head and el.head.rows then
+  if (num_cols >= 6 or total_floor > CAP) and el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
         local compact = pandoc.RawInline('latex', '\\footnotesize{}')
