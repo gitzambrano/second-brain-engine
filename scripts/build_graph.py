@@ -136,7 +136,7 @@ GRAPH_STYLE = {
         "edge": "#9aa0a8",
         "background": "#1b1e21",
     },
-    "edgeOpacity": 0.55,
+    "edgeOpacity": 0.35,
     # "sempre" (arestas sempre na opacidade cheia de `edgeOpacity`, mesmo
     # durante o destaque de um nó selecionado — nada nunca esmaece) | "auto"
     # (comportamento clássico: opacidade normal em repouso, mas esmaece as
@@ -156,9 +156,9 @@ GRAPH_STYLE = {
     "glow": "leve",
     # "sempre" (rótulo sempre visível) | "auto" (esconde ao afastar o zoom
     # se o tier de desempenho pedir) | "nunca" (rótulo sempre oculto).
-    # "sempre" é o padrão — o rótulo só some se o usuário pedir
-    # explicitamente no modal de Estilo.
-    "labels": "sempre",
+    # No automático, os rótulos aparecem apenas quando o zoom já os torna
+    # legíveis. "sempre" e "nunca" continuam escolhas explícitas no painel.
+    "labels": "auto",
     "starfield": True,
     "gradient": True,
     # Camada extra de luz especular + sombra de contato por cima do
@@ -1611,8 +1611,8 @@ const STYLE_KEY = "sb-graph-style-v1";
 const FACTORY_STYLE = data.defaultStyle || {
   colors: { essay: "#4fa8ff", concept: "#5fd3c4", entity: "#e8b657", insights: "#b48ce8",
     reference: "#8a8f96", edge: "#9aa0a8", background: "#1b1e21" },
-  edgeOpacity: 0.55, edgeVisibility: "auto", radiusBase: 5, radiusScale: 3, labelSize: 10,
-  glow: "leve", labels: "sempre", starfield: true, gradient: true, sizeMode: "degree",
+  edgeOpacity: 0.35, edgeVisibility: "auto", radiusBase: 5, radiusScale: 3, labelSize: 10,
+  glow: "leve", labels: "auto", starfield: true, gradient: true, sizeMode: "degree",
   spacing: 1.8, performance: "alta", collision: true,
   linkStrength: 3.5, chargeStrength: 2.5, friction: 0.65, homeStrength: 0.25,
   sphereShading: false, tagTint: false,
@@ -1986,7 +1986,9 @@ data.nodes.forEach(n => {
 // Estado do nível de desempenho atual — lido pela visibilidade de rótulos
 // no zoom (abaixo) e recalculado toda vez que spacing/performance mudam.
 let currentTier = PERFORMANCE_TIERS[resolvePerformanceTier(styleConfig)];
-let labelsShown = true;
+let labelsShown = false;
+const LABEL_SHOW_AT = 1.55;
+const LABEL_HIDE_AT = 1.45;
 
 // Some com os rótulos quando o tier não é "sempre mostrar" e o zoom está
 // afastado — em wikis de centenas de nós, texto é de longe a coisa mais
@@ -2000,7 +2002,8 @@ function updateLabelVisibility(k) {
   const mode = styleConfig.labels || "auto";
   const show = mode === "sempre" ? true
     : mode === "nunca" ? false
-    : (currentTier.labelsAlways || k > 1.4);
+    // Histerese evita piscada quando o zoom repousa no limiar.
+    : (labelsShown ? k > LABEL_HIDE_AT : k >= LABEL_SHOW_AT);
   if (show !== labelsShown) {
     labelsShown = show;
   }

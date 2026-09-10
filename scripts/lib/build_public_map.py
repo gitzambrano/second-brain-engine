@@ -178,8 +178,8 @@ PUBLIC_CHROME = """
     padding: 9px 15px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
-    color: #e8eef7; font: 600 13px/1 Inter, system-ui, sans-serif;
-    text-decoration: none;
+    color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif;
+    text-decoration: none; white-space: nowrap;
   }
   #sb-back:hover { border-color: rgba(255,255,255,.4); }
   #sb-map-switch {
@@ -190,15 +190,15 @@ PUBLIC_CHROME = """
     padding: 9px 15px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
-    color: #e8eef7; font: 600 13px/1 Inter, system-ui, sans-serif;
-    text-decoration: none;
+    color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif;
+    text-decoration: none; white-space: nowrap;
   }
   #sb-map-switch a:hover, #sb-theme:hover { border-color: rgba(255,255,255,.4); }
   #sb-theme {
     padding: 9px 13px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
-    color: #e8eef7; font: 600 13px/1 Inter, system-ui, sans-serif; cursor: pointer;
+    color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif; cursor: pointer;
   }
   /* In the light Atlas the floating chrome inverts with it. */
   :root[data-theme="light"] #sb-back,

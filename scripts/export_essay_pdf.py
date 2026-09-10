@@ -152,6 +152,29 @@ def strip_conexoes_section(body):
     return '\n'.join(result) + '\n'
 
 
+FENCED_CODE_RE = re.compile(
+    r"(?ms)^(?P<fence>`{3,}|~{3,})[^\r\n]*\r?\n.*?^(?P=fence)[ \t]*$"
+)
+
+
+def transform_outside_fenced_code(text, transform):
+    """Apply a Markdown transformation only to prose, never fenced source.
+
+    Export preparation predates the public renderer and also rewrites
+    ``[[...]]``.  Source code may legitimately use that bracket sequence for
+    nested lists/matrices, so every wikilink-oriented transformation must keep
+    fenced blocks opaque.
+    """
+    chunks = []
+    cursor = 0
+    for fence in FENCED_CODE_RE.finditer(text):
+        chunks.append(transform(text[cursor:fence.start()]))
+        chunks.append(fence.group(0))
+        cursor = fence.end()
+    chunks.append(transform(text[cursor:]))
+    return "".join(chunks)
+
+
 def convert_heading_wikilinks(text):
     """`[[#Heading]]` / `[[#Heading|Display]]` -> `[Display](#slug-pandoc)`.
 
@@ -183,19 +206,24 @@ def convert_heading_wikilinks(text):
             heading_anchor(_strip_md_links(alvo)),
         )
 
-    return re.sub(
-        r'\[\[#((?:(?!\]\])(?!\|).)+)(?:\|((?:(?!\]\]).)+))?\]\]',
-        repl, text,
+    return transform_outside_fenced_code(
+        text,
+        lambda prose: re.sub(
+            r'\[\[#((?:(?!\]\])(?!\|).)+)(?:\|((?:(?!\]\]).)+))?\]\]',
+            repl, prose,
+        ),
     )
 
 
 def clean_residual_wikilinks(text):
     """Remove [[wikilinks]] que sobraram, convertendo para texto puro."""
-    # [[Target|Display]] -> Display
-    text = re.sub(r'\[\[([^\]|]+)\|([^\]]+)\]\]', r'\2', text)
-    # [[Target]] -> Target
-    text = re.sub(r'\[\[([^\]]+)\]\]', r'\1', text)
-    return text
+    def clean_prose(prose):
+        # [[Target|Display]] -> Display
+        prose = re.sub(r'\[\[([^\]|]+)\|([^\]]+)\]\]', r'\2', prose)
+        # [[Target]] -> Target
+        return re.sub(r'\[\[([^\]]+)\]\]', r'\1', prose)
+
+    return transform_outside_fenced_code(text, clean_prose)
 
 
 def strip_italic_from_headings(text):

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-import build_newsletter_manifest as newsletter
+from lib import build_newsletter_manifest as newsletter
 
 
 def _essay():

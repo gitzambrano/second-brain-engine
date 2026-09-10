@@ -275,6 +275,7 @@ def site_chrome(essay, related) -> str:
     <div id="sbKitEmbedMount" data-uid="4fd36350af"
          data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
+  <p class="sb-subscribe-note"><strong>Depois de assinar:</strong> confirme seu endereço no e-mail enviado pelo Kit. Ele pode cair em <strong>Spam</strong> ou <strong>Promoções</strong>; procure por “Second Brain”, marque como “Não é spam” e então confirme.</p>
 </dialog>
 <div class="sb-progress"><span id="sbProgressFill"></span></div>
 <div class="sb-tags">{tags}</div>

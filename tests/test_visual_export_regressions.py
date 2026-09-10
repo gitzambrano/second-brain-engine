@@ -65,6 +65,11 @@ def test_table_pressure_is_structural_and_header_local():
     assert r"\\begingroup\\footnotesize%" not in lua
 
 
+def test_pdf_table_headers_prevent_hyphenation_before_breaking_words():
+    lua = (SCRIPTS / "pdf_boxes.lua").read_text(encoding="utf-8")
+    assert r"\\hyphenpenalty=10000\\exhyphenpenalty=10000\\raggedright" in lua
+
+
 def test_visual_export_has_no_per_essay_controls_or_known_slugs():
     combined = "\n".join(
         (SCRIPTS / name).read_text(encoding="utf-8")

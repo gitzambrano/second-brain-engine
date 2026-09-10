@@ -66,6 +66,12 @@ H1_RE = re.compile(r"(?m)^#\s+(.+?)\s*$")
 CONNECTIONS_RE = re.compile(r"(?ms)^##\s+Conex[õo]es\s*\n(.*?)(?=^##\s+|\Z)")
 SUMARIO_RE = re.compile(r"(?ms)^##\s+Sumário\s*\n(.*?)(?=^##\s+|\Z)")
 WIKILINK_RE = re.compile(r"\[\[([^|\]]+)(?:\|([^\]]+))?\]\]")
+# Sanitization runs before Pandoc converts Markdown to HTML. Keep fenced code
+# opaque here: Python matrices such as ``np.array([[1.0]])`` have the exact
+# same bracket shape as a wikilink but are source code, never wiki syntax.
+FENCED_CODE_RE = re.compile(
+    r"(?ms)^(?P<fence>`{3,}|~{3,})[^\r\n]*\r?\n.*?^(?P=fence)[ \t]*$"
+)
 
 
 @dataclass(frozen=True)
@@ -244,7 +250,17 @@ def sanitize_private_wikilinks(markdown: str, allowed_public: set[str]) -> str:
             return match.group(0)
         return display or "referência interna"
 
-    return WIKILINK_RE.sub(replace, markdown)
+    # Split instead of replacing through a single negative-lookaround: fences
+    # can contain arbitrary newlines and bracket pairs, so preserving each
+    # complete fenced block is both clearer and safer for every code language.
+    chunks: list[str] = []
+    cursor = 0
+    for fence in FENCED_CODE_RE.finditer(markdown):
+        chunks.append(WIKILINK_RE.sub(replace, markdown[cursor:fence.start()]))
+        chunks.append(fence.group(0))
+        cursor = fence.end()
+    chunks.append(WIKILINK_RE.sub(replace, markdown[cursor:]))
+    return "".join(chunks)
 
 
 def public_body_for_index(essay: PublicEssay, allowed_public: set[str]) -> str:

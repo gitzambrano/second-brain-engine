@@ -64,6 +64,33 @@ def test_desktop_essay_chrome_keeps_subscribe_available():
     assert ".sb-subscribe{display:none" in css
 
 
+def test_theme_control_border_matches_the_subscribe_control_presence():
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    assert "#sbTheme{border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));}" in css
+
+
+def test_mobile_theme_glyph_grows_without_growing_the_reader_control():
+    css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
+    assert ".sb-nav #sbTheme{font-size:1.25rem;}" in css
+
+
+def test_reader_footer_uses_at_least_comfortable_small_text():
+    template = (ROOT / "scripts" / "essay_template.html").read_text(encoding="utf-8")
+    assert "font-size:.68rem" in template
+
+
+def test_kit_confirmation_note_follows_the_form_instead_of_delaying_it():
+    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
+    assert source.index('class="sb-subscribe-embed"') < source.index('class="sb-subscribe-note"')
+
+
+def test_essay_subscribe_dialog_explains_spam_confirmation_action():
+    source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
+    for text in ("Spam", "Promoções", "Não é spam", "então confirme"):
+        assert text in source
+    assert 'class="sb-subscribe-note"' in source
+
+
 def test_browser_audit_declares_all_reader_theme_viewport_states():
     checker = (ROOT / "scripts" / "check_site_pages.py").read_text(encoding="utf-8")
     for state in ("mobile-light", "mobile-dark", "desktop-light", "desktop-dark"):

@@ -687,7 +687,7 @@ function Table(el)
   if el.head and el.head.rows then
     for _, row in ipairs(el.head.rows) do
       for _, cell in ipairs(row.cells) do
-        local marca = pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}')
+        local marca = pandoc.RawInline('latex', '\\cellcolor{sbink!8!white}\\hyphenpenalty=10000\\exhyphenpenalty=10000\\raggedright ')
         if cell.contents and #cell.contents > 0
            and (cell.contents[1].t == 'Plain' or cell.contents[1].t == 'Para') then
           table.insert(cell.contents[1].content, 1, marca)
