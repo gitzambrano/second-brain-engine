@@ -126,11 +126,11 @@ h1, h2, h3 {
   color: var(--text-strong);
 }
 .brand-mark {
-  width: 31px; height: 31px;
+  width: 36px; height: 36px;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
-  border-radius: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   background: var(--accent-soft);
   color: var(--accent);
   font-size: 11px;
@@ -804,6 +804,8 @@ h1, h2, h3 {
   .topbar { height: 60px; }
   .topnav { gap: 14px; }
   .nav-link { font-size: 13px; }
+  .brand > span:last-child { display: none; }
+  .icon-button > span { font-size: 1.2rem; line-height: 1; }
 
   .masthead { padding-block: 30px 24px; }
   .masthead-lede { font-size: 15px; }

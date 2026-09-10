@@ -175,7 +175,7 @@ PUBLIC_CHROME = """
   #sb-back {
     position: fixed; left: 16px; bottom: 16px; z-index: 8;
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 15px; border-radius: 999px;
+    min-height: 36px; padding: 9px 15px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
     color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif;
@@ -187,7 +187,7 @@ PUBLIC_CHROME = """
     display: inline-flex; gap: 8px;
   }
   #sb-map-switch a {
-    padding: 9px 15px; border-radius: 999px;
+    min-height: 36px; padding: 9px 15px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
     color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif;
@@ -195,7 +195,7 @@ PUBLIC_CHROME = """
   }
   #sb-map-switch a:hover, #sb-theme:hover { border-color: rgba(255,255,255,.4); }
   #sb-theme {
-    padding: 9px 13px; border-radius: 999px;
+    min-height: 36px; padding: 9px 13px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
     color: #e8eef7; font: 600 14px/1 Inter, system-ui, sans-serif; cursor: pointer;
@@ -213,14 +213,14 @@ PUBLIC_CHROME = """
   /* The options panel must end above the floating chrome, never behind it —
      the detail card now grows with the connection lists, so its last row
      would otherwise sit under the "Second Brain Atlas" pill. */
-  #panel { padding-bottom: 56px; }
+  #panel { padding-bottom: 60px; }
   @media (max-width: 760px) {
     /* No celular o painel e uma folha colada no rodape — e o cromo flutuante
        ficava POR CIMA dela, cobrindo o fim do cartao de detalhe. Levantar a
        folha acima do cromo e a unica correcao que nao esconde nenhum dos dois. */
-    #panel { bottom: 58px; border-radius: 14px; }
+    #panel { bottom: calc(64px + env(safe-area-inset-bottom)); border-radius: 14px; }
     #panel, .panel, aside { padding-bottom: 12px; }
-    #sb-back, #sb-map-switch a, #sb-theme { padding: 7px 11px; font-size: 12px; }
+    #sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }
   }
   /* Tema claro: o fundo e os controles do mapa seguem o tema do site. O
      fundo do canvas também é pintado por JS (ver script ao final), então
@@ -231,7 +231,7 @@ PUBLIC_CHROME = """
     --panel-border: #d7dde4;
     --ink: #1a1f24;
     --ink-dim: #5b6570;
-    --edge: #5b6570;
+    --edge: #a7b0ba;
     --edge-ref: #b0b8c0;
     --reference: #6b7280;
   }
@@ -267,7 +267,9 @@ PUBLIC_CHROME = """
         // estilo salvo (cores de nó, raio, glow) continua valendo.
         if (typeof styleConfig !== 'undefined' && typeof applyStyle === 'function') {
           styleConfig.colors.background = theme === 'light' ? '#ffffff' : '#090909';
-          styleConfig.colors.edge = theme === 'light' ? '#8a99aa' : '#9aa0a8';
+          styleConfig.colors.edge = theme === 'light' ? '#a7b0ba' : '#858b93';
+          // Migrate only the legacy factory opacity; explicit user choices survive.
+          if (styleConfig.edgeOpacity === 0.35) styleConfig.edgeOpacity = 0.28;
           applyStyle(styleConfig, { silent: true });
         }
       } catch (e) {}

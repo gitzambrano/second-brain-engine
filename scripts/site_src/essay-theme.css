@@ -71,7 +71,7 @@
 }
 
 html,body{background:var(--bg);}
-body{padding-top:56px;}
+body{padding-top:68px;}
 
 /* A equação continua na mesma medida editorial; em uma viewport estreita,
    qualquer excedente fica contido nela, nunca fora da página. */
@@ -104,7 +104,7 @@ body{padding-top:56px;}
 #sbThemeToggle,#sbToTop,body > .sb-progress > .sb-progress-fill{display:none !important;}
 
 .sb-bar{
-  position:fixed;inset:0 0 auto 0;z-index:60;height:56px;
+  position:fixed;inset:0 0 auto 0;z-index:60;height:68px;
   display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:0 clamp(16px,4vw,40px);
   border-bottom:1px solid var(--sb-line);
@@ -118,9 +118,9 @@ body{padding-top:56px;}
   text-decoration:none !important;
 }
 .sb-mark{
-  display:grid;place-items:center;width:27px;height:27px;
-  border:1px solid color-mix(in srgb,var(--sb-primary) 42%,transparent);
-  border-radius:8px;color:var(--sb-primary);background:var(--sb-primary-soft);
+  display:grid;place-items:center;width:36px;height:36px;
+  border:1px solid var(--sb-line);
+  border-radius:10px;color:var(--sb-primary);background:var(--sb-primary-soft);
   font-size:10px;font-weight:800;
 }
 /* A marca dentro do chip, no mesmo gesto do cabeçalho do catálogo. Aqui a
@@ -128,16 +128,16 @@ body{padding-top:56px;}
    sobe um nível — ao contrário do site.css, que é servido de dentro de
    `assets/`. */
 .sb-mark{
-  background:url("../assets/icon-32.png") center / 18px 18px no-repeat, var(--sb-primary-soft);
+  background:url("../assets/icon-32.png") center / 20px 20px no-repeat, var(--sb-primary-soft);
 }
 :root[data-theme="dark"] .sb-mark{
   background-image:url("../assets/icon-32-dark.png");
 }
-.sb-nav{display:flex;align-items:center;gap:16px;}
-.sb-nav a{color:var(--sb-muted) !important;font-size:13px;text-decoration:none !important;}
+.sb-nav{display:flex;align-items:center;gap:20px;}
+.sb-nav a{color:var(--sb-muted) !important;font-size:14px;font-weight:500;text-decoration:none !important;}
 .sb-nav a:hover{color:var(--sb-primary) !important;}
 .sb-nav button{
-  width:32px;height:32px;border:1px solid var(--sb-line);border-radius:9px;
+  width:36px;height:36px;border:1px solid var(--sb-line);border-radius:10px;
   background:transparent;color:var(--sb-primary);cursor:pointer;
 }
 .sb-nav button:hover{border-color:var(--sb-line-strong);}
@@ -146,11 +146,11 @@ body{padding-top:56px;}
   outline-offset:2px;
 }
 .sb-nav .sb-subscribe{
-  width:auto;height:32px;padding:0 10px;
-  border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));border-radius:999px;
-  background:var(--sb-primary-soft);color:var(--sb-primary);font:650 12px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+  width:auto;height:36px;padding:0 12px;
+  border-color:var(--sb-line);border-radius:999px;
+  background:color-mix(in srgb,var(--sb-primary) 13%,var(--sb-surface));color:var(--sb-primary);font:650 12.5px/1 Inter,ui-sans-serif,system-ui,sans-serif;
 }
-#sbTheme{border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));}
+#sbTheme{border-color:var(--sb-line);}
 .sb-subscribe-dialog{
   width:min(430px,calc(100% - 28px));margin:auto;padding:0;border:1px solid var(--sb-line-strong);
   border-radius:16px;background:var(--sb-surface);color:var(--sb-text);overflow:auto;
@@ -173,7 +173,7 @@ body{padding-top:56px;}
 
 /* Public progress bar injected by render_public_essay.py. */
 body > .sb-progress:not(:has(.sb-progress-fill)){
-  position:fixed;top:56px;left:0;right:0;z-index:61;height:2px;background:transparent;
+  position:fixed;top:68px;left:0;right:0;z-index:61;height:2px;background:transparent;
 }
 body > .sb-progress:not(:has(.sb-progress-fill)) span{
   display:block;width:0;height:100%;background:var(--sb-primary);
@@ -182,7 +182,7 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-toc-fab{
   position:fixed;right:clamp(16px,3vw,32px);bottom:clamp(16px,3vw,32px);z-index:61;
   display:inline-flex;align-items:center;gap:8px;padding:10px 17px;
-  border:1px solid var(--sb-line-strong);border-radius:999px;
+  border:1px solid var(--sb-line);border-radius:999px;
   background:color-mix(in srgb,var(--sb-surface) 96%,transparent);
   color:var(--sb-text);box-shadow:var(--sb-shadow);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
@@ -245,13 +245,16 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-related-card span{color:var(--sb-muted);font-size:12px;line-height:1.45;}
 
 @media(max-width:720px){
-  .sb-bar{padding-inline:14px;}
-  .sb-nav{gap:6px;}
-  .sb-nav a{font-size:12px;}
-  .sb-brand{font-size:13px;}
-  .sb-nav button{width:44px;height:44px;}
+  .sb-bar{height:60px;padding-inline:14px;}
+  body{padding-top:60px;}
+  body > .sb-progress:not(:has(.sb-progress-fill)){top:60px;}
+  .sb-nav{gap:8px;}
+  .sb-nav a{font-size:13px;}
+  .sb-brand{gap:0;font-size:0;}
+  .sb-nav a:first-child{display:none;}
+  .sb-nav button{width:36px;height:36px;}
   .sb-nav #sbTheme{font-size:1.25rem;}
-  .sb-subscribe{display:none;}
+  .sb-subscribe{display:inline-flex;}
   .sb-toc-fab{width:44px;height:44px;padding:0;justify-content:center;}
   .sb-toc-text{display:none;}
   .sb-toc a{font-size:13px;padding:8px 11px;}
@@ -261,7 +264,7 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 /* Duas palavras curtas cabem em qualquer telefone. Esconder a segunda tirava
    o unico caminho para o mapa na tela onde ele mais importa. */
 @media(max-width:520px){
-  .sb-brand{gap:7px;font-size:0;}
-  .sb-nav{gap:14px;}
-  .sb-nav a{font-size:12.5px;}
+  .sb-brand{gap:0;font-size:0;}
+  .sb-nav{gap:8px;}
+  .sb-nav a{font-size:13px;}
 }

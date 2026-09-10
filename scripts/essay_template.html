@@ -38,6 +38,7 @@ $endif$
   /* Native Obsidian callout palette — dark theme. Each semantic type owns
      an explicit accent instead of borrowing a generic global color. */
   --callout-note:#A2988A;
+  --note-bg:color-mix(in srgb,var(--callout-note) 7%,var(--surface2));
   --callout-abstract:#B08B4F;
   --callout-info:#98938A;
   --callout-todo:#B18A4A;
@@ -83,6 +84,7 @@ $endif$
   /* Native Obsidian callout palette — light theme. Hues keep the same
      semantic identity, but luminance/saturation are tuned independently. */
   --callout-note:#4A5C77;
+  --note-bg:var(--surface2);
   --callout-abstract:#2F5FB0;
   --callout-info:#6E7684;
   --callout-todo:#7B5C22;
@@ -126,6 +128,7 @@ $endif$
   /* Native Obsidian callout palette — light theme. Hues keep the same
      semantic identity, but luminance/saturation are tuned independently. */
   --callout-note:#4A5C77;
+  --note-bg:var(--surface2);
   --callout-abstract:#2F5FB0;
   --callout-info:#6E7684;
   --callout-todo:#7B5C22;
@@ -946,7 +949,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
    quando se QUER destacar. */
 .box.callout-note{
   border:1px solid var(--border);border-radius:3px;
-  background:var(--surface2);
+  background:var(--note-bg,var(--surface2));
 }
 .box.callout-note > .box-title{padding:1.05rem 1.3rem .85rem;}
 .box.callout-note > .box-title p{

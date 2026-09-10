@@ -133,10 +133,10 @@ GRAPH_STYLE = {
         # Puxada para o branco (mais clara que cinza médio) — dá uma sensação
         # de "fio de luz" sutil entre os nós, visível no toque sem chamar
         # atenção pra si.
-        "edge": "#9aa0a8",
+        "edge": "#858b93",
         "background": "#1b1e21",
     },
-    "edgeOpacity": 0.35,
+    "edgeOpacity": 0.28,
     # "sempre" (arestas sempre na opacidade cheia de `edgeOpacity`, mesmo
     # durante o destaque de um nó selecionado — nada nunca esmaece) | "auto"
     # (comportamento clássico: opacidade normal em repouso, mas esmaece as
@@ -1610,8 +1610,8 @@ const STYLE_VARS = {
 const STYLE_KEY = "sb-graph-style-v1";
 const FACTORY_STYLE = data.defaultStyle || {
   colors: { essay: "#4fa8ff", concept: "#5fd3c4", entity: "#e8b657", insights: "#b48ce8",
-    reference: "#8a8f96", edge: "#9aa0a8", background: "#1b1e21" },
-  edgeOpacity: 0.35, edgeVisibility: "auto", radiusBase: 5, radiusScale: 3, labelSize: 10,
+    reference: "#8a8f96", edge: "#858b93", background: "#1b1e21" },
+  edgeOpacity: 0.28, edgeVisibility: "auto", radiusBase: 5, radiusScale: 3, labelSize: 10,
   glow: "leve", labels: "auto", starfield: true, gradient: true, sizeMode: "degree",
   spacing: 1.8, performance: "alta", collision: true,
   linkStrength: 3.5, chargeStrength: 2.5, friction: 0.65, homeStrength: 0.25,
@@ -1987,8 +1987,8 @@ data.nodes.forEach(n => {
 // no zoom (abaixo) e recalculado toda vez que spacing/performance mudam.
 let currentTier = PERFORMANCE_TIERS[resolvePerformanceTier(styleConfig)];
 let labelsShown = false;
-const LABEL_SHOW_AT = 1.55;
-const LABEL_HIDE_AT = 1.45;
+const LABEL_SHOW_AT = 1.40;
+const LABEL_HIDE_AT = 1.32;
 
 // Some com os rótulos quando o tier não é "sempre mostrar" e o zoom está
 // afastado — em wikis de centenas de nós, texto é de longe a coisa mais

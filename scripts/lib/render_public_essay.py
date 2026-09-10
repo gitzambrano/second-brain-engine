@@ -255,7 +255,7 @@ def site_chrome(essay, related) -> str:
 
     return f"""
 <header class="sb-bar">
-  <a class="sb-brand" href="../index.html"><span class="sb-mark" aria-hidden="true"></span>Second Brain Atlas</a>
+  <a class="sb-brand" href="../index.html"><span class="sb-mark" aria-hidden="true"></span>Second Brain</a>
   <nav class="sb-nav">
     <a href="../index.html">Essays</a>
     <a href="../graph.html">Grafo</a>

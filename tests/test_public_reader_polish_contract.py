@@ -19,11 +19,11 @@ def test_public_site_font_bundle_covers_the_editorial_families():
         assert family in SITE_CSS_URL
 
 
-def test_mobile_reader_controls_preserve_compact_visuals_with_44px_hit_targets():
+def test_mobile_reader_controls_preserve_compact_36px_visuals():
     css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
     assert ".sb-nav button" in css
-    assert "width:44px;height:44px" in css
-    assert ".sb-nav{gap:6px" in css
+    assert "width:36px;height:36px" in css
+    assert ".sb-nav{gap:8px" in css
     assert ".sb-nav button:focus-visible" in css
 
 
@@ -61,12 +61,12 @@ def test_desktop_essay_chrome_keeps_subscribe_available():
     assert 'id="sbSubscribeDialog"' in source
     assert 'id="sbKitEmbedMount"' in source
     assert ".sb-subscribe" in css
-    assert ".sb-subscribe{display:none" in css
+    assert ".sb-subscribe{display:inline-flex" in css
 
 
 def test_theme_control_border_matches_the_subscribe_control_presence():
     css = (SRC / "essay-theme.css").read_text(encoding="utf-8")
-    assert "#sbTheme{border-color:color-mix(in srgb,var(--sb-primary) 42%,var(--sb-line));}" in css
+    assert "#sbTheme{border-color:var(--sb-line);}" in css
 
 
 def test_mobile_theme_glyph_grows_without_growing_the_reader_control():
