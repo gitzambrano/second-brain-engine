@@ -15,7 +15,8 @@
   legibilityStyle.textContent = [
     '.content h5{font-family:var(--font-display);font-size:1rem;font-weight:700;margin:1.55rem 0 .5rem;color:color-mix(in srgb,var(--text-bright) 58%,var(--text-dim));}',
     'mjx-container:not([display="true"]){vertical-align:-.5em;font-size:90%;}',
-    '@media (max-width:640px){mjx-container[display="true"]{font-size:90%;}}'
+    '@media (max-width:640px){mjx-container[display="true"]{font-size:90%;}}',
+    '@media print{body{padding-top:0!important;}.sb-bar,.sb-progress,.sb-toc-fab,.sb-toc,.sb-subscribe-dialog,#lupa,#lupa-fechar,#lupa-dica,#sbThemeToggle,#sbToTop,.hlink{display:none!important;}.content{max-width:none!important;}table{display:table!important;width:100%!important;max-width:100%!important;table-layout:fixed!important;overflow:visible!important;font-size:.82rem!important;}th,td{padding:.45rem .55rem!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;}pre,pre.sourceCode{max-width:100%!important;overflow:visible!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;word-break:break-word!important;}pre code{white-space:inherit!important;overflow-wrap:anywhere!important;word-break:break-word!important;}code{overflow-wrap:anywhere!important;word-break:break-word!important;}}'
   ].join('\n');
   document.head.appendChild(legibilityStyle);
 
