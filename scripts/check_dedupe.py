@@ -47,6 +47,19 @@ INDEX_JSON = WIKI_ROOT / "index.json"
 
 DEFAULT_THRESHOLD = 0.85
 
+# Pares que já foram apresentados pelo /organize e revisados pelo Usuário como
+# conceitos/pessoas distintos. A exceção é simétrica e se aplica apenas ao
+# dedupe de títulos; tags e referências continuam usando as regras normais.
+REVIEWED_TITLE_EXCEPTIONS = (
+    ("Modelo de Influxo de Pitt–Peters", "Modelo de Influxo de Peters–He"),
+    ("David Albert", "David Hilbert"),
+    ("Evan Thompson", "Ken Thompson"),
+)
+REVIEWED_TITLE_EXCEPTION_KEYS = {
+    frozenset((normalize_title(a), normalize_title(b)))
+    for a, b in REVIEWED_TITLE_EXCEPTIONS
+}
+
 
 def load(path):
     with open(path, "r", encoding="utf-8-sig") as f:
@@ -106,6 +119,12 @@ def differ_only_by_ordinal(a, b):
     return ORDINAL_RE.sub("#", a) == ORDINAL_RE.sub("#", b)
 
 
+def is_reviewed_title_exception(a, b):
+    """True quando o par de títulos já foi revisado como não duplicado."""
+    key = frozenset((normalize_title(a), normalize_title(b)))
+    return key in REVIEWED_TITLE_EXCEPTION_KEYS
+
+
 def near_duplicate_pairs(items, key, threshold):
     """Pares (a, b) cujas chaves normalizadas batem ou passam do threshold."""
     pairs = []
@@ -135,6 +154,11 @@ def check_titles(directory_pairs, threshold):
     for directory in directory_pairs:
         items.extend(titles_in(directory))
     pairs = near_duplicate_pairs(items, lambda it: normalize_title(it[0]), threshold)
+    pairs = [
+        (a, b, ratio)
+        for a, b, ratio in pairs
+        if not is_reviewed_title_exception(a[0], b[0])
+    ]
     return [
         {
             "a": {"title": a[0], "path": a[1]},
@@ -172,6 +196,7 @@ def reference_core(citation):
     text = TAIL_LINK_RE.sub("", citation).rstrip()
     core, _note = citation_and_note(text)
     return normalize_citation(core)
+
 
 def check_references(threshold):
     """Mesma fonte citada em essays diferentes com grafia distinta."""
