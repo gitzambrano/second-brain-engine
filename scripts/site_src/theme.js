@@ -60,6 +60,8 @@
     });
 
     var input = mount.querySelector('.formkit-input');
+    if (input) { input.placeholder = 'E-mail'; input.setAttribute('aria-label', 'E-mail'); }
+    mount.querySelectorAll('.formkit-powered-by-convertkit-container').forEach(function (el) { el.remove(); });
     var submit = mount.querySelector('.formkit-submit');
     if (!input || !submit) return;
 

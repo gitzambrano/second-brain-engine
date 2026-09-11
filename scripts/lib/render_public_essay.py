@@ -269,7 +269,7 @@ def site_chrome(essay, related) -> str:
     <h2 id="sbSubscribeTitle">Receba novos ensaios por email.</h2>
     <form method="dialog"><button class="sb-subscribe-close" type="submit" aria-label="Fechar">×</button></form>
   </div>
-  <div class="sb-subscribe-embed" aria-label="Assinar a newsletter do Second Brain">
+  <div class="sb-subscribe-embed" aria-label="Assinar o boletim do Second Brain">
     <div id="sbKitEmbedMount" data-uid="4fd36350af"
          data-src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"></div>
   </div>
@@ -279,11 +279,11 @@ def site_chrome(essay, related) -> str:
 <div class="sb-tags">{tags}</div>
 {related_block}
 <button class="sb-toc-fab" type="button" id="sbTocFab" aria-expanded="false"
-        aria-controls="sbToc" title="Sumário do essay">
+        aria-controls="sbToc" title="Sumário do ensaio">
   <span class="sb-toc-icon" aria-hidden="true">☰</span>
   <span class="sb-toc-text">Sumário</span>
 </button>
-<aside class="sb-toc" id="sbToc" hidden aria-label="Sumário do essay">
+<aside class="sb-toc" id="sbToc" hidden aria-label="Sumário do ensaio">
   <header><strong>Sumário</strong>
     <button type="button" id="sbTocClose" aria-label="Fechar">×</button></header>
   <nav id="sbTocList"></nav>

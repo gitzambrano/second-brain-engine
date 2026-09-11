@@ -1343,8 +1343,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       border-radius: 6px; background: rgba(255,255,255,.05); border-bottom: none; position: static; }
     #modal tbody tr { border-bottom: 1px solid #2b2f33; padding: 10px 2px; }
     #modal td { border: none; padding: 2px; }
-    #modal td[data-label]:not([data-label="Título"]):not([data-label="Tags"]) { color: var(--ink-dim); font-size: 11px; }
-    #modal td[data-label]:not([data-label="Título"]):not([data-label="Tags"])::before { content: attr(data-label) ": "; }
+    #modal td[data-label]:not([data-label="Título"]):not([data-label="Temas"]) { color: var(--ink-dim); font-size: 11px; }
+    #modal td[data-label]:not([data-label="Título"]):not([data-label="Temas"])::before { content: attr(data-label) ": "; }
     .node-title { font-size: 12px; }
   }
   .gap-item { font-size: 12px; margin: 4px 0; color: var(--ink-dim); }
@@ -1494,16 +1494,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <button id="panel-toggle" aria-label="Mostrar ou esconder o painel" aria-expanded="true">☰</button>
 <div id="panel">
   <h1>Grafo da Wiki</h1>
-  <input id="search" type="text" placeholder="Buscar por título ou tag…">
+  <input id="search" type="text" placeholder="Buscar por título ou tema…">
 
-  <div class="legend-item" data-type="essay"><span class="dot" style="background:var(--instrument-blue)"></span> Essay</div>
-  <div class="legend-item" data-type="concept"><span class="dot" style="background:var(--concept)"></span> Concept</div>
-  <div class="legend-item" data-type="entity"><span class="dot" style="background:var(--entity)"></span> Entity</div>
-  <div class="legend-item" data-type="insights"><span class="dot" style="background:var(--insight)"></span> Insight</div>
-  <div class="legend-item disabled" data-type="reference"><span class="dot" style="background:var(--reference)"></span> Reference</div>
+  <div class="legend-item" data-type="essay"><span class="dot" style="background:var(--instrument-blue)"></span> Ensaio</div>
+  <div class="legend-item" data-type="concept"><span class="dot" style="background:var(--concept)"></span> Conceito</div>
+  <div class="legend-item" data-type="entity"><span class="dot" style="background:var(--entity)"></span> Entidade</div>
+  <div class="legend-item" data-type="insights"><span class="dot" style="background:var(--insight)"></span> Ideia</div>
+  <div class="legend-item disabled" data-type="reference"><span class="dot" style="background:var(--reference)"></span> Referência</div>
 
   <button class="btn" id="btn-index">Índice</button>
-  <button class="btn" id="btn-gaps">Gaps entre tags</button>
+  <button class="btn" id="btn-gaps">Lacunas entre temas</button>
   <button class="btn" id="btn-style">Estilo</button>
   <button class="btn" id="btn-export-png">Exportar PNG</button>
   <button class="btn" id="btn-export-svg">Exportar SVG</button>
@@ -3040,15 +3040,15 @@ document.getElementById("modal-close").addEventListener("click", () => modalOver
 modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove("open"); });
 
 const TYPE_LABELS = {
-  essay: "Essays", concept: "Concepts", entity: "Entities",
-  insights: "Insights", reference: "Referências",
+  essay: "Ensaios", concept: "Conceitos", entity: "Entidades",
+  insights: "Ideias", reference: "Referências",
 };
 
 // O plural nomeia uma aba ("Concepts 22"); o singular nomeia o nó aberto no
 // cartão de detalhe, onde "ESSAYS" para um único essay soaria errado.
 const TYPE_LABEL_ONE = {
-  essay: "Essay", concept: "Concept", entity: "Entity",
-  insights: "Insight", reference: "Referência",
+  essay: "Ensaio", concept: "Conceito", entity: "Entidade",
+  insights: "Ideia", reference: "Referência",
 };
 
 function escapeHtml(s) {
@@ -3372,7 +3372,7 @@ function renderTypeIndex() {
     <div class="idx-count"></div>
     <table id="idx-table">
       <thead><tr>
-        <th data-col="title">Título</th><th data-col="tags">Tags</th>
+        <th data-col="title">Título</th><th data-col="tags">Temas</th>
         <th data-col="degree">Conexões</th><th data-col="size">Tamanho</th>
       </tr></thead>
       <tbody></tbody>
@@ -3499,7 +3499,7 @@ function renderTypeIndex() {
       <td data-label="Título"><span style="display:flex;align-items:center;gap:8px;">${hasDetail
         ? `<button type="button" class="idx-expand" aria-label="Mostrar detalhe" aria-expanded="false">▸</button> `
         : ""}<span style="flex:0 1 auto;min-width:0;">${highlightMatch(n.title, state.query)}${draft}${privateMark}</span>${readBtn}</span></td>
-      <td class="idx-tagcell" data-label="Tags">${(n.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join("")}</td>
+      <td class="idx-tagcell" data-label="Temas">${(n.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join("")}</td>
       <td data-label="Conexões">${n.degree}</td>
       <td data-label="Tamanho">${sizeOf(n) ? sizeOf(n) + " linhas" : "—"}</td></tr>`;
       const summaryRow = hasDetail
@@ -3608,7 +3608,7 @@ document.getElementById("btn-index").addEventListener("click", () => {
 document.getElementById("btn-gaps").addEventListener("click", () => {
   styleModalOpen = false;
   const gaps = data.tag_gaps || [];
-  let html = `<h2>Gaps entre tags</h2>`;
+  let html = `<h2>Lacunas entre temas</h2>`;
   if (!gaps.length) {
     html += "<div class=\\"gap-item\\">Nenhum par de tags isolado — todo o grafo conectado por tags está num único componente (ou não há tags suficientes ainda).</div>";
   } else {
@@ -3622,8 +3622,8 @@ document.getElementById("btn-gaps").addEventListener("click", () => {
 
 // ---- Painel de Estilo (cores, raio, rótulo — ao vivo + salvo por navegador) ----
 const STYLE_LABELS = {
-  essay: "Essay", concept: "Concept", entity: "Entity", insights: "Insight",
-  reference: "Reference", edge: "Arestas", background: "Fundo",
+  essay: "Ensaio", concept: "Conceito", entity: "Entidade", insights: "Ideia",
+  reference: "Referência", edge: "Arestas", background: "Fundo",
 };
 
 const GRAPH_THEMES = {
@@ -3750,7 +3750,7 @@ function renderStylePanel(seed) {
         </select>
       </label>
       <p class="style-hint">
-        Controla a física da simulação e quando os rótulos somem ao afastar o zoom — não mexe em cor/glow.
+        Controla a física da simulação e quando os rótulos somem ao afastar o zoom — não altera cor nem brilho.
         No automático, este navegador/grafo está usando: <b>${resolvePerformanceTier(draft)}</b>
         (${data.nodes.length} nós${DEVICE_IS_MOBILE ? ", aparelho móvel" : ""}).
       </p>
