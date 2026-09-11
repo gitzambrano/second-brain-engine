@@ -1,0 +1,91 @@
+name: Translate UI once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/translate-ui-once.yml']
+permissions:
+  contents: write
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Translate visible UI strings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          files = [Path('scripts/build_graph.py'), Path('scripts/build_sphere.py')]
+          replacements = [
+              ('Buscar por título ou tag…', 'Buscar por título ou tema…'),
+              ('> Essay</div>', '> Ensaio</div>'),
+              ('> Concept</div>', '> Conceito</div>'),
+              ('> Entity</div>', '> Entidade</div>'),
+              ('> Insight</div>', '> Ideia</div>'),
+              ('> Reference</div>', '> Referência</div>'),
+              ('essay: "Essays", concept: "Concepts", entity: "Entities",\n  insights: "Insights", reference: "Referências",',
+               'essay: "Ensaios", concept: "Conceitos", entity: "Entidades",\n  insights: "Ideias", reference: "Referências",'),
+              ('essay: "Essay", concept: "Concept", entity: "Entity",\n  insights: "Insight", reference: "Referência",',
+               'essay: "Ensaio", concept: "Conceito", entity: "Entidade",\n  insights: "Ideia", reference: "Referência",'),
+              ('essay: "Essay", concept: "Concept", entity: "Entity", insights: "Insight",\n  reference: "Reference", edge: "Arestas", background: "Fundo",',
+               'essay: "Ensaio", concept: "Conceito", entity: "Entidade", insights: "Ideia",\n  reference: "Referência", edge: "Arestas", background: "Fundo",'),
+              ('Gaps entre tags', 'Lacunas entre temas'),
+              ('>Tags</th>', '>Temas</th>'),
+              ('data-label="Tags"', 'data-label="Temas"'),
+              ('[data-label="Tags"]', '[data-label="Temas"]'),
+              ('não mexe em cor/glow.', 'não altera cor nem brilho.'),
+          ]
+
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for old, new in replacements:
+                  text = text.replace(old, new)
+              if text == original:
+                  raise SystemExit(f'no translations applied to {path}')
+              path.write_text(text, encoding='utf-8')
+
+          index = Path('scripts/site_src/index.html')
+          text = index.read_text(encoding='utf-8')
+          text = text.replace('aria-label="Assinar a newsletter do Second Brain"', 'aria-label="Assinar o boletim do Second Brain"')
+          index.write_text(text, encoding='utf-8')
+
+          render = Path('scripts/lib/render_public_essay.py')
+          text = render.read_text(encoding='utf-8')
+          text = text.replace('aria-label="Assinar a newsletter do Second Brain"', 'aria-label="Assinar o boletim do Second Brain"')
+          text = text.replace('title="Sumário do essay"', 'title="Sumário do ensaio"')
+          text = text.replace('aria-label="Sumário do essay"', 'aria-label="Sumário do ensaio"')
+          render.write_text(text, encoding='utf-8')
+
+          theme = Path('scripts/site_src/theme.js')
+          text = theme.read_text(encoding='utf-8')
+          old = "    var input = mount.querySelector('.formkit-input');\n    var submit = mount.querySelector('.formkit-submit');"
+          new = "    var input = mount.querySelector('.formkit-input');\n    if (input) { input.placeholder = 'E-mail'; input.setAttribute('aria-label', 'E-mail'); }\n    mount.querySelectorAll('.formkit-powered-by-convertkit-container').forEach(function (el) { el.remove(); });\n    var submit = mount.querySelector('.formkit-submit');"
+          if old not in text:
+              raise SystemExit('theme.js subscribe input signature not found')
+          text = text.replace(old, new, 1)
+          theme.write_text(text, encoding='utf-8')
+          PY
+      - name: Minimal checks
+        shell: bash
+        run: |
+          python -m py_compile scripts/build_graph.py scripts/build_sphere.py scripts/lib/render_public_essay.py
+          node --check scripts/site_src/theme.js
+          grep -q 'essay: "Ensaios", concept: "Conceitos", entity: "Entidades"' scripts/build_graph.py
+          grep -q '> Ensaio</div>' scripts/build_graph.py
+          grep -q '>Temas</th>' scripts/build_graph.py
+          grep -q 'Lacunas entre temas' scripts/build_graph.py
+          grep -q "placeholder = 'E-mail'" scripts/site_src/theme.js
+          grep -q 'Assinar o boletim do Second Brain' scripts/site_src/index.html
+      - name: Commit and self-clean
+        shell: bash
+        run: |
+          rm .github/workflows/translate-ui-once.yml
+          git config user.name second-brain-bot
+          git config user.email actions@users.noreply.github.com
+          git add scripts/build_graph.py scripts/build_sphere.py scripts/site_src/index.html scripts/site_src/theme.js scripts/lib/render_public_essay.py .github/workflows/translate-ui-once.yml
+          git commit -m 'Translate public UI labels to Portuguese'
+          git push origin HEAD:main
