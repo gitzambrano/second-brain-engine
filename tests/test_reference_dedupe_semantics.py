@@ -1,4 +1,4 @@
-from check_dedupe import reference_core
+from check_dedupe import is_reviewed_title_exception, reference_core
 from check_references import check_essay
 
 
@@ -12,6 +12,21 @@ def test_reference_core_detects_bibliographic_difference():
     a = "Author, A., *Book Title*, Publisher, 2020. [Link](https://example.com/book)"
     b = "Author, A., *Book Title*, Other Publisher, 2020. [Link](https://example.com/book)"
     assert reference_core(a) != reference_core(b)
+
+
+def test_reviewed_title_exceptions_are_symmetric():
+    reviewed_pairs = (
+        ("Modelo de Influxo de Pitt–Peters", "Modelo de Influxo de Peters–He"),
+        ("David Albert", "David Hilbert"),
+        ("Evan Thompson", "Ken Thompson"),
+    )
+    for a, b in reviewed_pairs:
+        assert is_reviewed_title_exception(a, b)
+        assert is_reviewed_title_exception(b, a)
+
+
+def test_unreviewed_title_pair_is_not_suppressed():
+    assert not is_reviewed_title_exception("David Albert", "Albert Einstein")
 
 
 def test_unused_reference_is_not_a_lint_issue(tmp_path):
