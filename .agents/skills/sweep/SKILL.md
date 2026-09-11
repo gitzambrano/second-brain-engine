@@ -14,9 +14,9 @@ allowed-tools: Bash Read Write Edit Glob Grep WebSearch WebFetch AskUserQuestion
 ---
 # Sweep
 
-Orquestra, nessa ordem, `/organize <slug>` → `/continuity` → `/proofread` → `/polish` → `/linkify`.
+Orquestra, nessa ordem lógica, as dimensões de `/organize`, `/continuity`, `/proofread`, `/polish` e `/linkify`.
 
-A lógica de cada dimensão vive na skill correspondente. `/sweep` controla ordem, escopo, decisões e relatório.
+A lógica de cada dimensão vive na skill correspondente. Durante o sweep, reutilize a mesma leitura do essay, os mesmos achados e o mesmo contexto entre etapas; não reinicie cada skill como um workflow independente quando isso apenas repetir leitura ou validação.
 
 ## Escopo
 
@@ -31,13 +31,13 @@ No corpus, siga a regra de status de `conventions/SKILL.md`: pule `revisao` e `f
 
 Processe um essay por vez.
 
-1. Rode `/organize <slug>` para fixes mecânicos locais.
-2. Rode `/continuity` e reutilize seus achados.
-3. Para achado estrutural **inequívoco** que não muda tese nem exige escolha editorial, aplique a correção estrutural correspondente dentro do fluxo e registre-a.
-4. Quando a correção exigir decidir tese, ordem argumentativa controversa, remoção de conteúdo ou interpretação entre alternativas, **não pare o batch**: marque o item como `decisão necessária` e continue o restante do essay e do corpus.
-5. Rode `/proofread` e aplique as correções de língua.
-6. Rode `/polish` e aplique as correções de estilo.
-7. Rode `/linkify` e aplique links/referências que puderem ser verificados sem decisão editorial.
+1. Leia o essay uma vez e reúna o contexto necessário para todas as dimensões.
+2. Aplique primeiro a manutenção mecânica de `/organize`.
+3. Avalie continuidade e estrutura com os critérios de `/continuity`, reutilizando a leitura já feita.
+4. Aplique correções inequívocas de português e estilo segundo `/proofread` e `/polish`, sem repetir uma passada completa sobre trechos já resolvidos.
+5. Verifique links e referências segundo `/linkify`.
+6. Quando surgir decisão editorial substantiva, registre `decisão necessária` e continue o restante do escopo.
+7. Execute o fechamento e as validações mecânicas uma vez ao final de cada essay, salvo quando uma etapa intermediária realmente exigir um checker para decidir como prosseguir.
 
 Não faça prompts de escala, estimativas de duração ou oferta de lotes. O escopo já foi definido pelo comando.
 
@@ -69,7 +69,7 @@ Não exponha cada microcorreção durante a execução.
 
 ## Fechamento
 
-Registre uma entrada consolidada em `wiki/log.md` quando houver mudanças. Nenhuma etapa de `/sweep` altera `updated:` por revisão mecânica, linguística ou estilística; uma correção estrutural/substantiva aplicada no passo 3 segue a regra de data da skill que efetivamente mudou o corpo.
+Registre uma entrada consolidada em `wiki/log.md` quando houver mudanças. Nenhuma etapa de `/sweep` altera `updated:` por revisão mecânica, linguística ou estilística; uma correção estrutural/substantiva aplicada no fluxo segue a regra de data da skill que efetivamente mudou o corpo.
 
 Depois do batch, ofereça o subagent `update` **somente** para regenerar derivados e executar commit/push após autorização explícita do Usuário. Ofereça `/status update` quando o trabalho for substancial.
 
