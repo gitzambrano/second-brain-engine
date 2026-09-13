@@ -18,6 +18,18 @@ Siga este arquivo e as skills em `.agents/skills/`. `conventions/SKILL.md` é a 
 
 São três repositórios Git independentes, sem submodules. O engine ignora `data/` e `site/`.
 
+### Invariante de GitHub Actions — NÃO VIOLAR
+
+Esta é uma regra arquitetural bloqueante, não uma preferência de implementação:
+
+- `second-brain-engine`: **NO GITHUB ACTIONS. ZERO.** Não criar `.github/workflows/` nem qualquer workflow de CI, testes, lint, build, QA, sync, cron, documentação, publicação, newsletter ou automação.
+- `second-brain-data`: **NO GITHUB ACTIONS. ZERO.** A mesma proibição é absoluta.
+- A **única GitHub Action permitida em todo o ecossistema Second Brain** fica em `second-brain-site` e serve somente para o **gate mínimo de privacidade antes da publicação + deploy no GitHub Pages**.
+- O workflow do site não deve virar CI geral. Ele não deve executar lint, testes do engine, QA de browser/PDF/HTML, builds editoriais, newsletter, sincronização ou tarefas agendadas.
+- Testes, lint, QA, build, sweeps e demais checks de `second-brain-engine` e `second-brain-data` rodam localmente pelos scripts do engine ou quando explicitamente solicitados; nunca via GitHub Actions.
+- Se uma tarefa sugerir criar uma Action em `second-brain-engine` ou `second-brain-data`, a solução está errada: não crie. Se encontrar um workflow nesses repositórios, remova-o.
+- Não trate o gate de privacidade como precedente para outras Actions. **Ele é a única exceção e existe somente em `second-brain-site`.**
+
 Caminhos `wiki/...`, `plan/...`, `raw/...` e `output/...` são relativos a `DATA_ROOT` (`data/` por padrão). Resolva caminhos com `scripts/repo_paths.py`; nunca pelo diretório corrente.
 
 Estrutura detalhada de conteúdo, frontmatter, tags, links, referências, prosa e imagens: `conventions/SKILL.md`.
@@ -37,7 +49,7 @@ Edite somente `.agents/`. Os mirrors existem para os harnesses e são gerados po
 - Nunca edite `.claude/skills/` ou `.claude/agents/` à mão.
 - Após alterar `.agents/`, rode `python scripts/sync_skills.py`.
 - `python scripts/sync_skills.py --check` deve passar.
-- `CLAUDE.md` apenas importa `@AGENTS.md`.
+- `CLAUDE.md` importa `@AGENTS.md` e repete apenas o invariante crítico de GitHub Actions para que a proibição não dependa do import ser percebido.
 
 ## Skills Disponíveis
 
@@ -143,6 +155,7 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 - Nunca altere `visibility:` automaticamente; exige decisão explícita do Usuário.
 - Nenhum corpo não autorizado, link de leitura restrito ou caminho para `data/` pode sair.
 - `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`.
+- O único GitHub Action permitido no pipeline de publicação é o gate mínimo de privacidade em `second-brain-site`, junto do deploy do Pages. **Não mover checks do engine/data para Actions.**
 - Contrato completo de dados: `conventions/SKILL.md`; workflow: `/publish`.
 
 ## Plano de Longo Prazo
