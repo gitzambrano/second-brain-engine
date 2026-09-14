@@ -1443,9 +1443,14 @@ def check_index(title_map, essay_only_file=None):
         add("ERROR", "INDEX_LEGACY_WIKILINK",
             "index.md tem [[wikilinks]] (formato antigo) — rode `python scripts/build_index.py`")
 
-    essay_titles_to_check = (
-        {get_h1(load(essay_only_file))} if essay_only_file else sorted(title_map["essay_titles"])
-    )
+    if essay_only_file:
+        essay_content = load(essay_only_file)
+        if re.search(r"(?mi)^visibility:\s*(?:hidden|oculto)\s*$", essay_content):
+            essay_titles_to_check = set()
+        else:
+            essay_titles_to_check = {get_h1(essay_content)}
+    else:
+        essay_titles_to_check = sorted(title_map["essay_titles"])
     for essay_title in essay_titles_to_check:
         if not essay_title or essay_title not in title_map["title_to_file"]:
             continue
