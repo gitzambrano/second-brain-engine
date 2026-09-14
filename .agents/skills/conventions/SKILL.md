@@ -70,7 +70,7 @@ Altere `updated:` somente quando a prosa do corpo mudar substancialmente, como c
 - Reuse uma tag existente sempre que ela cobrir o tema; crie uma nova apenas quando nenhuma servir.
 - Use uma única grafia em Title Case, sem variantes por plural, acento ou sinônimo.
 - Tags representam temas, não tipo de essay/source.
-- Use 2 a 5 tags por essay ou source.
+- Use 2 a 6 tags por essay ou source.
 - Renomeação em massa exige aprovação.
 
 ## Tipos de Source — Vocabulário Controlado
