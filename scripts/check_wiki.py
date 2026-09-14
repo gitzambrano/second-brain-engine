@@ -219,11 +219,14 @@ def classify_updated_diff(diff: str) -> str | None:
         if not line.startswith(("+", "-")):
             continue
         text = line[1:]
+        if text.startswith("updated:"):
+            updated_changed = True
+            continue
         if text.strip() == "---":
             in_frontmatter = not in_frontmatter
             continue
         if in_frontmatter:
-            updated_changed = updated_changed or text.startswith("updated:")
+            pass
         elif text.strip():
             body_changes += 1
     if body_changes >= 12 and not updated_changed:
