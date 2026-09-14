@@ -27,9 +27,15 @@ def _display(argv: list[str]) -> str:
     return " ".join(argv)
 
 
-def _run(argv: list[str], *, cwd: Path = CODE_ROOT, check: bool = True) -> subprocess.CompletedProcess[str]:
+def _run(
+    argv: list[str],
+    *,
+    cwd: Path = CODE_ROOT,
+    check: bool = True,
+    shell: bool = False,
+) -> subprocess.CompletedProcess[str]:
     print(f"> {_display(argv)}")
-    proc = subprocess.run(argv, cwd=cwd, text=True, encoding="utf-8", errors="replace")
+    proc = subprocess.run(argv, cwd=cwd, text=True, encoding="utf-8", errors="replace", shell=shell)
     if check and proc.returncode:
         raise CloseError(f"falhou ({proc.returncode}): {_display(argv)}")
     return proc
@@ -60,10 +66,12 @@ def prepare() -> None:
     ):
         _python(script, *args)
 
-    if shutil.which("qmd"):
-        _run(["qmd", "status"])
-        _run(["qmd", "update"])
-        _run(["qmd", "embed"])
+    qmd_bin = shutil.which("qmd")
+    if qmd_bin:
+        is_windows = sys.platform == "win32"
+        _run([qmd_bin, "status"], shell=is_windows)
+        _run([qmd_bin, "update"], shell=is_windows)
+        _run([qmd_bin, "embed"], shell=is_windows)
 
     _python("sync_skills.py", "--check")
     _python("check_repo.py", "--wiki")
