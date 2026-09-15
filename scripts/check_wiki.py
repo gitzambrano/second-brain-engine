@@ -801,6 +801,42 @@ def check_essay(filepath: Path) -> dict:
         for n in sorted(listed - cited):
             add("INFO", "REF_NEVER_CITED",
                 f"Entrada [{n}] em '## Referências' nunca é citada no corpo")
+
+        # Citações inline [N] devem ter links no formato Obsidian [[#Referências|[N]]].
+        # Prevenção rigorosa de falsos positivos:
+        # 1. Ignora blocos de código cercados (strip_fences já aplicado).
+        # 2. Ignora fórmulas matemáticas em display ($$...$$) e inline ($...$).
+        # 3. Ignora código inline (`...`).
+        # 4. Ignora imagens Markdown (![...](...)).
+        # 5. Ignora chamadas já devidamente linkadas ([[#Referências|[N]]] e [N](#referências)).
+        # 6. Ignora todos os demais links Markdown [texto](url) e [[wikilinks]].
+        # 7. Só sinaliza se o número dentro dos colchetes pertencer a `listed` (efetivamente presente na bibliografia).
+        unlinked_body = strip_fences(body_before_ref)
+        unlinked_body = re.sub(r"\$\$.*?\$\$", "", unlinked_body, flags=re.DOTALL)
+        unlinked_body = re.sub(r"\$[^\$\n]+?\$", "", unlinked_body)
+        unlinked_body = re.sub(r"`[^`\n]+?`", "", unlinked_body)
+        unlinked_body = re.sub(r"!\[[^\]]*\]\([^\)]*\)", "", unlinked_body)
+        unlinked_body = re.sub(r"\[\[#(?:refer[eê]ncias|references)\|[^\]]*\]\]", "", unlinked_body, flags=re.IGNORECASE)
+        unlinked_body = re.sub(r"\[\d{1,3}(?:\s*,\s*\d{1,3})*\]\(#(?:refer[eê]ncias|references)\)", "", unlinked_body, flags=re.IGNORECASE)
+        unlinked_body = re.sub(r"\[[^\]]*\]\([^\)]*\)", "", unlinked_body)
+        unlinked_body = re.sub(r"\[\[[^\]]*\]\]", "", unlinked_body)
+
+        unlinked_cites = []
+        for line_no, line_txt in enumerate(unlinked_body.splitlines(), start=1):
+            for m in re.finditer(r"(?<!\[)\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\](?!\])", line_txt):
+                parts = [x.strip() for x in m.group(1).split(",")]
+                if all(x.isdigit() for x in parts):
+                    nums = [int(x) for x in parts]
+                    if all(n in listed and n > 0 for n in nums):
+                        unlinked_cites.append((line_no, m.group(0)))
+
+        if unlinked_cites:
+            exemplos = [f"linha {ln}: '{tok}'" for ln, tok in unlinked_cites[:3]]
+            add("WARNING", "UNLINKED_CITATION",
+                f"{len(unlinked_cites)} citação(ões) inline sem link para '## Referências' "
+                f"({', '.join(exemplos)}{'...' if len(unlinked_cites) > 3 else ''}) "
+                "— a convenção pede [[#Referências|[N]]]")
+
         check_reference_contracts(ref_entries, add)
 
     # -----------------------------------------------------------------------

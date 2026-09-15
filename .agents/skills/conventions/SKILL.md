@@ -165,6 +165,7 @@ Não use `[[wikilinks]]` nem `:` na byline.
 | --- | --- |
 | Outra página | `[[slug-do-arquivo\|Título Visível]]` |
 | Seção do mesmo arquivo | `[[#Texto Exato Do Heading]]` ou `[[#Texto\|Display]]` |
+| Citação bibliográfica inline | `[[#Referências\|[N]]]` |
 | Corpo do essay | links externos `[texto](url)`; sem wikilinks para outras páginas |
 | `## Conexões` | apenas `[[slug\|Título]]` |
 | `## Referências` | links externos bibliográficos |
@@ -172,6 +173,7 @@ Não use `[[wikilinks]]` nem `:` na byline.
 Regras:
 
 - O alvo de wikilink é o nome do arquivo, não o H1.
+- Citações inline no corpo devem sempre linkar para a seção de bibliografia via `[[#Referências|[N]]]`; nunca use `[N]` como texto puro sem link.
 - Não coloque link Markdown dentro de heading.
 - Não remeta a outro essay no corpo; registre a relação em `## Conexões`.
 - Trabalho bibliográfico modifica `## Referências`, não links do corpo.
