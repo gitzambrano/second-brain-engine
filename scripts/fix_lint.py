@@ -7,6 +7,7 @@ nunca tocam frontmatter nem blocos de código.
 
 Correções: linha em branco após heading; ':' dentro de [[wikilink]] -> '—';
 espaços duplos em prosa; '&amp;' residual; 3+ linhas em branco -> 1;
+citações inline [N] -> [[#Referências|[N]]];
 `## Referências` no formato antigo -> padrão AIAA [N] (renumera, normaliza
 itálico, move link para o fim).
 
@@ -441,6 +442,59 @@ def fix_bare_title_wikilinks(body, title_to_slug, all_slugs):
     return BARE_WIKILINK_RE.sub(repl, body)
 
 
+def fix_unlinked_citations(content: str) -> tuple[str, int]:
+    """Converte citações inline [N] e [N1, N2] para [[#Referências|[N]]],
+    preservando cercas de código, fórmulas KaTeX, código inline e links existentes."""
+    if "## Referências" not in content:
+        return content, 0
+    m = re.search(r"(?m)^## Referências[ \t]*$", content)
+    if not m:
+        return content, 0
+
+    body = content[:m.start()]
+    rest = content[m.start():]
+
+    # Extrai números de referências listadas na seção
+    ref_part = rest.split("\n## ", 1)[0]
+    listed = set(int(match.group(1)) for match in re.finditer(r"(?m)^\[(\d+)\]", ref_part))
+    if not listed:
+        return content, 0
+
+    protected = []
+    def protect(match):
+        idx = len(protected)
+        protected.append(match.group(0))
+        return f"\x00PROTECTED_{idx}\x00"
+
+    p_body = re.sub(r"(?ms)^```.*?^```", protect, body)
+    p_body = re.sub(r"\$\$.*?\$\$", protect, p_body, flags=re.DOTALL)
+    p_body = re.sub(r"\$[^\$\n]+?\$", protect, p_body)
+    p_body = re.sub(r"`[^`\n]+?`", protect, p_body)
+    p_body = re.sub(r"!\[[^\]]*\]\([^\)]*\)", protect, p_body)
+    p_body = re.sub(r"\[\[#(?:refer[eê]ncias|references)\|[^\]]*\]\]", protect, p_body, flags=re.IGNORECASE)
+    p_body = re.sub(r"\[\d{1,3}(?:\s*,\s*\d{1,3})*\]\(#(?:refer[eê]ncias|references)\)", protect, p_body, flags=re.IGNORECASE)
+    p_body = re.sub(r"\[\[[^\]]*\]\]", protect, p_body)
+    p_body = re.sub(r"\[[^\]]*\]\([^\)]*\)", protect, p_body)
+
+    count = 0
+    def repl_cite(match):
+        nonlocal count
+        parts = [x.strip() for x in match.group(1).split(",")]
+        if all(x.isdigit() for x in parts):
+            nums = [int(x) for x in parts]
+            if all(n in listed and n > 0 for n in nums):
+                count += len(nums)
+                return ", ".join(f"[[#Referências|[{n}]]]" for n in nums)
+        return match.group(0)
+
+    p_body = re.sub(r"(?<!\[)\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\](?!\])", repl_cite, p_body)
+
+    for idx, orig in enumerate(protected):
+        p_body = p_body.replace(f"\x00PROTECTED_{idx}\x00", orig)
+
+    return p_body + rest, count
+
+
 def resolve_essay(slug: str) -> Path:
     """Resolve um slug para o arquivo do essay, aceitando também um caminho direto."""
     p = Path(slug)
@@ -736,6 +790,7 @@ def main():
 
     fixed_files_count = 0
     referencias_fixed_count = 0
+    citations_fixed_count = 0
     sem_legenda_count = 0
     title_to_slug, all_slugs = build_title_to_slug()
 
@@ -754,6 +809,13 @@ def main():
         frontmatter, body = split_frontmatter(new_content)
         body = apply_outside_fences(body, lambda seg: fix_bare_title_wikilinks(seg, title_to_slug, all_slugs))
         new_content = frontmatter + body
+
+        if category == "essays":
+            new_content, n_cites = fix_unlinked_citations(new_content)
+            if n_cites:
+                citations_fixed_count += n_cites
+                verb = "would link" if args.dry_run else "linkadas"
+                print(f"Citações {verb} inline: {file.relative_to(DATA_ROOT)} ({n_cites} citação(ões))")
 
         if new_content != content:
             if not args.dry_run:
@@ -784,7 +846,8 @@ def main():
     action = "Dry-run completo — nada foi escrito." if args.dry_run else "Completed auto-fix."
     print(f"\n{action} {fixed_files_count} file(s) {'seriam' if args.dry_run else 'foram'} "
           f"modificado(s); {referencias_fixed_count} essay(s) "
-          f"{'teriam' if args.dry_run else 'tiveram'} '## Referências' reescrita.")
+          f"{'teriam' if args.dry_run else 'tiveram'} '## Referências' reescrita; "
+          f"{citations_fixed_count} citação(ões) inline {'seriam' if args.dry_run else 'foram'} linkadas.")
     if referencias_fixed_count and not args.dry_run:
         print("Rode `python scripts/build_references.py` para regenerar o índice de referências.")
         print(
