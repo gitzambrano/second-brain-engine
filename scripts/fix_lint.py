@@ -467,14 +467,14 @@ def fix_unlinked_citations(content: str) -> tuple[str, int]:
         return f"\x00PROTECTED_{idx}\x00"
 
     p_body = re.sub(r"(?ms)^```.*?^```", protect, body)
+    p_body = re.sub(r"\[\[#(?:refer[eê]ncias|references)\|[^\]]*\]\]", protect, p_body, flags=re.IGNORECASE)
+    p_body = re.sub(r"\[\d{1,3}(?:\s*,\s*\d{1,3})*\]\(#(?:refer[eê]ncias|references)\)", protect, p_body, flags=re.IGNORECASE)
+    p_body = re.sub(r"!\[[^\]]*\]\([^\)]*\)", protect, p_body)
+    p_body = re.sub(r"\[\[[^\]]*\]\]", protect, p_body)
+    p_body = re.sub(r"\[[^\]]*\]\([^\)]*\)", protect, p_body)
     p_body = re.sub(r"\$\$.*?\$\$", protect, p_body, flags=re.DOTALL)
     p_body = re.sub(r"\$[^\$\n]+?\$", protect, p_body)
     p_body = re.sub(r"`[^`\n]+?`", protect, p_body)
-    p_body = re.sub(r"!\[[^\]]*\]\([^\)]*\)", protect, p_body)
-    p_body = re.sub(r"\[\[#(?:refer[eê]ncias|references)\|[^\]]*\]\]", protect, p_body, flags=re.IGNORECASE)
-    p_body = re.sub(r"\[\d{1,3}(?:\s*,\s*\d{1,3})*\]\(#(?:refer[eê]ncias|references)\)", protect, p_body, flags=re.IGNORECASE)
-    p_body = re.sub(r"\[\[[^\]]*\]\]", protect, p_body)
-    p_body = re.sub(r"\[[^\]]*\]\([^\)]*\)", protect, p_body)
 
     count = 0
     def repl_cite(match):
@@ -489,8 +489,11 @@ def fix_unlinked_citations(content: str) -> tuple[str, int]:
 
     p_body = re.sub(r"(?<!\[)\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\](?!\])", repl_cite, p_body)
 
-    for idx, orig in enumerate(protected):
-        p_body = p_body.replace(f"\x00PROTECTED_{idx}\x00", orig)
+    for idx in reversed(range(len(protected))):
+        p_body = p_body.replace(f"\x00PROTECTED_{idx}\x00", protected[idx])
+    for idx in range(len(protected)):
+        if f"\x00PROTECTED_{idx}\x00" in p_body:
+            p_body = p_body.replace(f"\x00PROTECTED_{idx}\x00", protected[idx])
 
     return p_body + rest, count
 
