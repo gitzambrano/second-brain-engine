@@ -59,3 +59,4 @@ Thumbs.db
 # alguns MB de PNG num repositório que não guarda corpus.
 /tmp/
 .worktrees/
+scratch*.png
