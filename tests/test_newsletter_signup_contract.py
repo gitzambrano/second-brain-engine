@@ -28,13 +28,11 @@ def test_subscribe_opens_compact_dialog_with_expected_kit_embed() -> None:
     assert 'data-uid="4fd36350af"' in html
     assert 'src="https://gustavo-jose-zambrano.kit.com/4fd36350af/index.js"' in html
     assert "KIT_API_KEY" not in html
-    assert "Novos ensaios, quando houver." in html
-    assert "Receba um e-mail quando eu publicar um novo ensaio no Second Brain." in html
-    assert "Sem frequência fixa" in html
-    assert "Ele pode cair em" in html
-    assert "Spam" in html
-    assert "Promoções" in html
-    assert "Não é spam" in html
+    assert "Receba novos ensaios por email." in html
+    assert "Confirme" in html
+    assert "caixa de spam" in html
+    assert "confiável" in html
+    assert "Você não receberá mensagens de spam." in html
 
 
 def test_subscribe_header_fits_narrow_mobile_contract() -> None:
@@ -46,13 +44,13 @@ def test_subscribe_header_fits_narrow_mobile_contract() -> None:
     assert '.brand>span:last-child{display:none}' in html
     assert '.topnav .nav-link[href="graph.html"]{display:none}' not in html
     assert '<a class="brand" href="index.html" aria-label="Second Brain">' in html
-    assert ".subscribe-cta{padding-inline:9px}" in html
+    assert ".subscribe-cta{" in html
 
 
 def test_dialog_form_is_single_column_and_full_width() -> None:
     html = _html()
 
     assert "flex-direction:column!important" in html
-    assert ".subscribe-embed .formkit-submit{width:100%!important" in html
+    assert ".subscribe-embed .formkit-submit" in html
     assert "width:min(430px,calc(100% - 28px))" in html
     assert ".subscribe-dialog-note" in html

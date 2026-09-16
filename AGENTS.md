@@ -24,11 +24,13 @@ Esta é uma regra arquitetural bloqueante, não uma preferência de implementaç
 
 - `second-brain-engine`: **NO GITHUB ACTIONS. ZERO.** Não criar `.github/workflows/` nem qualquer workflow de CI, testes, lint, build, QA, sync, cron, documentação, publicação, newsletter ou automação.
 - `second-brain-data`: **NO GITHUB ACTIONS. ZERO.** A mesma proibição é absoluta.
-- A **única GitHub Action permitida em todo o ecossistema Second Brain** fica em `second-brain-site` e serve somente para o **gate mínimo de privacidade antes da publicação + deploy no GitHub Pages**.
-- O workflow do site não deve virar CI geral. Ele não deve executar lint, testes do engine, QA de browser/PDF/HTML, builds editoriais, newsletter, sincronização ou tarefas agendadas.
+- Os **únicos dois GitHub Actions permitidos em todo o ecossistema Second Brain** ficam exclusivamente em `second-brain-site`:
+  1. `pages.yml`: **gate mínimo de privacidade antes da publicação + deploy no GitHub Pages**.
+  2. `newsletter.yml`: **anúncio de novos essays via Kit após deploy concluído**.
+- O repositório do site não deve ter outros workflows nem virar CI geral. Ele não deve executar lint, testes do engine, QA de browser/PDF/HTML, builds editoriais, sincronização ou tarefas agendadas.
 - Testes, lint, QA, build, sweeps e demais checks de `second-brain-engine` e `second-brain-data` rodam localmente pelos scripts do engine ou quando explicitamente solicitados; nunca via GitHub Actions.
 - Se uma tarefa sugerir criar uma Action em `second-brain-engine` ou `second-brain-data`, a solução está errada: não crie. Se encontrar um workflow nesses repositórios, remova-o.
-- Não trate o gate de privacidade como precedente para outras Actions. **Ele é a única exceção e existe somente em `second-brain-site`.**
+- Não trate essas duas Actions como precedente para outras. **Elas são as únicas exceções e existem somente em `second-brain-site`.**
 
 Caminhos `wiki/...`, `plan/...`, `raw/...` e `output/...` são relativos a `DATA_ROOT` (`data/` por padrão). Resolva caminhos com `scripts/repo_paths.py`; nunca pelo diretório corrente.
 
@@ -155,7 +157,7 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 - Nunca altere `visibility:` automaticamente; exige decisão explícita do Usuário.
 - Nenhum corpo não autorizado, link de leitura restrito ou caminho para `data/` pode sair.
 - `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`.
-- O único GitHub Action permitido no pipeline de publicação é o gate mínimo de privacidade em `second-brain-site`, junto do deploy do Pages. **Não mover checks do engine/data para Actions.**
+- Os únicos GitHub Actions permitidos no pipeline de publicação ficam exclusivamente em `second-brain-site`: o gate mínimo de privacidade com deploy do Pages (`pages.yml`) e o anúncio de novos essays via Kit (`newsletter.yml`). **Não mover checks do engine/data para Actions.**
 - Contrato completo de dados: `conventions/SKILL.md`; workflow: `/publish`.
 
 ## Plano de Longo Prazo

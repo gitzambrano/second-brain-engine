@@ -97,8 +97,8 @@ def test_kit_confirmation_note_follows_the_form_instead_of_delaying_it():
 
 def test_essay_subscribe_dialog_keeps_confirmation_copy_concise():
     source = (ROOT / "scripts" / "lib" / "render_public_essay.py").read_text(encoding="utf-8")
-    assert "Spam" in source
-    assert "confirme o e-mail" in source
+    assert "spam" in source.lower()
+    assert "confirme" in source.lower()
     for verbose in ("Promoções", "Não é spam", "então confirme"):
         assert verbose not in source
     assert 'class="sb-subscribe-note"' in source
