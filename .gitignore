@@ -58,5 +58,6 @@ Thumbs.db
 # paginação). Já entrou em `main` uma vez por um `git add -A`: 81 arquivos e
 # alguns MB de PNG num repositório que não guarda corpus.
 /tmp/
+/substack/
 .worktrees/
 scratch*.png
