@@ -1207,6 +1207,29 @@ document.querySelectorAll('.content p').forEach(function(paragraph){
      "Previsao de Conclusao com Modelos...", em que a palavra existe mas
      nao nomeia a secao. */
   var SECTION_RE=/^\s*(?:(?:se[çc][aã]o|cap[íi]tulo|parte)\s*)?(?:\d+|[IVXLC]+)?\s*[.:\-—–]?\s*(introdu[çc][aã]o|conclus[aã]o|resumo(?:\s+executivo)?|pref[áa]cio|pr[óo]logo|ep[íi]logo|posf[áa]cio|p[óo]s-?escrito|agradecimentos|ap[êe]ndice|anexos?)\b/i;
+
+  function stripAnexoPrefix(h){
+    var n=h.firstChild;
+    while(n&&n.nodeType!==3){n=n.nextSibling;}
+    if(!n){return null;}
+    var m=/^\s*((anexo|ap[êe]ndice)\s+([A-Za-z0-9]+))(?:[.\s—–:-]+)([\s\S]*)/i.exec(n.data);
+    if(!m){
+      var trimmed=n.data.trim();
+      var m2=/^(anexo|ap[êe]ndice)\s+([A-Za-z0-9]+)/i.exec(trimmed);
+      if(m2&&m2[0]===trimmed){
+        return m2[1].toUpperCase()+" "+m2[2].toUpperCase();
+      }
+      return null;
+    }
+    var span=document.createElement("span");
+    span.className="sb-selfnum";
+    span.setAttribute("aria-hidden","true");
+    span.textContent=m[1];
+    n.data=m[4];
+    h.insertBefore(span,n);
+    return m[2].toUpperCase()+" "+m[3].toUpperCase();
+  }
+
   /* Esconde o prefixo de numeracao a esquerda do titulo e devolve o numero
      para o kicker: o CAPITULO NN dourado substitui o "3."/"Secao 3 —" no
      texto em vez de repetir a numeracao. O prefixo pode ter rotulo
@@ -1234,10 +1257,13 @@ document.querySelectorAll('.content p').forEach(function(paragraph){
   }
   var chapterNo=0;
   Array.prototype.forEach.call(h2s,function(h){
+    var anexo=stripAnexoPrefix(h);
     var sem=SECTION_RE.exec(h.textContent);
     var num=selfNum?stripSelfNumber(h):null;
     var label=null;
-    if(sem){
+    if(anexo){
+      label=anexo;
+    }else if(sem){
       label=sem[1].toUpperCase();
     }else if(num){
       /* Zero à esquerda para casar com o estilo decimal-leading-zero do

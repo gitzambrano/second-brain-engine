@@ -1205,6 +1205,12 @@ HEADING_NUM_RE = re.compile(
     r'^(#{2})\s+(?:(\d+(?:\.\d+)*)|([IVXLC]+))\s*[.\-–:]\s*(.+?)\s*$'
 )
 
+# Anexos e Apêndices com identificador de letra/número: "## Anexo A — ...", "## Apêndice B: ..."
+ANEXO_HEADING_RE = re.compile(
+    r'^(#{2})\s+(Anexo|Ap[êe]ndice)\s+([A-Za-z0-9]+)\b(?:\s*[.\-–:—]\s*(.+?))?\s*$',
+    re.IGNORECASE
+)
+
 
 def _detect_self_numbered(heading_text):
     """Numeral escrito pelo autor no título, na grafia original, ou None."""
@@ -1216,6 +1222,10 @@ def _detect_self_numbered(heading_text):
 
 def _semantic_label(heading_text):
     """Palavra que nomeia a seção (Introdução, Conclusão...), ou None."""
+    m_anx = ANEXO_HEADING_RE.match(heading_text)
+    if m_anx:
+        tipo = 'Apêndice' if 'ap' in m_anx.group(2).lower() else 'Anexo'
+        return f'{tipo} {m_anx.group(3).upper()}'
     m = SECTION_RE.match(heading_text)
     if not m:
         return None
@@ -1401,11 +1411,18 @@ def inject_chapter_kickers(body):
                 out.append('\\sbskipnextneed')
             continue
 
+        m_anexo = ANEXO_HEADING_RE.match(line)
         num = _detect_self_numbered(line)
         label = _semantic_label(line)
         heading = line
 
-        if num:
+        if m_anexo:
+            tipo = 'Apêndice' if 'ap' in m_anexo.group(2).lower() else 'Anexo'
+            letra = m_anexo.group(3).upper()
+            label = f'{tipo} {letra}'
+            subtitulo = m_anexo.group(4)
+            heading = f'## {subtitulo.strip()}' if subtitulo and subtitulo.strip() else f'## {tipo} {letra}'
+        elif num:
             # O prefixo sai do título SEMPRE que existe — inclusive em
             # "## 9. Conclusão", onde o rótulo é a palavra e o "9." ficaria
             # sobrando ao lado dela.

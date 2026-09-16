@@ -1896,7 +1896,27 @@ function enhanceReaderDom() {
     const toc = readerRoot.querySelector("#sumário + ul,#sumário + ol");
     if (toc) toc.classList.add("sb-toc-plain");
   }
-  const SECTION_RE = /^\\s*(?:(?:se[çc][aã]o|cap[íi]tulo|parte)\\s*)?(?:\\d+|[IVXLC]+)?\\s*[.:\\-—–]?\\s*(introdu[çc][aã]o|conclus[aã]o|resumo(?:\\s+executivo)?|pref[áa]cio|pr[óo]logo|ep[íi]logo|posf[áa]cio|p[óo]s-?escrito|agradecimentos|ap[êe]ndice|anexos?)\\b/i;
+  const SECTION_RE = /^\\s*(?:(?:se[çc][aã]o|cap[íi]tulo|parte)\\s*)?(?:\\d+|[IVXLC]+)?\\s*[.:\\-—–]?\\s*(introdu[çc][aã]o|conclus[aã]o|resumo(?:\\s+executivo)?|pref[áa]cio|pr[óo]logo|ep[íi]logo|posf[áa]cio|p[óo]s-?escrito|agradecimentos|ap[êe]ndice|anexos?)\b/i;
+  function stripAnexoPrefix(h) {
+    let n = h.firstChild;
+    while (n && n.nodeType !== 3) n = n.nextSibling;
+    if (!n) return null;
+    const m = /^\\s*((anexo|ap[êe]ndice)\\s+([A-Za-z0-9]+))(?:[.\\s—–:-]+)([\\s\\S]*)/i.exec(n.data);
+    if (!m) {
+      const m2 = /^\\s*(anexo|ap[êe]ndice)\\s+([A-Za-z0-9]+)\\s*$/i.exec(n.data);
+      if (m2) {
+        return m2[1].toUpperCase() + " " + m2[2].toUpperCase();
+      }
+      return null;
+    }
+    const span = document.createElement("span");
+    span.className = "sb-selfnum";
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = m[1];
+    n.data = m[4];
+    h.insertBefore(span, n);
+    return m[2].toUpperCase() + " " + m[3].toUpperCase();
+  }
   // Espelha o template: esconde o prefixo de numeração à esquerda do título
   // e devolve o número para o kicker. O prefixo pode ter rótulo ("Seção 9 —",
   // "Capítulo II:") — ele some inteiro. O lookahead (?!\\d) evita partir
@@ -1923,10 +1943,13 @@ function enhanceReaderDom() {
   }
   let chapterNo = 0;
   Array.prototype.forEach.call(h2s, (h) => {
+    const anexo = stripAnexoPrefix(h);
     const sem = SECTION_RE.exec(h.textContent);
     const num = selfNum ? stripSelfNumber(h) : null;
     let label = null;
-    if (sem) {
+    if (anexo) {
+      label = anexo;
+    } else if (sem) {
       label = sem[1].toUpperCase();
     } else if (num) {
       const pad = /^[0-9]/.test(num) && num.length < 2 ? "0" + num : num;

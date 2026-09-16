@@ -932,12 +932,17 @@ def check_essay(filepath: Path) -> dict:
             expected += 1
 
         cur_parent = None
+        cur_parent_numbered = False
         expected_sub = 1
+        h3_in_numbered_h2 = []
         for it in seq_items:
             if it[0] == "h2":
                 cur_parent = it[3]
+                cur_parent_numbered = (it[3] is not None and not SEM_HEADING_RE.match(it[2]))
                 expected_sub = 1
                 continue
+            if cur_parent_numbered:
+                h3_in_numbered_h2.append(it)
             if it[3] is None:
                 continue  # H3 sem número: legítimo, salvo misto abaixo
             if cur_parent is None:
@@ -958,10 +963,11 @@ def check_essay(filepath: Path) -> dict:
                 expected_sub = it[5]
             expected_sub += 1
 
-        if h3_numbered and len(h3_numbered) < sum(1 for it in seq_items if it[0] == "h3"):
+        numbered_in_h2 = [it for it in h3_in_numbered_h2 if it[3] is not None]
+        if numbered_in_h2 and len(numbered_in_h2) < len(h3_in_numbered_h2):
             unnum = [
                 f"linha {it[1]}: '{it[2][:40]}'"
-                for it in seq_items if it[0] == "h3" and it[3] is None
+                for it in h3_in_numbered_h2 if it[3] is None
             ]
             add("WARNING", "NUMBERING_MIXED",
                 f"{len(unnum)} subseção(ões) H3 sem número em essay com "

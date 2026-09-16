@@ -151,11 +151,12 @@ Não use `[[wikilinks]]` nem `:` na byline.
 ## Estrutura obrigatória do essay
 
 1. H1 + byline.
-2. `## Sumário` logo após a byline, com links para todos os H2 de conteúdo.
+2. `## Sumário` logo após a byline, com links para todos os H2 de conteúdo (incluindo Anexos).
 3. Introdução como primeira seção de conteúdo. Não crie `## Resumo Executivo` em essays novos.
 4. Corpo autocontido com links externos na primeira ocorrência dos termos relevantes.
-5. `## Referências` com heading exato e bibliografia no padrão abaixo.
-6. `## Conexões` como última seção, contendo apenas relações internas.
+5. Anexos opcionais após a Conclusão e antes de `## Referências`, numerados por letras (`## Anexo A — Título`, `## Anexo B — Título`).
+6. `## Referências` com heading exato e bibliografia no padrão abaixo.
+7. `## Conexões` como última seção, contendo apenas relações internas.
 
 `Referências` e `Conexões` não entram no Sumário.
 
