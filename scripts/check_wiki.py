@@ -188,12 +188,12 @@ def check_reference_contracts(entries: list[str], add) -> None:
         label = number.group(1) if number else "?"
         if not re.search(r"\*[^*]+\*", entry):
             add("WARNING", "REF_TITLE_NOT_ITALIC", f"entrada [{label}] sem título em itálico")
-        links = re.findall(r"\[Link\]\((https?://[^)]+)\)", entry)
+        links = re.findall(r"\[Link\]\((https?://(?:[^()\s]|\([^()\s]*\))+)\)", entry)
         link = links[-1] if links else None
-        if link and not re.search(r"\[Link\]\(https?://[^)]+\)\s*$", entry):
+        if link and not re.search(r"\[Link\]\(https?://(?:[^()\s]|\([^()\s]*\))+\)\s*$", entry):
             add("WARNING", "REF_LINK_NOT_FINAL", f"entrada [{label}] não termina no [Link](url)")
         local_urls: set[str] = set()
-        for raw_url in re.findall(r"https?://[^\s)]+", entry):
+        for raw_url in re.findall(r"https?://(?:[^()\s]|\([^()\s]*\))+", entry):
             normalized = normalize_url(raw_url)
             if normalized in local_urls:
                 continue
