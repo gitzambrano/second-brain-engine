@@ -166,3 +166,17 @@ def test_keywords_never_select_visual_family():
     for typ, title in cases.items():
         out = transform_markdown(f"> [!{typ}] {title}\n> corpo\n")
         assert f"{{.box .callout-{typ}}}" in out
+
+
+def test_math_block_in_callout_remains_contiguous():
+    src = (
+        "> [!note] Solidez\n"
+        "> Parágrafo introdutório:\n"
+        "> $$\n"
+        "> \\sigma = \\frac{N c}{\\pi R}\n"
+        "> $$\n"
+        "> Parágrafo conclusivo.\n"
+    )
+    out = transform_markdown(src)
+    assert "$$\n\\sigma = \\frac{N c}{\\pi R}\n$$" in out
+    assert "$$\n\n\\sigma" not in out

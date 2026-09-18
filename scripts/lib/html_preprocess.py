@@ -135,6 +135,37 @@ def _box_body(lines: list[str]) -> list[str]:
                 i += 1
             continue
 
+        # Keep LaTeX math blocks ($$, \[, \begin{...}) contiguous without blank lines
+        if re.match(r"^\s*(?:\$\$|\\\[|\\begin\{[a-zA-Z*]+\})", line):
+            if out and out[-1] != "":
+                out.append("")
+            stripped = line.strip()
+            if stripped.startswith("$$") and len(stripped) > 2 and stripped.endswith("$$") and not stripped.endswith(r"\$$"):
+                out.append(line)
+                i += 1
+                continue
+            if stripped.startswith(r"\[") and stripped.endswith(r"\]"):
+                out.append(line)
+                i += 1
+                continue
+            out.append(line)
+            if stripped.startswith("$$"):
+                close_re = re.compile(r"^\s*\$\$")
+            elif stripped.startswith(r"\["):
+                close_re = re.compile(r".*?\\\]\s*$")
+            else:
+                env_match = re.match(r"^\s*\\begin\{([a-zA-Z*]+)\}", line)
+                env = env_match.group(1) if env_match else ""
+                close_re = re.compile(r".*?\\end\{" + re.escape(env) + r"\}\s*$")
+            i += 1
+            while i < n:
+                out.append(lines[i])
+                if close_re.match(lines[i]):
+                    i += 1
+                    break
+                i += 1
+            continue
+
         # Keep Markdown block structures contiguous, including headings.
         if re.match(r"^\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|\|)", line):
             if out and out[-1] != "":
