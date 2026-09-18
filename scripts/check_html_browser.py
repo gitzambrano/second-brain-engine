@@ -130,6 +130,27 @@ def audit_file(browser, path: Path, result: CheckResult) -> None:
                 f"{scale['medProse']:.2f}px/ex na prosa ({scale['n']} fórmulas em tabela)",
                 path.name,
             )
+
+        ref_check = page.evaluate("""() => {
+          const anchor = document.querySelector('a.ref-cite');
+          if (!anchor) return { present: false };
+          anchor.click();
+          const popup = document.querySelector('#ref-popup.is-active');
+          if (!popup) return { present: true, opened: false };
+          const popRect = popup.getBoundingClientRect();
+          const overflow = popRect.right > window.innerWidth + 2 || popRect.left < -2;
+          return {
+            present: true,
+            opened: true,
+            hasContent: (popup.innerText || '').length > 10,
+            overflow: overflow
+          };
+        }""")
+        if ref_check.get("present") and not ref_check.get("opened"):
+            result.error("REF_POPUP_FAILED", f"{label}: footnote popup did not open on click", path.name)
+        if ref_check.get("present") and ref_check.get("overflow"):
+            result.error("REF_POPUP_OVERFLOW", f"{label}: footnote popup overflows viewport", path.name)
+
         for message in console_errors[:5]:
             result.error("CONSOLE_ERROR", f"{label}: {message}", path.name)
         for url in failed[:5]:

@@ -33,6 +33,6 @@ Estados de saída:
 - **EXPORT OK + VALIDATION FAIL** — não declare o HTML validado; reporte os códigos.
 - **EXPORT FAILED** — reporte STDERR/causa.
 
-`check_html_structure.py` cobre estrutura/DOM, anchors, resíduos, imagens e dependências externas. `check_html_browser.py` abre mobile + desktop e cobre overflow, imagens, console e navegação interna.
+`check_html_structure.py` cobre estrutura/DOM, anchors, resíduos, imagens e dependências externas. `check_html_browser.py` abre mobile + desktop e cobre overflow, imagens, console, navegação interna e funcionamento de popups de referência.
 
 Não atualize `wiki/log.md`: export é operação de leitura.
