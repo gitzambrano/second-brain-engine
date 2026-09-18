@@ -40,29 +40,66 @@ def find_mmdc():
     return None
 
 
+def find_browser():
+    cache_dir = Path.home() / ".cache" / "puppeteer"
+    if cache_dir.exists():
+        for exe in cache_dir.rglob("chrome-headless-shell*"):
+            if exe.is_file() and (exe.suffix in (".exe", "") or os.access(exe, os.X_OK)):
+                return str(exe)
+    candidates = [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+    ]
+    for c in candidates:
+        if Path(c).exists():
+            return c
+    return None
+
+
 def convert(src, dst, width=1400, scale=2, bg="white"):
     command = find_mmdc()
     if not command:
         print("ERRO: mmdc não encontrado. Instale @mermaid-js/mermaid-cli.")
         return False
     dst.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        [
-            command,
-            "-i",
-            str(src),
-            "-o",
-            str(dst),
-            "--backgroundColor",
-            bg,
-            "--width",
-            str(width),
-            "--scale",
-            str(scale),
-        ],
-        capture_output=True,
-        timeout=120,
-    )
+    cmd = [
+        command,
+        "-i",
+        str(src),
+        "-o",
+        str(dst),
+        "--backgroundColor",
+        bg,
+        "--width",
+        str(width),
+        "--scale",
+        str(scale),
+    ]
+    browser = find_browser()
+    temp_config = None
+    if browser:
+        import json
+        import tempfile
+        cfg = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8")
+        json.dump({"executablePath": browser, "args": ["--no-sandbox", "--disable-setuid-sandbox"]}, cfg)
+        cfg.close()
+        temp_config = Path(cfg.name)
+        cmd.extend(["-p", str(temp_config)])
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            timeout=120,
+        )
+    finally:
+        if temp_config and temp_config.exists():
+            try:
+                temp_config.unlink()
+            except OSError:
+                pass
     if result.returncode == 0 and dst.exists():
         print(f"OK: {dst} ({dst.stat().st_size // 1024} KB)")
         return True

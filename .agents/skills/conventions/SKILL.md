@@ -415,9 +415,10 @@ Lista plana de fontes já processadas:
 ## Tratamento de imagens
 
 1. Salve imagens em `wiki/assets/` com o nome `<slug-do-essay>_fig<N>.<ext>`, onde `N` é a ordem de aparição no texto. Nunca use base64 inline.
-2. Use caminho relativo: `../assets/...` em essays e `../../assets/...` em resumos de sources.
-3. Descreva em texto a informação essencial de gráficos e diagramas.
-4. Toda figura tem legenda em itálico logo abaixo da imagem:
+2. Diagramas Mermaid: preserve o código-fonte em `wiki/assets/<slug-do-essay>_fig<N>.mmd` e compile para PNG via `scripts/mermaid_to_png.py`. Use nós com preenchimento sólido e linhas de contraste intermediário para legibilidade em tema claro e escuro.
+3. Use caminho relativo: `../assets/...` em essays e `../../assets/...` em resumos de sources.
+4. Descreva em texto a informação essencial de gráficos e diagramas.
+5. Toda figura tem legenda em itálico logo abaixo da imagem:
 
    ```markdown
    ![alt](../assets/arquivo.png)
@@ -425,7 +426,7 @@ Lista plana de fontes já processadas:
    *Figura 3. Curva de calibração do modelo contra os placares observados.*
    ```
 
-5. Numere as figuras sequencialmente a partir de 1. A legenda deve identificar a figura sem simplesmente repetir o alt ou o argumento do parágrafo.
+6. Numere as figuras sequencialmente a partir de 1. A legenda deve identificar a figura sem simplesmente repetir o alt ou o argumento do parágrafo.
 
 ## Regra de contradição entre fontes
 

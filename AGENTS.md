@@ -76,6 +76,7 @@ A coluna **Modo** descreve a execução da skill. O metadata declara seu contrat
 | Polish     | `/polish`     | leitura | Melhorar estilo sem mudar conteúdo                        |
 | Linkify    | `/linkify`    | ambos   | Adicionar/validar links externos e referências            |
 | Review     | `/review`     | leitura | Peer review de argumento, rigor, profundidade e evidência |
+| Diagram    | `/diagram`    | ambos   | Modelar, validar e compilar diagrama Mermaid estático     |
 
 ### Fontes e estudo
 

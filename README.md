@@ -134,7 +134,7 @@ O routing detalhado e os contratos ficam em **[`AGENTS.md`](./AGENTS.md)** e nas
 | Fase | Comandos |
 | --- | --- |
 | **Ideação e criação** | `/insight`, `/outline`, `/essay` |
-| **Iteração** | `/expand`, `/chapter`, `/continuity`, `/proofread`, `/polish`, `/linkify`, `/review` |
+| **Iteração** | `/expand`, `/chapter`, `/continuity`, `/proofread`, `/polish`, `/linkify`, `/review`, `/diagram` |
 | **Fontes e estudo** | `/import`, `/digest`, `/absorb`, `/study`, `/scout` |
 | **Manutenção** | `/organize`, `/sweep`, `/gaps`, `/connect`, `/merge`, `/delete`, `/plan`, `/stats`, `/status`, `/doctor` |
 | **Saída e consulta** | `/handout`, `/html`, `/pdf`, `/publish`, `/query`, `/synthesize` |
