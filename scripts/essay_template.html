@@ -1076,12 +1076,52 @@ h2#referencias ~ p a[href^="http"]:last-of-type::after {
 /* ------------------------------------------------------------------ */
 /* Citações Inline e Popup de Referência (Padrão Substack)            */
 /* ------------------------------------------------------------------ */
+.ref-cite-group {
+  display:inline;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size:.78em;
+  line-height:0;
+  vertical-align:super;
+  user-select:none;
+  white-space:nowrap;
+}
+.ref-cite-group .ref-cite {
+  display:inline;
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+  vertical-align:baseline;
+  font-weight:600;
+  padding:0 .04em;
+  cursor:pointer;
+  color:var(--gold);
+  text-decoration:none;
+  border-bottom:none;
+  transition:color .15s ease, opacity .15s ease;
+}
+.ref-cite-group .ref-cite:hover,
+.ref-cite-group .ref-cite:focus-visible,
+.ref-cite-group .ref-cite[aria-expanded="true"] {
+  color:var(--rust-bright);
+  text-decoration:none;
+}
+.ref-cite-sep {
+  display:inline;
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+  vertical-align:baseline;
+  color:var(--gold);
+  font-weight:600;
+  margin-right:.12em;
+}
+
 .ref-cite {
   font-size:.78em;
   line-height:0;
   vertical-align:super;
   font-weight:600;
-  padding:0 .18em;
+  padding:0 .1em;
   cursor:pointer;
   color:var(--gold);
   text-decoration:none;
@@ -1571,34 +1611,137 @@ document.querySelectorAll('.content p').forEach(function(paragraph){
 
     // 2. Localiza e transforma chamadas inline no corpo
     var content = document.querySelector("main.content") || document.body;
-    var links = content.querySelectorAll('a[href^="#refer"]');
-    var anchors = [];
+    var rawLinks = [].slice.call(content.querySelectorAll('a[href^="#refer"]'));
+    var validItems = [];
 
-    links.forEach(function(link){
+    rawLinks.forEach(function(link){
       if (link.closest("h2#referências ~ p, h2#referencias ~ p, nav, #sumário, #sumario")) return;
       var rawText = (link.textContent || "").trim();
       var num = rawText.replace(/[^\d]/g, "");
-      if (!num) return;
-      if (!refMap[num]) return;
+      if (!num || !refMap[num]) return;
+      validItems.push({ link: link, num: num });
+    });
 
-      // Limpa colchetes literais residuais [ e ] gerados antes/depois do link
-      var prev = link.previousSibling;
-      if (prev && prev.nodeType === Node.TEXT_NODE && prev.textContent.trimEnd().endsWith("[")) {
-        prev.textContent = prev.textContent.trimEnd().slice(0, -1);
-      }
-      var next = link.nextSibling;
-      if (next && next.nodeType === Node.TEXT_NODE && next.textContent.trimStart().startsWith("]")) {
-        next.textContent = next.textContent.trimStart().slice(1);
+    if (validItems.length === 0) return;
+
+    // Agrupa citações consecutivas (ex: [1], [2], [3] -> 1, 2, 3 no mesmo grupo superscript)
+    var clusters = [];
+    var currentCluster = [validItems[0]];
+
+    for (var i = 1; i < validItems.length; i++) {
+      var prevItem = validItems[i - 1];
+      var currItem = validItems[i];
+
+      var areAdjacent = false;
+      if (prevItem.link.parentNode && prevItem.link.parentNode === currItem.link.parentNode) {
+        var node = prevItem.link.nextSibling;
+        var onlySeps = true;
+        while (node && node !== currItem.link) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            if (/[^\s,;\[\]]/.test(node.textContent)) {
+              onlySeps = false;
+              break;
+            }
+          } else if (node.nodeType !== Node.COMMENT_NODE) {
+            onlySeps = false;
+            break;
+          }
+          node = node.nextSibling;
+        }
+        if (node === currItem.link && onlySeps) {
+          areAdjacent = true;
+        }
       }
 
-      link.textContent = num;
-      link.classList.add("ref-cite");
-      link.setAttribute("data-ref", num);
-      link.setAttribute("role", "button");
-      link.setAttribute("aria-haspopup", "dialog");
-      link.setAttribute("aria-expanded", "false");
-      link.setAttribute("tabindex", "0");
-      anchors.push(link);
+      if (areAdjacent) {
+        currentCluster.push(currItem);
+      } else {
+        clusters.push(currentCluster);
+        currentCluster = [currItem];
+      }
+    }
+    clusters.push(currentCluster);
+
+    var anchors = [];
+
+    clusters.forEach(function(cluster){
+      var firstLink = cluster[0].link;
+      var lastLink = cluster[cluster.length - 1].link;
+      var parent = firstLink.parentNode;
+      if (!parent) return;
+
+      // Limpa colchetes e espaços antes da primeira citação do grupo
+      var prev = firstLink.previousSibling;
+      if (prev && prev.nodeType === Node.TEXT_NODE) {
+        var sPrev = prev.textContent;
+        while (sPrev.length > 0) {
+          var lastCh = sPrev.charAt(sPrev.length - 1);
+          if (lastCh === "[" || /\s/.test(lastCh)) {
+            sPrev = sPrev.slice(0, -1);
+          } else {
+            break;
+          }
+        }
+        prev.textContent = sPrev;
+        if (!prev.textContent) {
+          parent.removeChild(prev);
+        }
+      }
+
+      // Limpa colchetes e espaços após a última citação do grupo
+      var next = lastLink.nextSibling;
+      if (next && next.nodeType === Node.TEXT_NODE) {
+        var sNext = next.textContent;
+        while (sNext.charAt(0) === "]") {
+          sNext = sNext.slice(1);
+        }
+        if (/^\s+[.,;:!?]/.test(sNext)) {
+          sNext = sNext.replace(/^\s+/, "");
+        }
+        next.textContent = sNext;
+        if (!next.textContent) {
+          parent.removeChild(next);
+        }
+      }
+
+      // Remove nós de separação intermediários do parent (ex: "], [")
+      for (var c = 0; c < cluster.length - 1; c++) {
+        var a = cluster[c].link;
+        var b = cluster[c + 1].link;
+        var middle = a.nextSibling;
+        while (middle && middle !== b) {
+          var toRemove = middle;
+          middle = middle.nextSibling;
+          if (toRemove.parentNode) {
+            toRemove.parentNode.removeChild(toRemove);
+          }
+        }
+      }
+
+      // Cria contêiner do grupo em superscript
+      var group = document.createElement("span");
+      group.className = "ref-cite-group";
+      parent.insertBefore(group, firstLink);
+
+      cluster.forEach(function(item, idx){
+        if (idx > 0) {
+          var sep = document.createElement("span");
+          sep.className = "ref-cite-sep";
+          sep.textContent = ", ";
+          group.appendChild(sep);
+        }
+
+        var link = item.link;
+        link.textContent = item.num;
+        link.classList.add("ref-cite");
+        link.setAttribute("data-ref", item.num);
+        link.setAttribute("role", "button");
+        link.setAttribute("aria-haspopup", "dialog");
+        link.setAttribute("aria-expanded", "false");
+        link.setAttribute("tabindex", "0");
+        group.appendChild(link);
+        anchors.push(link);
+      });
     });
 
     if (anchors.length === 0) return;

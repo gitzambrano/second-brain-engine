@@ -14,6 +14,9 @@
   legibilityStyle.id = 'sb-essay-legibility-fixes';
   legibilityStyle.textContent = [
     '.ref-cite{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif!important;}',
+    '.ref-cite-group{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif!important;font-size:.78em!important;line-height:0!important;vertical-align:super!important;white-space:nowrap!important;}',
+    '.ref-cite-group .ref-cite{font-size:inherit!important;line-height:inherit!important;vertical-align:baseline!important;padding:0 .04em!important;}',
+    '.ref-cite-sep{font-family:inherit!important;font-size:inherit!important;line-height:inherit!important;vertical-align:baseline!important;color:var(--gold)!important;font-weight:600!important;margin-right:.12em!important;}',
     '.content h5{font-family:var(--font-display);font-size:1rem;font-weight:700;margin:1.55rem 0 .5rem;color:color-mix(in srgb,var(--text-bright) 58%,var(--text-dim));}',
     'mjx-container:not([display="true"]){vertical-align:-.5em;font-size:90%;}',
     '@media (max-width:640px){mjx-container[display="true"]{font-size:90%;}}',

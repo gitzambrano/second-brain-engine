@@ -119,3 +119,24 @@ Nota de rodapé solta[^1].
 
     assert {"HEADING_WITH_LINK", "STRAY_PLATFORM_SYNTAX", "CALLOUT_DUPLICATE", "REDUNDANT_TABLE_IMAGE"} <= codes
 
+
+def test_unclosed_blocks_and_table_pipes_and_empty_callouts(mini_brain):
+    _insert_before_references(mini_brain, """
+| Coluna 1 | Coluna 2 |
+|---|---|
+| A | B [[#Referências|[1]]] |
+
+> [!note]
+
+```python
+x = 1
+
+$$
+y = 2
+""")
+
+    _proc, codes = _codes(mini_brain)
+
+    assert {"TABLE_PIPE_UNESCAPED", "CALLOUT_EMPTY", "UNCLOSED_CODE_BLOCK", "UNCLOSED_MATH_BLOCK"} <= codes
+
+

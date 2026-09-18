@@ -138,6 +138,12 @@ def check_callout_contracts(body: str, add) -> None:
             add("WARNING", "CALLOUT_ABSTRACT_PER_SECTION",
                 f"seção '{section}' tem {count} callouts [!abstract] (máximo recomendado: 1)")
 
+    # Detecção de callouts vazios
+    for ln, k, parts in callouts:
+        if not "".join(parts).strip():
+            add("WARNING", "CALLOUT_EMPTY",
+                f"linha {ln}: callout [!{k}] vazio (sem título e sem corpo de texto)")
+
     # Detecção de callouts duplicados ou repetitivos dentro do mesmo essay
     for idx1, (ln1, k1, parts1) in enumerate(callouts):
         txt1 = " ".join(parts1)
@@ -584,6 +590,20 @@ def check_essay(filepath: Path) -> dict:
         add("CRITICAL", "CONTROL_CHAR",
             f"{len(controle)} caractere(s) de controle invisível(is) na prosa: "
             f"{onde}{resto} — quebram a exportação para PDF")
+
+    # Delimitadores de blocos desbalanceados (code fences e display math)
+    fence_lines = [ln for ln in content.splitlines() if re.match(r"^(?:>\s*)?```", ln)]
+    if len(fence_lines) % 2 != 0:
+        add("CRITICAL", "UNCLOSED_CODE_BLOCK",
+            f"{len(fence_lines)} delimitador(es) ``` encontrados — bloco de código não fechado "
+            "engole o restante do ensaio")
+
+    clean_for_math = re.sub(r"(`{3,})[\s\S]*?\1", "", content)
+    clean_for_math = re.sub(r"`[^`\n]+`", "", clean_for_math)
+    math_runs = len(re.findall(r"(?<!\\)\$\$", clean_for_math))
+    if math_runs % 2 != 0:
+        add("CRITICAL", "UNCLOSED_MATH_BLOCK",
+            f"{math_runs} delimitador(es) $$ encontrados — bloco de matemática em display não fechado")
 
     if not fm_text:
         add("CRITICAL", "NO_FRONTMATTER", "Sem YAML frontmatter")
@@ -1098,6 +1118,17 @@ def check_essay(filepath: Path) -> dict:
         add("WARNING", "DOUBLE_SPACES",
             f"Espaços duplos em {len(double_spaces)} linha(s): {double_spaces[:5]}"
             + ("..." if len(double_spaces) > 5 else ""))
+
+    # -----------------------------------------------------------------------
+    # 10b. Integridade de tabelas Markdown
+    # -----------------------------------------------------------------------
+    for i, line in enumerate(lines_clean):
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            if re.search(r"\[\[[^\]]*?(?<!\\)\|[^\]]*?\]\]", stripped):
+                add("ERROR", "TABLE_PIPE_UNESCAPED",
+                    f"linha {i+1}: wikilink com pipe não-escapado ('|') dentro de tabela divide a célula indevidamente; "
+                    "escape como '\\|' ou use link Markdown '[N](#slug)'")
 
     # -----------------------------------------------------------------------
     # 11. Linhas em branco excessivas (>=3 consecutivas)
