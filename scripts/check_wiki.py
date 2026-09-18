@@ -41,6 +41,7 @@ import json
 import re
 import subprocess
 import sys
+from difflib import SequenceMatcher
 from math import ceil
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
@@ -70,7 +71,7 @@ CALLOUT_HEADER_RE = re.compile(
     r"^(?:>\s*)+\[!([A-Za-z0-9_-]+)\](?:[+-])?(?:\s+(.*))?$"
 )
 CALLOUT_HEADING_RE = re.compile(r"^(?:>\s*)+#{2,3}\s+")
-FIGURE_RE = re.compile(r"!\[[^\]]*\]\(([^\s\)]+)(?:\s+[^\)]*)?\)")
+FIGURE_RE = re.compile(r"!\[([^\]]*)\]\(([^\s\)]+)(?:\s+[^\)]*)?\)")
 
 
 def normalize_url(url: str) -> str:
@@ -88,6 +89,9 @@ def check_callout_contracts(body: str, add) -> None:
     active_h2 = "(antes do primeiro H2)"
     abstract_counts: dict[str, int] = {}
     callout_count = 0
+    callouts: list[tuple[int, str, list[str]]] = []
+    in_callout = False
+
     for lineno, line in enumerate(strip_fences(body).splitlines(), start=1):
         h2 = re.match(r"^##\s+(.+)$", line)
         if h2:
@@ -97,9 +101,19 @@ def check_callout_contracts(body: str, add) -> None:
                 f"linha {lineno}: ##/### dentro de callout quebra o Sumário; use ####")
         match = CALLOUT_HEADER_RE.match(line)
         if not match:
+            if in_callout:
+                if line.strip().startswith(">"):
+                    cleaned = re.sub(r"^(?:>\s*)+", "", line).strip()
+                    if cleaned:
+                        callouts[-1][2].append(cleaned)
+                else:
+                    in_callout = False
             continue
+        in_callout = True
         callout_count += 1
         kind, title = match.group(1).casefold(), (match.group(2) or "").strip()
+        parts = [title] if title else []
+        callouts.append((lineno, kind, parts))
         if kind in CALLOUT_ALIASES:
             add("ERROR", "CALLOUT_ALIAS", f"linha {lineno}: alias [!{kind}] proibido")
         elif kind not in CALLOUT_TYPES:
@@ -124,20 +138,45 @@ def check_callout_contracts(body: str, add) -> None:
             add("WARNING", "CALLOUT_ABSTRACT_PER_SECTION",
                 f"seção '{section}' tem {count} callouts [!abstract] (máximo recomendado: 1)")
 
+    # Detecção de callouts duplicados ou repetitivos dentro do mesmo essay
+    for idx1, (ln1, k1, parts1) in enumerate(callouts):
+        txt1 = " ".join(parts1)
+        if len(txt1) < 40:
+            continue
+        for ln2, k2, parts2 in callouts[idx1 + 1:]:
+            txt2 = " ".join(parts2)
+            if len(txt2) < 40:
+                continue
+            ratio = SequenceMatcher(None, txt1.lower(), txt2.lower()).ratio()
+            if ratio >= 0.8:
+                add("WARNING", "CALLOUT_DUPLICATE",
+                    f"linha {ln2}: callout [!{k2}] repete conteúdo do callout da linha {ln1} (similaridade: {int(ratio*100)}%)")
+
 
 def check_figure_contracts(body: str, slug: str, add) -> None:
-    """Check figure filename, ordering and adjacent Markdown captions."""
+    """Check figure filename, ordering, table redundancy and adjacent Markdown captions."""
     lines = strip_fences(body).splitlines()
     numbers: list[int] = []
     name_re = re.compile(rf"^{re.escape(slug)}_fig(\d+)\.[A-Za-z0-9]+$")
+    has_native_table = bool(re.search(r"(?m)^\|.*\|.*\|", body))
+
     for index, line in enumerate(lines):
         match = FIGURE_RE.search(line)
         if not match:
             continue
-        target = match.group(1).strip("<>")
+        alt = match.group(1).strip()
+        target = match.group(2).strip("<>")
         if target.startswith(("http://", "https://", "data:")):
             continue
         filename = Path(target).name
+        name_lower = filename.lower()
+        alt_lower = alt.lower()
+
+        # Detecção de imagens de tabela que duplicam tabela nativa em Markdown
+        if has_native_table and ("tabela" in name_lower or "table" in name_lower or "tabela" in alt_lower or "table" in alt_lower):
+            add("WARNING", "REDUNDANT_TABLE_IMAGE",
+                f"linha {index + 1}: imagem de tabela '{filename}' em ensaio que já possui tabela nativa em Markdown")
+
         name_match = name_re.fullmatch(filename)
         if not name_match:
             add("WARNING", "FIGURE_FILENAME",
@@ -642,13 +681,17 @@ def check_essay(filepath: Path) -> dict:
                 f"Título H1 contém '{bad_char}' — verifique o escape no export_essay_pdf.py")
 
     # -----------------------------------------------------------------------
-    # 3. Espaçamento de headings
+    # 3. Espaçamento e integridade de headings
     # -----------------------------------------------------------------------
     heading_spacing_errors = []
     for i, line in enumerate(lines_clean):
         if re.match(r"^#{1,6} ", line):
             if i == h1_idx:
                 continue
+            if re.search(r"\[.*\]", line):
+                add("ERROR", "HEADING_WITH_LINK",
+                    f"linha {i+1}: heading contém colchetes/links ('{line.strip()[:60]}') — "
+                    "quebra compilação LaTeX e âncoras; coloque links na prosa abaixo")
             next_i = i + 1
             if next_i < len(lines):
                 nxt = lines[next_i].strip()
@@ -1219,6 +1262,18 @@ def check_essay(filepath: Path) -> dict:
     if html_tags:
         add("ERROR", "HTML_RESIDUAL",
             f"{len(html_tags)} tag(s) HTML residuais: {html_tags[:3]}")
+
+    # -----------------------------------------------------------------------
+    # 14b. Resíduos de sintaxe de plataformas externas (Substack, Pandoc, etc.)
+    # -----------------------------------------------------------------------
+    for i, line in enumerate(lines_clean):
+        stripped = line.strip()
+        if re.match(r"^:::\s*\w*", stripped):
+            add("ERROR", "STRAY_PLATFORM_SYNTAX",
+                f"linha {i+1}: resíduo de div/bloco do Substack ('{stripped[:40]}') — use blockquote/callout nativo")
+        if re.search(r"\[\^\d+\]", stripped):
+            add("ERROR", "STRAY_PLATFORM_SYNTAX",
+                f"linha {i+1}: nota de rodapé não-canônica ('{stripped[:40]}') — use [[#Referências|[N]]]")
 
     # -----------------------------------------------------------------------
     # 15. Símbolos residuais

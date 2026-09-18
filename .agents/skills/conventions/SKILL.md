@@ -282,6 +282,7 @@ Uma entrada por parágrafo, numerada `[N]` na ordem de citação.
 
 Regras:
 
+- Citações no corpo usam `[[#Referências|[N]]]` imediatamente após a menção, obra ou link externo; renderizam como numeral em superscript em fonte sem serifa simples e abrem popup interativo com a referência completa no HTML e no site.
 - Título sempre em itálico.
 - Até 3 autores: liste todos. Acima disso: primeiro autor + `et al.`.
 - Preserve subtítulo quando existir.

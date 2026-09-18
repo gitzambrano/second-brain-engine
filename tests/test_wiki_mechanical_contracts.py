@@ -87,3 +87,35 @@ def test_updated_metadata_contract_distinguishes_substantive_and_metadata_diffs(
 
     assert classify_updated_diff(substantive) == "BODY_CHANGED_UPDATED_UNCHANGED"
     assert classify_updated_diff(metadata_only) == "UPDATED_CHANGED_WITHOUT_BODY"
+
+
+def test_new_mechanical_contracts_report_latex_and_platform_residuals(mini_brain):
+    _insert_before_references(mini_brain, """
+### Heading Proibido com Link [Link](https://example.com)
+
+::: substack-custom-div
+conteúdo
+:::
+
+Nota de rodapé solta[^1].
+
+| Coluna A | Coluna B |
+|---|---|
+| 1 | 2 |
+
+![tabela redundante](../assets/kitchen-sink_fig3.png)
+*Figura 3. Tabela redundante.*
+
+> [!note] Experimento Mental
+> Este é um texto razoavelmente longo para testar a detecção de duplicação de callout mecânico.
+> Repetindo o mesmo bloco para garantir tamanho superior ao limiar mínimo de quarenta caracteres.
+
+> [!abstract] Experimento Mental
+> Este é um texto razoavelmente longo para testar a detecção de duplicação de callout mecânico.
+> Repetindo o mesmo bloco para garantir tamanho superior ao limiar mínimo de quarenta caracteres.
+""")
+
+    _proc, codes = _codes(mini_brain)
+
+    assert {"HEADING_WITH_LINK", "STRAY_PLATFORM_SYNTAX", "CALLOUT_DUPLICATE", "REDUNDANT_TABLE_IMAGE"} <= codes
+
