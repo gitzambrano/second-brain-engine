@@ -59,5 +59,6 @@ Thumbs.db
 # alguns MB de PNG num repositório que não guarda corpus.
 /tmp/
 /substack/
+/scratch/
 .worktrees/
 scratch*.png
