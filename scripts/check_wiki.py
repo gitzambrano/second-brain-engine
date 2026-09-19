@@ -1341,6 +1341,61 @@ def check_essay(filepath: Path) -> dict:
             add("WARNING", "LOOSE_CHAPTER_LABEL",
                 f"Possível label de capítulo solto (linha {i+1}): '{stripped}'")
 
+    # -----------------------------------------------------------------------
+    # 22. Auditoria de blocos de código cercados (```...```)
+    # -----------------------------------------------------------------------
+    PROGRAMMING_LANGS = {
+        "python", "py", "bash", "sh", "powershell", "ps1", "json", "yaml", "yml",
+        "javascript", "js", "typescript", "ts", "c", "cpp", "html", "css", "sql", "rust", "go", "diff", "mermaid"
+    }
+    def is_real_tree(ls: list[str]) -> bool:
+        has_branches = any(l.lstrip().startswith(("├── ", "└── ", "|-- ", "`-- ")) or "├── " in l or "└── " in l for l in ls)
+        has_box_enclosure = any(l.rstrip().endswith(("│", "┤", "┐", "┘", "║", "╣", "╗", "╝")) for l in ls)
+        has_top_border = any(l.strip().startswith(("┌", "╔", "+--")) and l.strip().endswith(("┐", "╗", "--+")) for l in ls)
+        if has_box_enclosure or has_top_border:
+            return False
+        return has_branches
+
+    box_chars = set("┌┐└┘├┤┬┴┼")
+
+    for m in re.finditer(r"```([a-zA-Z0-9_-]*)[^\n]*\n(.*?)```", content, re.DOTALL):
+        lang = m.group(1).strip().lower()
+        body = m.group(2)
+        start_pos = m.start()
+        ln = content.count("\n", 0, start_pos) + 1
+        lines = [l for l in body.splitlines() if l.strip()]
+
+        if lang in PROGRAMMING_LANGS:
+            continue
+
+        if is_real_tree(lines):
+            continue
+
+        is_filesystem = any(re.search(r"^(?:[a-zA-Z0-9_.-]+/)+[a-zA-Z0-9_.-]*$", l.strip()) for l in lines)
+        if is_filesystem:
+            continue
+
+        # 1. Caixa ASCII fora de árvores
+        if any(any(c in box_chars for c in l) for l in lines):
+            add("WARNING", "CODE_BLOCK_ASCII_BOX",
+                f"linha {ln}: bloco de código emula caixa/diagrama com caracteres ASCII (┌, ┐, └, ┘) — converta para callout Obsidian (> [!note]) ou diagrama Mermaid")
+
+        # 2. Equações matemáticas dentro de bloco de código sem linguagem ou em text
+        if any(re.search(pat, body) for pat in [r"\b[pP]\s*=\s*P\(", r"\b[tT]_\d\s*=", r"\bH₀\b", r"\bH₁\b", r"\bPoder\s*=", r"\bdx/dt\b", r"\\ln\b", r"\\int\b", r"\bClippedReLU\b"]):
+            sample = lines[0][:40] if lines else ""
+            add("WARNING", "CODE_BLOCK_MATH_IN_FENCE",
+                f"linha {ln}: bloco de código contém formulação matemática ('{sample}...') — use LaTeX canônico ($$...$$) ou lista com math inline ($)")
+
+        # 3. Bloco sem linguagem que não é árvore e tem setas de fluxo
+        has_h_arrow = not lang and any(re.search(r"(?:───+>|---+>|===+>|\s+-->\s+|\s+->\s+)", l) for l in lines)
+        has_v_arrow = not lang and any(
+            (lines[i].strip() in ("│", "|", "║") and lines[i+1].strip() in ("▼", "v", "V", "↓", "⇓"))
+            for i in range(len(lines)-1)
+        )
+        if (has_h_arrow or has_v_arrow):
+            add("WARNING", "CODE_BLOCK_ASCII_ARROWS",
+                f"linha {ln}: bloco de código usa setas ASCII para fluxograma — prefira diagrama Mermaid ou lista enumerada")
+
     return {"name": name, "issues": issues}
 
 
