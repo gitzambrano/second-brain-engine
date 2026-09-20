@@ -333,10 +333,13 @@ Vale para texto novo ou reescrito pela wiki. Texto original importado só muda s
 8. Use travessões raramente: no máximo 1 a 2 em todo o corpo de um essay. Não os use como substituto recorrente de vírgulas, parênteses ou dois-pontos.
 9. Parênteses apenas para informação curta. Evite atalhos tipográficos como `/`, `~`, `--`, `5-30`, `Cap.`/`Sec.`, `e.g.` e `i.e.`.
 10. Elimine metadiscurso dispensável: não anuncie o que o texto fará, acabou de fazer ou pretende demonstrar quando a própria argumentação já o mostra.
-11. Evite frases de efeito, tríades, paralelismos e contrastes simétricos usados apenas para ritmo ou ênfase. Use-os somente quando cada elemento expressar uma distinção necessária ao argumento.
-12. Não atribua autoridade a fontes vagas. `Estudos mostram` ou `especialistas afirmam` exigem fonte identificável.
-13. Preserve a voz do autor. Estas regras orientam revisão editorial, não substituição mecânica de estilo.
-14. Escreva apenas o estado final do argumento. Não mencione versões anteriores, correções, pedidos do Usuário ou alternativas fora do texto final.
+11. Evite frases de efeito, tríades, paralelismos e contrastes simétricos usados apenas para ritmo ou ênfase. Proibida a fórmula antitética artificial de IA: *“Não se trata (apenas) de X, trata-se de Y”* ou *“Não é sobre X, é sobre Y”*.
+12. Varie intencionalmente a extensão dos períodos: alterne frases curtas e incisivas (3 a 8 palavras) com frases médias, evitando a cadência monótona e uniforme típica de modelos de linguagem.
+13. Não mergulhe imediatamente em tópicos com marcadores (`-`) para responder tensões conceituais abertas; desenvolva o argumento em prosa contínua.
+14. Não use a muleta de dois-pontos em títulos no molde artificial `Tema Geral: Subtítulo Prolixo`.
+15. Não atribua autoridade a fontes vagas. `Estudos mostram` ou `especialistas afirmam` exigem fonte identificável.
+16. Preserve a voz do autor. Estas regras orientam revisão editorial, não substituição mecânica de estilo.
+17. Escreva apenas o estado final do argumento. Não mencione versões anteriores, correções, pedidos do Usuário ou alternativas fora do texto final.
 
 `check_wiki.py` cobre as regras mecânicas; `/polish` e `/proofread` cobrem as editoriais.
 
@@ -347,10 +350,10 @@ Vale para texto novo ou reescrito pela wiki. Texto original importado só muda s
 3. Prefira voz ativa quando o agente for conhecido.
 4. Use gerúndio somente quando sua relação temporal, causal ou lógica for clara e necessária; elimine gerúndio ornamental.
 5. Evite `isso/isto` com referente ambíguo e simplifique cadeias longas de `de/da/do`.
-6. Não use linguagem promocional ou superlativos sem medida objetiva. Evite termos como `revolucionário`, `extraordinário`, `fundamental`, `crucial`, `impressionante` ou `dramático` apenas para intensificar a afirmação.
+6. Não use linguagem promocional, superlativos ou clichês de IA sem medida objetiva. São estritamente proibidos termos como `divisor de águas`, `revolucionário`, `extraordinário`, `fundamental`, `crucial`, `impressionante`, `dramático`, `mergulhar em`, `vale a pena notar`, `no mundo moderno`, `na era digital`, `rica tapeçaria` ou `serve como testamento`.
 7. Não aumente a importância de um resultado além do que a evidência permite. Descreva o efeito e sua consequência técnica diretamente.
-8. Evite qualificadores vagos como `possivelmente`, `potencialmente`, `de certa forma`, `em grande medida` ou `pode-se dizer` quando não expressarem incerteza real. Quando houver incerteza, diga sua origem: hipótese, limitação dos dados, aproximação do modelo ou evidência conflitante.
-9. Não encerre uma seção com conclusão genérica que não acrescente informação.
+8. Evite qualificadores vagos e hesitações fracas como `possivelmente`, `potencialmente`, `de certa forma`, `em grande medida` ou `pode-se dizer` quando não expressarem incerteza real. Quando houver incerteza, diga sua origem: hipótese, limitação dos dados, aproximação do modelo ou evidência conflitante.
+9. Não encerre uma seção com conclusão genérica que não acrescente informação (ex: *“o futuro dirá”*, *“apenas o tempo dirá”*).
 
 ## Formato do índice (`wiki/index.md`)
 
