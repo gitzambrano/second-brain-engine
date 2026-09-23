@@ -261,7 +261,7 @@ def site_chrome(essay, related) -> str:
     <a href="../graph.html">Grafo</a>
     <button class="sb-subscribe" type="button" id="sbSubscribe" aria-haspopup="dialog"
             aria-controls="sbSubscribeDialog">Assinar</button>
-    <button type="button" id="sbTheme" aria-label="Alternar tema" aria-pressed="false"><span aria-hidden="true">◐</span></button>
+    <button type="button" id="sbTheme" aria-label="Mudar para tema sépia"><span class="theme-disc" aria-hidden="true"></span></button>
   </nav>
 </header>
 <dialog class="sb-subscribe-dialog" id="sbSubscribeDialog" aria-labelledby="sbSubscribeTitle">
@@ -337,7 +337,7 @@ def render(slug: str, output: Path) -> None:
         'try{t=localStorage.getItem("sb-theme")}catch(e){}'
         # Sem escolha guardada, claro. Seguir o `prefers-color-scheme` abria o
         # site inteiro no escuro em qualquer aparelho com o sistema escuro.
-        'if(!t)t="light";'
+        'if(["light","sepia","dark"].indexOf(t)<0)t="light";'
         'document.documentElement.dataset.theme=t'
         '})();</script>'
     )
