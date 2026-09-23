@@ -1,19 +1,38 @@
 // Controle de tema compartilhado. O valor inicial é aplicado por um trecho
 // inline no <head> de cada página, para a primeira pintura já sair na paleta
-// certa. Este arquivo também aplica um pequeno reparo pós-montagem no formulário
-// do Kit, que injeta estilos próprios depois do CSS do site.
+// certa. O seletor percorre claro → sépia → escuro e persiste a escolha.
 (function () {
   var root = document.documentElement;
+  var THEMES = ['light', 'sepia', 'dark'];
+  var NAMES = { light: 'claro', sepia: 'sépia', dark: 'escuro' };
+  var COLORS = { light: '#ffffff', sepia: '#f4eedf', dark: '#090909' };
 
+  /* Fallback para HTML público já publicado antes do terceiro tema. Os fontes
+     CSS também definem a paleta, então builds novos não dependem deste bloco. */
+  var compatStyle = document.createElement('style');
+  compatStyle.id = 'sb-three-theme-base';
+  compatStyle.textContent = "\n:root[data-theme=\"sepia\"]{\n  --bg:#f4eedf;--bg-soft:#f7f1e6;--panel:#fbf7ed;--panel-2:#eee5d5;\n  --surface:#faf5e9;--surface2:#eee5d5;--border:#d8cdbc;\n  --text:#3a342d;--text-strong:#241f1a;--text-bright:#241f1a;\n  --muted:#746b60;--faint:#766a5e;--text-dim:#746b60;\n  --line:rgba(74,62,48,.15);--line-strong:rgba(74,62,48,.28);\n  --accent:#75572f;--accent-soft:rgba(117,87,47,.10);--accent-dim:#5d4223;\n  --gold:#75572f;--gold-dim:#5d4223;--rust:#8e4636;--rust-bright:#9c4838;--amber:#865a27;\n  --callout-note:#746b60;--note-bg:#eee5d5;--callout-abstract:#77572f;\n  --callout-info:#596b78;--callout-todo:#865a27;--callout-success:#486f50;\n  --callout-question:#77572f;--callout-warning:#8c5f2a;--callout-failure:#8e4636;\n  --callout-danger:#98493e;--callout-bug:#8f4337;--callout-example:#6e536f;\n  --callout-quote:#746b60;--quote-bg:#eee5d5;--box-bg:#faf5e9;\n  --tab-mix:4%;--verdict-mix:6%;--box-verdict-bg:#eee5d5;--th-bg:#e9decc;\n  --sb-bg:#f4eedf;--sb-surface:#fbf7ed;--sb-surface-soft:#f7f1e6;\n  --sb-text:#241f1a;--sb-muted:#746b60;--sb-line:rgba(74,62,48,.15);\n  --sb-line-strong:rgba(74,62,48,.28);--sb-primary:#75572f;\n  --sb-primary-soft:rgba(117,87,47,.10);--sb-shadow:0 20px 56px rgba(73,54,32,.12);\n}\n:root[data-theme=\"sepia\"] .masthead{background:#f4eedf!important;color:var(--text)!important;border-bottom-color:var(--border)!important}\n:root[data-theme=\"sepia\"] .masthead .hero-title{color:var(--text-bright)!important}\n:root[data-theme=\"sepia\"] .cover-map{background-image:url(\"cover-light.png\");background-color:var(--bg);background-blend-mode:multiply}\n.theme-disc{width:19px;height:19px;display:block;flex:none;border-radius:50%;background:conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);border:1px solid color-mix(in srgb,var(--text) 30%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--bg) 45%,transparent)}\n";
+  document.head.appendChild(compatStyle);
+
+  function normalize(theme) {
+    return THEMES.indexOf(theme) < 0 ? 'light' : theme;
+  }
+  function nextTheme(theme) {
+    var at = THEMES.indexOf(normalize(theme));
+    return THEMES[(at + 1) % THEMES.length];
+  }
   function apply(theme, persist) {
+    theme = normalize(theme);
     root.dataset.theme = theme;
+    var next = nextTheme(theme);
     var button = document.getElementById('themeToggle');
     if (button) {
-      button.setAttribute('aria-pressed', String(theme === 'light'));
-      button.setAttribute(
-        'aria-label', theme === 'light' ? 'Mudar para tema escuro' : 'Mudar para tema claro'
-      );
+      button.removeAttribute('aria-pressed');
+      button.setAttribute('aria-label', 'Mudar para tema ' + NAMES[next]);
+      button.setAttribute('title', 'Tema ' + NAMES[theme] + ' · próximo: ' + NAMES[next]);
     }
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', COLORS[theme]);
     if (persist) {
       try { localStorage.setItem('sb-theme', theme); } catch (e) { /* private mode */ }
     }
@@ -22,7 +41,7 @@
   apply(root.dataset.theme || 'light', false);
 
   document.getElementById('themeToggle')?.addEventListener('click', function () {
-    apply(root.dataset.theme === 'dark' ? 'light' : 'dark', true);
+    apply(nextTheme(root.dataset.theme), true);
   });
 
   /* O Kit monta o formulário de forma assíncrona e pode aplicar largura própria
