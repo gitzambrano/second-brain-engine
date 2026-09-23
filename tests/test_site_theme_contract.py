@@ -36,7 +36,7 @@ def test_all_three_themes_are_defined_in_every_public_stylesheet():
     for name in ("essay-theme.css", "site.css"):
         css = (SRC / name).read_text(encoding="utf-8").lower()
         assert "#2f5fb0" in css, name
-        assert "#f4eedf" in css, name
+        assert "#fbf8f1" in css, name
         assert 'data-theme="sepia"' in css, name
         assert "#c9a45c" in css, name
         assert "#ffffff" in css, name
