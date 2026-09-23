@@ -60,17 +60,36 @@
 
   /* --- Theme --------------------------------------------------------------- */
   var themeButton = document.getElementById('sbTheme');
+  var themes = ['light', 'sepia', 'dark'];
+  var themeNames = { light: 'claro', sepia: 'sépia', dark: 'escuro' };
+
+  function normalizeTheme(theme) {
+    return themes.indexOf(theme) < 0 ? 'light' : theme;
+  }
+  function nextTheme(theme) {
+    var at = themes.indexOf(normalizeTheme(theme));
+    return themes[(at + 1) % themes.length];
+  }
   function applyTheme(theme, persist) {
+    theme = normalizeTheme(theme);
     root.dataset.theme = theme;
-    if (themeButton) themeButton.setAttribute('aria-pressed', String(theme === 'light'));
+    if (themeButton) {
+      if (!themeButton.querySelector('.theme-disc')) {
+        themeButton.innerHTML = '<span class="theme-disc" aria-hidden="true"></span>';
+      }
+      var next = nextTheme(theme);
+      themeButton.removeAttribute('aria-pressed');
+      themeButton.setAttribute('aria-label', 'Mudar para tema ' + themeNames[next]);
+      themeButton.setAttribute('title', 'Tema ' + themeNames[theme] + ' · próximo: ' + themeNames[next]);
+    }
     if (persist) {
       try { localStorage.setItem('sb-theme', theme); } catch (e) { /* private mode */ }
     }
   }
-  applyTheme(root.dataset.theme || 'dark', false);
+  applyTheme(root.dataset.theme || 'light', false);
   if (themeButton) {
     themeButton.addEventListener('click', function () {
-      applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark', true);
+      applyTheme(nextTheme(root.dataset.theme), true);
     });
   }
 
