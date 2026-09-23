@@ -5,6 +5,7 @@
    - scripts/essay_template.html owns the essay body and components.
    - This file only maps theme tokens and styles Atlas-only chrome.
    - Light = white + Atlas blue.
+   - Sepia = warm paper + softened contrast.
    - Dark = near-black + restrained gold.
    ========================================================================== */
 
@@ -37,6 +38,52 @@
   --sb-primary:#2f5fb0;
   --sb-primary-soft:rgba(47,95,176,.09);
   --sb-shadow:0 18px 54px rgba(24,45,78,.12);
+}
+
+:root[data-theme="sepia"] {
+  --bg:#f4eedf;
+  --surface:#faf5e9;
+  --surface2:#eee5d5;
+  --border:#d8cdbc;
+  --text:#3a342d;
+  --text-dim:#746b60;
+  --text-bright:#241f1a;
+  --gold:#75572f;
+  --gold-dim:#5d4223;
+  --rust:#8e4636;
+  --rust-bright:#9c4838;
+  --accent:#596b78;
+  --amber:#865a27;
+  --callout-note:#746b60;
+  --note-bg:#eee5d5;
+  --callout-abstract:#77572f;
+  --callout-info:#596b78;
+  --callout-todo:#865a27;
+  --callout-success:#486f50;
+  --callout-question:#77572f;
+  --callout-warning:#8c5f2a;
+  --callout-failure:#8e4636;
+  --callout-danger:#98493e;
+  --callout-bug:#8f4337;
+  --callout-example:#6e536f;
+  --callout-quote:#746b60;
+  --quote-bg:#eee5d5;
+  --box-bg:#faf5e9;
+  --tab-mix:4%;
+  --verdict-mix:6%;
+  --box-verdict-bg:#eee5d5;
+  --th-bg:#e9decc;
+
+  --sb-bg:#f4eedf;
+  --sb-surface:#fbf7ed;
+  --sb-surface-soft:#f7f1e6;
+  --sb-text:#241f1a;
+  --sb-muted:#746b60;
+  --sb-line:rgba(74,62,48,.15);
+  --sb-line-strong:rgba(74,62,48,.28);
+  --sb-primary:#75572f;
+  --sb-primary-soft:rgba(117,87,47,.10);
+  --sb-shadow:0 20px 56px rgba(73,54,32,.12);
 }
 
 :root[data-theme="dark"] {
@@ -85,6 +132,12 @@ body{padding-top:68px;}
   color:var(--text) !important;
   border-bottom:1px solid var(--border);
 }
+:root[data-theme="sepia"] .masthead{
+  background:#f4eedf !important;
+  color:var(--text) !important;
+  border-bottom:1px solid var(--border);
+}
+:root[data-theme="sepia"] .masthead .hero-title{color:var(--text-bright) !important;}
 :root[data-theme="dark"] .masthead{
   background:#090909 !important;
   color:var(--text) !important;
@@ -157,6 +210,12 @@ body{padding-top:68px;}
   font:650 12.5px/1 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;
 }
 #sbTheme{border-color:var(--sb-line);}
+#sbTheme .theme-disc{
+  width:19px;height:19px;display:block;border-radius:50%;
+  background:conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);
+  border:1px solid color-mix(in srgb,var(--sb-text) 30%,transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--sb-bg) 45%,transparent);
+}
 .sb-subscribe-dialog{
   width:min(430px,calc(100% - 28px));margin:auto;padding:0;border:1px solid var(--sb-line-strong);
   border-radius:16px;background:var(--sb-surface);color:var(--sb-text);overflow:auto;
