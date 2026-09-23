@@ -40,7 +40,7 @@
 .topnav .nav-link.active{color:var(--text)!important;font-weight:600!important}
 .subscribe-cta{color:var(--text)!important;border-radius:10px!important}
 .icon-button{background:var(--accent-soft)!important}
-.sb-brand{color:var(--sb-text-strong)!important;font-size:14px!important;line-height:1.6!important}
+.sb-brand{color:var(--sb-text-strong)!important;line-height:1.6!important}
 .sb-nav a{color:var(--sb-text)!important}
 .sb-nav a{font-weight:500!important}
 .sb-nav a:hover{color:var(--sb-text-strong)!important}
