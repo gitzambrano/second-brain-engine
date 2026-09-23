@@ -31,14 +31,29 @@ def test_public_overlay_does_not_restyle_canonical_components():
         assert selector not in css, selector
 
 
-def test_both_themes_are_defined_in_every_public_stylesheet():
-    """Light = white paper + editorial blue; dark = near black + gold."""
+def test_all_three_themes_are_defined_in_every_public_stylesheet():
+    """Light, warm sepia and dark are first-class palettes."""
     for name in ("essay-theme.css", "site.css"):
         css = (SRC / name).read_text(encoding="utf-8").lower()
         assert "#2f5fb0" in css, name
+        assert "#f4eedf" in css, name
+        assert 'data-theme="sepia"' in css, name
         assert "#c9a45c" in css, name
         assert "#ffffff" in css, name
         assert "#090909" in css, name
+
+
+def test_theme_controls_cycle_light_sepia_dark():
+    theme = (SRC / "theme.js").read_text(encoding="utf-8")
+    essay = (SRC / "essay.js").read_text(encoding="utf-8")
+    index = (SRC / "index.html").read_text(encoding="utf-8")
+    renderer = (ROOT / "scripts/lib/render_public_essay.py").read_text(encoding="utf-8")
+
+    assert "['light', 'sepia', 'dark']" in theme
+    assert "['light', 'sepia', 'dark']" in essay
+    assert 'class="theme-disc"' in index
+    assert 'class="theme-disc"' in renderer
+    assert "◐" not in index
 
 
 def test_the_library_ships_a_single_stylesheet():
