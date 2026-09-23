@@ -200,18 +200,37 @@ PUBLIC_CHROME = """
     display: grid; place-items: center; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16);
     background: rgba(9,9,9,.88); backdrop-filter: blur(10px);
-    color: #e8eef7; font: 600 18px/1 Inter, system-ui, sans-serif; cursor: pointer;
+    color: #e8eef7; cursor: pointer;
   }
-  /* In the light Atlas the floating chrome inverts with it. */
+  #sb-theme .theme-disc {
+    width: 16px; height: 16px; display: block; position: relative;
+    box-sizing: border-box; overflow: hidden; border: 2px solid #111;
+    border-radius: 50%;
+    background: conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);
+  }
+  #sb-theme .theme-disc::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: repeating-conic-gradient(from -90deg,#111 0 7deg,transparent 7deg 120deg);
+    pointer-events: none;
+  }
+  /* In the light/sepia Atlas the floating chrome follows the paper. */
   :root[data-theme="light"] #sb-back,
   :root[data-theme="light"] #sb-map-switch a,
   :root[data-theme="light"] #sb-theme {
-    background: rgba(255,255,255,.9);
+    background: rgba(255,255,255,.92);
     border-color: rgba(16,28,46,.16);
     color: #101c2e;
   }
+  :root[data-theme="sepia"] #sb-back,
+  :root[data-theme="sepia"] #sb-map-switch a,
+  :root[data-theme="sepia"] #sb-theme {
+    background: rgba(255,253,248,.94);
+    border-color: rgba(74,62,48,.18);
+    color: #39342f;
+  }
   #sb-map-switch a[aria-current="page"] { color: #c9a45c; border-color: #c9a45c; }
   :root[data-theme="light"] #sb-map-switch a[aria-current="page"] { color: #2f5fb0; border-color: #2f5fb0; }
+  :root[data-theme="sepia"] #sb-map-switch a[aria-current="page"] { color: #785b38; border-color: #785b38; }
   /* The options panel must end above the floating chrome, never behind it —
      the detail card now grows with the connection lists, so its last row
      would otherwise sit under the "Second Brain Atlas" pill. */
@@ -223,11 +242,9 @@ PUBLIC_CHROME = """
     #panel { bottom: calc(64px + env(safe-area-inset-bottom)); border-radius: 14px; }
     #panel, .panel, aside { padding-bottom: 12px; }
     #sb-back, #sb-map-switch a { box-sizing:border-box; height:36px; min-height:36px; padding:0 12px; font-size:13px; }
-    #sb-theme { width:36px; height:36px; min-height:36px; padding:0; font-size:21px; line-height:1; }
+    #sb-theme { width:36px; height:36px; min-height:36px; padding:0; }
   }
-  /* Tema claro: o fundo e os controles do mapa seguem o tema do site. O
-     fundo do canvas também é pintado por JS (ver script ao final), então
-     este bloco só alinha painéis/controles que usam CSS variable. */
+  /* Paper themes: CSS chrome and Canvas background stay in sync. */
   html[data-theme="light"] {
     --bg: #ffffff;
     --panel: #ffffff;
@@ -238,6 +255,16 @@ PUBLIC_CHROME = """
     --edge-ref: #b0b8c0;
     --reference: #6b7280;
   }
+  html[data-theme="sepia"] {
+    --bg: #fbf8f1;
+    --panel: #fffdf8;
+    --panel-border: #ded5c8;
+    --ink: #39342f;
+    --ink-dim: #746b62;
+    --edge: #afa89d;
+    --edge-ref: #bbb2a6;
+    --reference: #7d7165;
+  }
   html[data-theme="light"] #search,
   html[data-theme="light"] .btn,
   html[data-theme="light"] .idx-expand,
@@ -245,33 +272,48 @@ PUBLIC_CHROME = """
   html[data-theme="light"] .idx-range input[type="number"],
   html[data-theme="light"] #idx-maturidade,
   html[data-theme="light"] .idx-read { background: #ffffff; }
+  html[data-theme="sepia"] #search,
+  html[data-theme="sepia"] .btn,
+  html[data-theme="sepia"] .idx-expand,
+  html[data-theme="sepia"] #idx-search,
+  html[data-theme="sepia"] .idx-range input[type="number"],
+  html[data-theme="sepia"] #idx-maturidade,
+  html[data-theme="sepia"] .idx-read { background: #fffdf8; }
   html[data-theme="light"] .legend-item:hover,
   html[data-theme="light"] #modal .close { background: rgba(0,0,0,.05); }
+  html[data-theme="sepia"] .legend-item:hover,
+  html[data-theme="sepia"] #modal .close { background: rgba(74,62,48,.06); }
 </style>
 <a id="sb-back" href="index.html">&larr; Second Brain Atlas</a>
 <nav id="sb-map-switch" aria-label="Trocar de mapa">
   <a href="graph.html"__GRAPH_CURRENT__>Grafo</a>
   <a href="sphere.html"__SPHERE_CURRENT__>Globo</a>
-  <button type="button" id="sb-theme" aria-label="Alternar tema" aria-pressed="false">&#9680;</button>
+  <button type="button" id="sb-theme" aria-label="Mudar para tema sépia"><span class="theme-disc" aria-hidden="true"></span></button>
 </nav>
 <script>
   // The map follows the Atlas: same stored theme key, same background.
   // Framing is the renderer's job — it now fits the whole base on load for
   // every screen size, so there is nothing to press from out here.
   (function () {
+    var themes = ['light', 'sepia', 'dark'];
+    var names = { light: 'claro', sepia: 'sépia', dark: 'escuro' };
+    var backgrounds = { light: '#ffffff', sepia: '#fbf8f1', dark: '#090909' };
+    var edges = { light: '#a7b0ba', sepia: '#afa89d', dark: '#858b93' };
+
+    var normalize = function (theme) {
+      return themes.indexOf(theme) < 0 ? 'light' : theme;
+    };
+    var nextTheme = function (theme) {
+      var at = themes.indexOf(normalize(theme));
+      return themes[(at + 1) % themes.length];
+    };
     var updateMapStyle = function (theme) {
       try {
-        // O tema manda no fundo, sempre. Antes um estilo salvo em
-        // `localStorage` (painel Estilo) fixava `colors.background`, e
-        // `applyStyle` grava esse valor como `--bg` INLINE no <html> — inline
-        // vence a regra `html[data-theme="light"]` deste mesmo bloco. O
-        // resultado era o mapa abrir com fundo escuro e painéis claros no
-        // tema claro, e o botão de tema só trocar a cor das letras. O resto do
-        // estilo salvo (cores de nó, raio, glow) continua valendo.
+        // O tema manda no fundo e nas arestas estruturais. O resto do estilo
+        // salvo (cores de nós, raio e glow) continua valendo.
         if (typeof styleConfig !== 'undefined' && typeof applyStyle === 'function') {
-          styleConfig.colors.background = theme === 'light' ? '#ffffff' : '#090909';
-          styleConfig.colors.edge = theme === 'light' ? '#a7b0ba' : '#858b93';
-          // Migrate only the legacy factory opacity; explicit user choices survive.
+          styleConfig.colors.background = backgrounds[theme];
+          styleConfig.colors.edge = edges[theme];
           if (styleConfig.edgeOpacity === 0.35) styleConfig.edgeOpacity = 0.28;
           applyStyle(styleConfig, { silent: true });
         }
@@ -279,25 +321,26 @@ PUBLIC_CHROME = """
     };
 
     var apply = function (theme) {
+      theme = normalize(theme);
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.dataset.theme = theme;
-      document.documentElement.style.background = theme === 'light' ? '#ffffff' : '#090909';
-      document.body.style.background = theme === 'light' ? '#ffffff' : '#090909';
+      document.documentElement.style.background = backgrounds[theme];
+      document.body.style.background = backgrounds[theme];
       var button = document.getElementById('sb-theme');
-      if (button) button.setAttribute('aria-pressed', String(theme === 'light'));
+      if (button) {
+        var next = nextTheme(theme);
+        button.setAttribute('aria-label', 'Mudar para tema ' + names[next]);
+        button.setAttribute('title', 'Tema ' + names[theme] + ' · próximo: ' + names[next]);
+      }
       updateMapStyle(theme);
     };
 
     var stored = null;
     try { stored = localStorage.getItem('sb-theme'); } catch (e) { /* private mode */ }
-    // Mesmo padrão do Atlas: sem escolha guardada, claro. Antes o mapa lia o
-    // `prefers-color-scheme` e abria preto num celular com o sistema escuro,
-    // desmentindo a página de onde o leitor veio.
-    if (!stored) stored = 'light';
-    apply(stored);
+    apply(stored || 'light');
     document.addEventListener('click', function (event) {
       if (!event.target.closest('#sb-theme')) return;
-      var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      var next = nextTheme(document.documentElement.getAttribute('data-theme'));
       try { localStorage.setItem('sb-theme', next); } catch (e) { /* private mode */ }
       apply(next);
     });
