@@ -38,7 +38,12 @@
     }
   }
 
-  apply(root.dataset.theme || 'light', false);
+  var initialTheme = root.dataset.theme || 'light';
+  try {
+    var savedTheme = localStorage.getItem('sb-theme');
+    if (savedTheme) initialTheme = savedTheme;
+  } catch (e) { /* private mode */ }
+  apply(initialTheme, false);
 
   document.getElementById('themeToggle')?.addEventListener('click', function () {
     apply(nextTheme(root.dataset.theme), true);
