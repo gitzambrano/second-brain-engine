@@ -203,16 +203,12 @@ PUBLIC_CHROME = """
     color: #e8eef7; cursor: pointer;
   }
   #sb-theme .theme-disc {
-    width: 16px; height: 16px; display: block; position: relative;
-    box-sizing: border-box; overflow: hidden; border: 2px solid #111;
-    border-radius: 50%;
-    background: conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);
+    width: 14px; height: 14px; display: block; box-sizing: border-box;
+    border: 0; border-radius: 50%;
+    background: center / 100% 100% no-repeat url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2014%2014%22%3E%3Cpath%20d%3D%22M7%207L7%201A6%206%200%200%201%2012.196%2010Z%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M7%207L12.196%2010A6%206%200%200%201%201.804%2010Z%22%20fill%3D%22%23d6bc8b%22%2F%3E%3Cpath%20d%3D%22M7%207L1.804%2010A6%206%200%200%201%207%201Z%22%20fill%3D%22%23111%22%2F%3E%3Cpath%20d%3D%22M7%207L7%201M7%207L12.196%2010M7%207L1.804%2010%22%20fill%3D%22none%22%20stroke%3D%22%23111%22%20stroke-width%3D%221.25%22%20stroke-linecap%3D%22butt%22%2F%3E%3Ccircle%20cx%3D%227%22%20cy%3D%227%22%20r%3D%226%22%20fill%3D%22none%22%20stroke%3D%22%23111%22%20stroke-width%3D%221.5%22%2F%3E%3C%2Fsvg%3E");
+    box-shadow: none;
   }
-  #sb-theme .theme-disc::after {
-    content: ""; position: absolute; inset: 0; border-radius: inherit;
-    background: repeating-conic-gradient(from -90deg,#111 0 7deg,transparent 7deg 120deg);
-    pointer-events: none;
-  }
+  #sb-theme .theme-disc::after { content: none; }
   /* In the light/sepia Atlas the floating chrome follows the paper. */
   :root[data-theme="light"] #sb-back,
   :root[data-theme="light"] #sb-map-switch a,
