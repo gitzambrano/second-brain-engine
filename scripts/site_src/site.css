@@ -172,14 +172,14 @@ h1, h2, h3 {
   gap: 20px;
 }
 .nav-link {
-  color: var(--muted);
+  color: var(--text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   transition: color 0.16s var(--ease);
 }
 .nav-link:hover { color: var(--text-strong); }
-.nav-link.active { color: var(--accent); }
+.nav-link.active { color: var(--text); font-weight: 600; }
 
 .icon-button {
   width: 36px; height: 36px;
@@ -187,7 +187,7 @@ h1, h2, h3 {
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: transparent;
+  background: var(--accent-soft);
   color: var(--accent);
   cursor: pointer;
   transition: border-color 0.16s var(--ease);
