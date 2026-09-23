@@ -38,10 +38,12 @@
 .theme-disc::after{content:none!important}
 .topnav .nav-link{color:var(--text)!important}
 .topnav .nav-link.active{color:var(--text)!important;font-weight:600!important}
-.subscribe-cta{color:var(--text)!important}
+.subscribe-cta{color:var(--text)!important;border-radius:10px!important}
 .icon-button{background:var(--accent-soft)!important}
 .sb-nav a{color:var(--sb-text)!important}
-.sb-nav .sb-subscribe{color:var(--sb-text)!important}
+.sb-nav a{font-weight:500!important}
+.sb-nav a.active{font-weight:600!important}
+.sb-nav .sb-subscribe{color:var(--sb-text)!important;border-radius:10px!important;font:650 12.5px/1 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 #sbTheme{background:var(--sb-primary-soft)!important}
 `;
   document.head.appendChild(compatStyle);

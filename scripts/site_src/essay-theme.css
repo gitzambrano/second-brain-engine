@@ -189,7 +189,7 @@ body{padding-top:68px;}
 }
 .sb-nav{display:flex;align-items:center;gap:20px;}
 .sb-nav a{color:var(--sb-text) !important;font-size:14px;font-weight:500;line-height:1.6;text-decoration:none !important;}
-.sb-nav a:hover{color:var(--sb-primary) !important;}
+.sb-nav a:hover{color:var(--sb-text) !important;}
 .sb-nav button{
   box-sizing:border-box;width:36px;height:36px;padding:0;display:grid;place-items:center;
   border:1px solid var(--sb-line);border-radius:10px;
@@ -197,7 +197,7 @@ body{padding-top:68px;}
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1;
   transition:border-color .16s cubic-bezier(.22,.61,.36,1);
 }
-.sb-nav button:hover{border-color:color-mix(in srgb,var(--sb-primary) 55%,var(--sb-line));}
+.sb-nav button:hover{border-color:var(--sb-line-strong);background:color-mix(in srgb,var(--sb-primary) 17%,var(--sb-surface));}
 .sb-nav button:focus-visible{
   outline:2px solid color-mix(in srgb,var(--sb-primary) 58%,transparent);
   outline-offset:2px;
@@ -205,9 +205,15 @@ body{padding-top:68px;}
 .sb-nav .sb-subscribe{
   box-sizing:border-box;width:auto;height:36px;min-height:36px;padding:0 12px;
   display:inline-flex;align-items:center;justify-content:center;
-  border-color:var(--sb-line);border-radius:999px;
-  background:var(--sb-primary-soft);color:var(--sb-primary);
+  border:1px solid var(--sb-line);border-radius:10px;
+  background:var(--sb-primary-soft);color:var(--sb-text);
   font:650 12.5px/1 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;
+}
+.sb-nav a.active{color:var(--sb-text) !important;font-weight:600;}
+.sb-nav .sb-subscribe:hover{
+  border-color:var(--sb-line-strong);
+  background:color-mix(in srgb,var(--sb-primary) 17%,var(--sb-surface));
+  color:var(--sb-text);
 }
 #sbTheme{border-color:var(--sb-line);background:var(--sb-primary-soft);}
 .sb-subscribe-dialog{
@@ -314,7 +320,7 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
   .sb-brand{gap:0;font-size:0;}
   .sb-nav a:first-child{display:none;}
   .sb-nav button{width:36px;height:36px;}
-  .sb-nav #sbTheme > span.theme-disc{width:16px;height:16px;display:block;font-size:0;line-height:1;}
+  .sb-nav #sbTheme > span.theme-disc{width:13px;height:13px;display:block;font-size:0;line-height:1;}
   .sb-nav .sb-subscribe{height:36px;min-height:36px;padding-inline:10px;font-size:12px;line-height:1;}
   .sb-subscribe{display:inline-flex;}
   .sb-toc-fab{width:44px;height:44px;padding:0;justify-content:center;}

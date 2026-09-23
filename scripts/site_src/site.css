@@ -192,7 +192,10 @@ h1, h2, h3 {
   cursor: pointer;
   transition: border-color 0.16s var(--ease);
 }
-.icon-button:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.icon-button:hover {
+  border-color: var(--line-strong);
+  background: color-mix(in srgb, var(--accent) 17%, var(--panel));
+}
 
 .theme-disc {
   width: 13px;
