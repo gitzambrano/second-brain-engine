@@ -222,6 +222,168 @@ def check_prose_signals(body: str, add) -> None:
             add(severity, code, f"{len(found)} ocorrência(s) de sinal editorial: {found[:3]}")
 
 
+def check_callout_prose_duplication(body: str, add) -> None:
+    """Detecta texto substantivo duplicado entre o interior de um callout e a prosa adjacente."""
+    prose_body = strip_fences(body).split("## Referências", 1)[0]
+    lines = prose_body.splitlines()
+
+    blocks = []  # (kind, lineno, text)
+    curr_kind = None
+    curr_lines = []
+    curr_start = 1
+    in_math = False
+
+    for lineno, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith("$$"):
+            in_math = not in_math
+            continue
+        if in_math:
+            continue
+
+        if stripped.startswith(">"):
+            cleaned = re.sub(r"^(?:>\s*)+", "", line).strip()
+            header_m = re.match(r"^\[!([a-zA-Z0-9_-]+)\](?:\s+(.*))?$", cleaned)
+            if header_m:
+                if curr_kind:
+                    blocks.append((curr_kind, curr_start, "\n".join(curr_lines).strip()))
+                curr_kind = "callout"
+                curr_lines = []
+                curr_start = lineno
+                if header_m.group(2):
+                    curr_lines.append(header_m.group(2).strip())
+            else:
+                if curr_kind != "callout":
+                    if curr_lines:
+                        blocks.append((curr_kind, curr_start, "\n".join(curr_lines).strip()))
+                    curr_kind = "callout"
+                    curr_lines = []
+                    curr_start = lineno
+                if cleaned:
+                    curr_lines.append(cleaned)
+        elif not stripped:
+            if curr_lines:
+                blocks.append((curr_kind, curr_start, "\n".join(curr_lines).strip()))
+                curr_lines = []
+                curr_kind = None
+        else:
+            if curr_kind == "callout":
+                if curr_lines:
+                    blocks.append((curr_kind, curr_start, "\n".join(curr_lines).strip()))
+                    curr_lines = []
+                curr_kind = "prose"
+                curr_start = lineno
+            elif curr_kind is None:
+                curr_kind = "prose"
+                curr_start = lineno
+            curr_lines.append(stripped)
+
+    if curr_lines:
+        blocks.append((curr_kind, curr_start, "\n".join(curr_lines).strip()))
+
+    for idx, (b_type, b_start, b_text) in enumerate(blocks):
+        if b_type != "callout":
+            continue
+        callout_norm = re.sub(r"\s+", " ", b_text).strip()
+        if len(callout_norm) < 60:
+            continue
+
+        adj_prose = []
+        if idx > 0 and blocks[idx - 1][0] == "prose":
+            adj_prose.append(blocks[idx - 1])
+        if idx + 1 < len(blocks) and blocks[idx + 1][0] == "prose":
+            adj_prose.append(blocks[idx + 1])
+
+        for p_type, p_start, p_text in adj_prose:
+            if p_text.startswith(("#", "---", "***", "![", "|")):
+                continue
+            prose_norm = re.sub(r"\s+", " ", p_text).strip()
+            if len(prose_norm) < 60:
+                continue
+
+            ratio = SequenceMatcher(None, callout_norm.lower(), prose_norm.lower()).ratio()
+            if ratio >= 0.80:
+                add(
+                    "WARNING",
+                    "CALLOUT_PROSE_DUPLICATION",
+                    f"linha {b_start}: conteúdo do callout repete o parágrafo adjacente da linha {p_start} (similaridade: {int(ratio*100)}%)",
+                )
+                continue
+
+            sentences = [
+                s.strip()
+                for s in re.split(r"(?<=[.!?])\s+", callout_norm)
+                if len(s.strip()) >= 60 and len(s.strip().split()) >= 8
+            ]
+            for s in sentences:
+                s_clean = s.lower().strip(".,;:!? ")
+                if s_clean in prose_norm.lower():
+                    add(
+                        "WARNING",
+                        "CALLOUT_PROSE_DUPLICATION",
+                        f"linha {b_start}: callout repete sentença do parágrafo adjacente da linha {p_start}: '{s[:60]}...'",
+                    )
+                    break
+
+
+def check_consecutive_duplicate_prose(body: str, add) -> None:
+    """Detecta parágrafos consecutivos idênticos ou quase-idênticos na prosa."""
+    prose_body = strip_fences(body).split("## Referências", 1)[0]
+    lines = prose_body.splitlines()
+
+    paragraphs = []  # (lineno, text)
+    curr_lines = []
+    curr_start = 1
+    in_math = False
+
+    for lineno, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith("$$"):
+            in_math = not in_math
+            continue
+        if in_math:
+            continue
+
+        if not stripped:
+            if curr_lines:
+                paragraphs.append((curr_start, "\n".join(curr_lines).strip()))
+                curr_lines = []
+        else:
+            if not curr_lines:
+                curr_start = lineno
+            curr_lines.append(stripped)
+
+    if curr_lines:
+        paragraphs.append((curr_start, "\n".join(curr_lines).strip()))
+
+    pure_prose = []
+    for ln, p in paragraphs:
+        if p.startswith(("#", ">", "-", "*", "1.", "2.", "3.", "|", "![", "---", "***")):
+            continue
+        norm = re.sub(r"\s+", " ", p).strip()
+        if len(norm) >= 60:
+            pure_prose.append((ln, norm))
+
+    for i in range(len(pure_prose) - 1):
+        ln1, t1 = pure_prose[i]
+        ln2, t2 = pure_prose[i + 1]
+
+        if t1.lower() == t2.lower():
+            add(
+                "WARNING",
+                "CONSECUTIVE_DUPLICATE_PROSE",
+                f"linha {ln2}: parágrafo idêntico ao parágrafo anterior da linha {ln1}",
+            )
+        else:
+            ratio = SequenceMatcher(None, t1.lower(), t2.lower()).ratio()
+            if ratio >= 0.85:
+                add(
+                    "WARNING",
+                    "CONSECUTIVE_DUPLICATE_PROSE",
+                    f"linha {ln2}: parágrafo repete o parágrafo anterior da linha {ln1} (similaridade: {int(ratio*100)}%)",
+                )
+
+
 def check_reference_contracts(entries: list[str], add) -> None:
     """Validate bibliography details not covered by the citation-link checker."""
     numbers = [int(match.group(1)) for entry in entries if (match := re.match(r"^\[(\d+)\]", entry))]
@@ -906,6 +1068,8 @@ def check_essay(filepath: Path) -> dict:
     # 5a. Contratos mecânicos de callouts, figuras e prosa editorial
     # -----------------------------------------------------------------------
     check_callout_contracts(body, add)
+    check_callout_prose_duplication(body, add)
+    check_consecutive_duplicate_prose(body, add)
     check_figure_contracts(body, filepath.stem, add)
     check_prose_signals(body, add)
     check_updated_against_git(filepath, add)
