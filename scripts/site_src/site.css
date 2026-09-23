@@ -195,17 +195,32 @@ h1, h2, h3 {
 .icon-button:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 
 .theme-disc {
-  width: 19px;
-  height: 19px;
+  width: 16px;
+  height: 16px;
   display: block;
+  position: relative;
   flex: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 2px solid #111111;
   border-radius: 50%;
   background: conic-gradient(from -90deg,
     #ffffff 0 33.333%,
     #d6bc8b 33.333% 66.666%,
     #111111 66.666% 100%);
-  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg) 45%, transparent);
+  box-shadow: none;
+}
+.theme-disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-conic-gradient(
+    from -90deg,
+    #111111 0 7deg,
+    transparent 7deg 120deg
+  );
+  pointer-events: none;
 }
 
 /* --- Masthead ------------------------------------------------------------ */
