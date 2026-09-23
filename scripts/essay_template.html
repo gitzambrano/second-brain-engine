@@ -103,6 +103,40 @@ $endif$
   --box-verdict-bg:var(--surface2);
   --th-bg:var(--surface2);
 }
+[data-theme="sepia"]{
+  --bg:#FBF8F1;
+  --surface:#FFFAF3;
+  --surface2:#F3EDE3;
+  --border:#DED5C8;
+  --text:#39342F;
+  --text-dim:#746B62;
+  --text-bright:#26211C;
+  --gold:#785B38;
+  --gold-dim:#604626;
+  --rust:#8E4636;
+  --rust-bright:#9C4838;
+  --accent:#596B78;
+  --amber:#865A27;
+  --callout-note:#746B62;
+  --note-bg:#F3EDE3;
+  --callout-abstract:#77572F;
+  --callout-info:#596B78;
+  --callout-todo:#865A27;
+  --callout-success:#486F50;
+  --callout-question:#77572F;
+  --callout-warning:#8C5F2A;
+  --callout-failure:#8E4636;
+  --callout-danger:#98493E;
+  --callout-bug:#8F4337;
+  --callout-example:#6E536F;
+  --callout-quote:#746B62;
+  --quote-bg:#F3EDE3;
+  --box-bg:#FFFAF3;
+  --tab-mix:4%;
+  --verdict-mix:6%;
+  --box-verdict-bg:#F3EDE3;
+  --th-bg:#EEE5D8;
+}
 @media (min-width:901px){
   /* Desktop: coluna de leitura ampla com teto para monitores ultrawide. */
   :root{
@@ -111,7 +145,7 @@ $endif$
   }
   /* Claro por padrão no desktop; data-theme="dark" devolve o editorial
      escuro para quem preferir. Playfair permanece em todos os temas */
-  :root:not([data-theme="dark"]){
+  :root:not([data-theme="dark"]):not([data-theme="sepia"]){
     --bg:#FFFFFF;
     --surface:#F7F9FC;
     --surface2:#EDF2F8;
@@ -173,6 +207,16 @@ body{
   color:var(--gold);font-size:1rem;cursor:pointer;transition:border-color .15s,color .15s;
 }
 #sbThemeToggle:hover{border-color:var(--gold);}
+#sbThemeToggle .theme-disc{
+  width:16px;height:16px;display:block;position:relative;box-sizing:border-box;overflow:hidden;
+  margin:auto;border:2px solid #111;border-radius:50%;
+  background:conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);
+}
+#sbThemeToggle .theme-disc::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  background:repeating-conic-gradient(from -90deg,#111 0 7deg,transparent 7deg 120deg);
+  pointer-events:none;
+}
 #sbToTop{
   position:fixed;bottom:22px;right:18px;z-index:61;width:40px;height:40px;
   border-radius:50%;border:1px solid var(--border);background:var(--surface);
@@ -195,17 +239,24 @@ body{
 }
 /* Tema claro: capa branca nobre com brilho suave dourado */
 [data-theme="light"] .masthead,
-:root:not([data-theme="dark"]) .masthead{
+:root:not([data-theme="dark"]):not([data-theme="sepia"]) .masthead{
   background:#F3F5F7;
   color:#171310;
 }
 [data-theme="light"] .masthead .hero-title,
-:root:not([data-theme="dark"]) .masthead .hero-title{
+:root:not([data-theme="dark"]):not([data-theme="sepia"]) .masthead .hero-title{
   color:#15120E;
 }
 /* Tema escuro: capa preta editorial */
 [data-theme="dark"] .masthead,
-:root[data-theme="dark"] .masthead{
+:root[data-theme="sepia"] .masthead{
+  background:#FBF8F1;
+  color:#39342F;
+}
+[data-theme="sepia"] .masthead .hero-title{
+  color:#26211C;
+}
+[data-theme="dark"] .masthead{
   background:#0A0A0A;
   color:#EDE8DF;
 }
@@ -1238,7 +1289,7 @@ $endif$
 </head>
 <body>
 <div class="sb-progress"><div class="sb-progress-fill" id="sb-progress-fill"></div></div>
-<button id="sbThemeToggle" title="Alternar tema" aria-label="Alternar tema">◐</button>
+<button id="sbThemeToggle" title="Tema" aria-label="Mudar para tema sépia"><span class="theme-disc" aria-hidden="true"></span></button>
 
 <header class="masthead">
   <div class="stripe"></div>
@@ -1276,19 +1327,33 @@ $body$
     fill.style.width=(max>0?(h.scrollTop/max)*100:0)+"%";
     toTop.classList.toggle("visible",h.scrollTop>600);
   }
-  /* Tema: inverte o tema EFETIVO (considerando o padrao do dispositivo:
-     claro no desktop, escuro no mobile) e persiste a escolha. */
+  /* Tema: claro → sépia → escuro. Sem escolha guardada, preserva o
+     padrão histórico do standalone: claro no desktop, escuro no mobile. */
   var root=document.documentElement,tgl=document.getElementById("sbThemeToggle");
-  try{var saved=localStorage.getItem("sb-theme");if(saved){root.setAttribute("data-theme",saved);}}catch(e){}
+  var themes=["light","sepia","dark"];
+  var themeNames={light:"claro",sepia:"sépia",dark:"escuro"};
+  try{var saved=localStorage.getItem("sb-theme");if(themes.indexOf(saved)>=0){root.setAttribute("data-theme",saved);}}catch(e){}
   function effectiveTheme(){
     var a=root.getAttribute("data-theme");
-    if(a)return a;
+    if(themes.indexOf(a)>=0)return a;
     return window.matchMedia("(min-width:901px)").matches?"light":"dark";
   }
+  function nextTheme(theme){
+    var at=themes.indexOf(theme);
+    return themes[(at<0?0:at+1)%themes.length];
+  }
+  function syncThemeButton(){
+    if(!tgl)return;
+    var current=effectiveTheme(),next=nextTheme(current);
+    tgl.setAttribute("aria-label","Mudar para tema "+themeNames[next]);
+    tgl.setAttribute("title","Tema "+themeNames[current]+" · próximo: "+themeNames[next]);
+  }
+  syncThemeButton();
   tgl.addEventListener("click",function(){
-    var next=effectiveTheme()==="dark"?"light":"dark";
+    var next=nextTheme(effectiveTheme());
     root.setAttribute("data-theme",next);
     try{localStorage.setItem("sb-theme",next);}catch(e){}
+    syncThemeButton();
   });
   /* Voltar ao topo */
   var toTop=document.getElementById("sbToTop");
