@@ -869,8 +869,14 @@ def _scope_css_for_shadow(css):
     """Adapta o CSS do template para viver num Shadow Root enxertado no
     overlay do grafo: :root/body viram :host (o host é o elemento que carrega
     o atributo data-theme), html somem, e nada vaza para a página do grafo."""
+    css = re.sub(
+        r":root:not\(\[data-theme=\"dark\"\]\):not\(\[data-theme=\"sepia\"\]\)",
+        ":host(:not([data-theme=\"dark\"]):not([data-theme=\"sepia\"]))",
+        css,
+    )
     css = re.sub(r":root:not\(\[data-theme=\"dark\"\]\)", ":host(:not([data-theme=\"dark\"]))", css)
     css = re.sub(r"\[data-theme=\"light\"\]", ":host([data-theme=\"light\"])", css)
+    css = re.sub(r"\[data-theme=\"sepia\"\]", ":host([data-theme=\"sepia\"])", css)
     css = re.sub(r":root(?![\w-])", ":host", css)
     css = re.sub(r"(?<![}\w])html\b[^{]*\{", ":host{", css)
     css = re.sub(r"(?<![}\w])body(?=\s*[,{])", ":host", css)
@@ -1480,7 +1486,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border: 1px solid #2A2A2A; background: rgba(17,17,17,.92); color: #8A857E;
     font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
   #reader-fabs button:hover { color: #EDE8DF; border-color: #C9922A; }
-  #reader-theme { width: 38px; height: 38px; font-size: 1rem; }
+  #reader-theme { width: 38px; height: 38px; display:grid; place-items:center; padding:0; }
+  #reader-theme .theme-disc {
+    width:16px;height:16px;display:block;position:relative;box-sizing:border-box;overflow:hidden;
+    border:2px solid #111;border-radius:50%;
+    background:conic-gradient(from -90deg,#fff 0 33.333%,#d6bc8b 33.333% 66.666%,#111 66.666% 100%);
+  }
+  #reader-theme .theme-disc::after {
+    content:"";position:absolute;inset:0;border-radius:inherit;
+    background:repeating-conic-gradient(from -90deg,#111 0 7deg,transparent 7deg 120deg);
+    pointer-events:none;
+  }
   #reader-close { padding: 0 14px; height: 38px; }
   @media (pointer: coarse) {
     #reader-fabs button { position: relative; }
@@ -1523,7 +1539,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <div id="reader-overlay" role="dialog" aria-modal="true" aria-label="Leitor de ensaio">
   <div class="sb-progress"><div class="sb-progress-fill" id="reader-progress-fill"></div></div>
   <div id="reader-fabs">
-    <button id="reader-theme" title="Alternar tema" aria-label="Alternar tema">◐</button>
+    <button id="reader-theme" title="Tema" aria-label="Mudar para tema sépia"><span class="theme-disc" aria-hidden="true"></span></button>
     <button id="reader-close" aria-label="Fechar leitor">✕ Fechar</button>
   </div>
   <div id="reader-scroll"><div id="reader-article"></div></div>
@@ -3269,20 +3285,35 @@ function enhanceReaderDom() {
 
 // Tema: mesma regra do template — mobile escuro, desktop claro; toggle
 // persiste na MESMA chave 'sb-theme' usada pelos exports (consistência).
+const READER_THEMES = ["light", "sepia", "dark"];
+const READER_THEME_NAMES = { light: "claro", sepia: "sépia", dark: "escuro" };
+function nextReaderTheme(theme) {
+  const at = READER_THEMES.indexOf(theme);
+  return READER_THEMES[((at < 0 ? 0 : at) + 1) % READER_THEMES.length];
+}
+function syncReaderThemeButton(theme) {
+  const button = document.getElementById("reader-theme");
+  if (!button) return;
+  const next = nextReaderTheme(theme);
+  button.setAttribute("aria-label", "Mudar para tema " + READER_THEME_NAMES[next]);
+  button.setAttribute("title", "Tema " + READER_THEME_NAMES[theme] + " · próximo: " + READER_THEME_NAMES[next]);
+}
 function applyReaderTheme() {
   let saved = null;
   try { saved = localStorage.getItem("sb-theme"); } catch (e) {}
   const def = window.matchMedia("(min-width:901px)").matches ? "light" : "dark";
-  const theme = saved || def;
+  const theme = READER_THEMES.includes(saved) ? saved : def;
   readerArticle.setAttribute("data-theme", theme); // :host([data-theme]) no shadow
+  syncReaderThemeButton(theme);
   return theme;
 }
 
 document.getElementById("reader-theme").addEventListener("click", () => {
   if (!readerOpenState) return;
   const cur = readerArticle.getAttribute("data-theme") || "dark";
-  const next = cur === "dark" ? "light" : "dark";
+  const next = nextReaderTheme(cur);
   readerArticle.setAttribute("data-theme", next);
+  syncReaderThemeButton(next);
   try { localStorage.setItem("sb-theme", next); } catch (e) {}
 });
 
