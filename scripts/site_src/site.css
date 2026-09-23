@@ -922,9 +922,19 @@ h1, h2, h3 {
 }
 
 /* SB_HEADER_CONTRACT:START */
-/* Header contract: identical metrics to public essay headers. */
-.topbar{height:68px}
-.brand{gap:11px;font-size:14px;font-weight:700;line-height:1.6}
+/* Header contract: literally identical to the public essay header. */
+.topbar.shell{
+  width:100%;
+  margin-inline:0;
+  padding:0 max(24px,calc((100% - var(--shell))/2));
+}
+.topbar{
+  height:68px;
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.brand{gap:11px;font-size:14px;font-weight:700;line-height:1.6;letter-spacing:-.02em}
 .topnav{gap:20px}
 .nav-link{font-size:14px;font-weight:500;line-height:1.6;color:var(--text)}
 .nav-link.active{font-weight:600;color:var(--text)}
@@ -939,6 +949,7 @@ h1, h2, h3 {
   background:var(--accent-soft)
 }
 @media (max-width:760px){
+  .topbar.shell{padding:0 14px}
   .topbar{height:60px}
   .brand{gap:0}
   .brand>span:last-child{display:none!important}
