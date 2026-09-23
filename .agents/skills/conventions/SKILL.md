@@ -340,6 +340,19 @@ Vale para texto novo ou reescrito pela wiki. Texto original importado só muda s
 
 `check_wiki.py` cobre as regras mecânicas; `/polish` e `/proofread` cobrem as editoriais.
 
+### Voz editorial de essays
+
+1. Escreva como ensaio de divulgação técnica de alto nível: prosa fluida, precisa e cativante, sem tom apostilar, sem marketing e sem dramatização artificial.
+2. A introdução deve apresentar a tensão central e anunciar a tese que organizará o texto. Cada seção deve avançar essa tese; evite capítulos que funcionem apenas como catálogo de conceitos.
+3. Headings devem ser afirmativos e anunciar o conteúdo da seção. Evite títulos interrogativos, construções “por que X não é Y” e contrastes negativos usados apenas como gancho.
+4. Evite sequências de frases curtas criadas apenas para impacto. Varie o ritmo naturalmente e prefira períodos completos quando as ideias pertencem ao mesmo encadeamento causal.
+5. A conclusão deve fechar o arco iniciado na introdução, extrair a consequência mais forte do argumento e terminar sem recapitulação mecânica, slogan ou sentimentalismo.
+6. Em essays técnicos, toda equação ou formalismo relevante deve pagar aluguel em insight físico: mecanismo, escala, causalidade, limite de validade ou consequência de engenharia.
+7. Em essays filosóficos, apresente a tese junto do melhor contra-argumento relevante. Separe resultado científico, interpretação filosófica e especulação.
+8. Termos técnicos consagrados em inglês podem permanecer em inglês quando a tradução reduzir precisão ou soar artificial. Use a mesma forma de modo consistente.
+9. Quotes e callouts devem criar respiro ou concentrar uma peça real do argumento. Não os use como decoração ou para fabricar ênfase.
+10. Prefira precisão a intensidade. Quando a evidência sustentar apenas tendência, dependência de hipótese ou resultado local, escreva exatamente nesse nível.
+
 ### Regras adicionais para essays técnicos
 
 1. Use português claro, conciso, formal e assertivo.
