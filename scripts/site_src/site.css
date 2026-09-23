@@ -7,6 +7,7 @@
    styles them: this file owns the landing page and nothing else.
 
    Light  = white paper, editorial blue.
+   Sepia  = warm paper, softened contrast for long reading.
    Dark   = near black, restrained gold.
    =========================================================================== */
 
@@ -56,6 +57,24 @@
   --accent-dim: #234a86;
   --shadow-sm: 0 1px 5px rgba(24, 45, 78, 0.08);
   --shadow: 0 20px 56px rgba(24, 45, 78, 0.11);
+}
+
+:root[data-theme="sepia"] {
+  --bg: #f4eedf;
+  --bg-soft: #f7f1e6;
+  --panel: #fbf7ed;
+  --panel-2: #eee5d5;
+  --text: #3a342d;
+  --text-strong: #241f1a;
+  --muted: #746b60;
+  --faint: #766a5e;
+  --line: rgba(74, 62, 48, 0.15);
+  --line-strong: rgba(74, 62, 48, 0.28);
+  --accent: #75572f;
+  --accent-soft: rgba(117, 87, 47, 0.10);
+  --accent-dim: #5d4223;
+  --shadow-sm: 0 1px 5px rgba(73, 54, 32, 0.08);
+  --shadow: 0 20px 56px rgba(73, 54, 32, 0.12);
 }
 
 /* --- Base ---------------------------------------------------------------- */
@@ -175,6 +194,20 @@ h1, h2, h3 {
 }
 .icon-button:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 
+.theme-disc {
+  width: 19px;
+  height: 19px;
+  display: block;
+  flex: none;
+  border-radius: 50%;
+  background: conic-gradient(from -90deg,
+    #ffffff 0 33.333%,
+    #d6bc8b 33.333% 66.666%,
+    #111111 66.666% 100%);
+  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
 /* --- Masthead ------------------------------------------------------------ */
 
 /* The cover map sits beside the title on desktop: one ornament, aligned to the
@@ -251,6 +284,11 @@ h1, h2, h3 {
    O fundo do PNG é a cor da página, então a imagem assenta sem costura. */
 .cover-map { background: center / contain no-repeat url("cover-light.png"); }
 [data-theme="dark"] .cover-map { background-image: url("cover-dark.png"); }
+[data-theme="sepia"] .cover-map {
+  background-image: url("cover-light.png");
+  background-color: var(--bg);
+  background-blend-mode: multiply;
+}
 
 /* --- Library ------------------------------------------------------------- */
 
