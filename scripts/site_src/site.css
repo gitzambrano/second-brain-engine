@@ -141,6 +141,8 @@ h1, h2, h3 {
   gap: 11px;
   text-decoration: none;
   font-weight: 700;
+  font-size: 14px;
+  line-height: 1.6;
   letter-spacing: -0.02em;
   color: var(--text-strong);
 }
