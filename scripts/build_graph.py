@@ -148,12 +148,12 @@ GRAPH_STYLE = {
     "radiusBase": 5,
     "radiusScale": 3,
     "labelSize": 10,
-    # "off" | "leve" (halo sem blur, barato) | "alto" (drop-shadow com blur,
-    # mais bonito porém pesado em SVG — cada nó vira uma rasterização à
-    # parte; em grafos grandes ou no Chrome mobile isso é o maior vilão de
-    # FPS que existe aqui). "leve" é o padrão por ser barato E ainda dar
-    # uma sensação de brilho.
-    "glow": "leve",
+    # "off" | "leve" (halo sem blur, barato) | "alto" (drop-shadow com blur).
+    # O brilho é opt-in: no tema escuro ele criava um halo luminoso em cada
+    # bolinha e, no sépia, lia ainda mais como artefato. O padrão limpo mantém
+    # só preenchimento/gradiente; quem quiser o efeito ainda pode ligá-lo no
+    # painel de Estilo.
+    "glow": "off",
     # "sempre" (rótulo sempre visível) | "auto" (esconde ao afastar o zoom
     # se o tier de desempenho pedir) | "nunca" (rótulo sempre oculto).
     # No automático, os rótulos aparecem apenas quando o zoom já os torna
@@ -226,17 +226,10 @@ GRAPH_STYLE = {
 
 # Aplicado por cima de GRAPH_STYLE no navegador, só quando o próprio
 # navegador se identifica como celular/tablet (toque ou tela pequena) — e só
-# se o usuário nunca salvou uma preferência própria naquele aparelho. Glow e
-# céu estrelado são os itens puramente decorativos mais caros de render;
-# desligá-los por padrão no celular evita que a maioria dos usuários mobile
-# precise descobrir o painel de Estilo só pra destravar performance.
+# se o usuário nunca salvou uma preferência própria naquele aparelho. O glow
+# já nasce desligado no padrão geral; no mobile também desligamos o céu
+# estrelado, outro extra puramente decorativo.
 GRAPH_STYLE_MOBILE_OVERRIDES = {
-    # "on" não é um valor válido (as opções são "off"/"leve"/"alto" — ver
-    # <select id="st-glow"> no HTML gerado); ficava sem corresponder a
-    # nenhuma delas, então o halo nunca desenhava na tela mesmo assim.
-    # Trocado para "leve", a opção decorativa mais barata, já que a intenção
-    # aqui parece ter sido ligar glow no celular em vez de desligar.
-    "glow": "leve",
     "starfield": False,
     # Física um passo mais calma no celular. A tela é pequena e o dedo é um
     # ponteiro grosso: o mesmo grafo que no desktop assenta rápido, aqui fica
@@ -1608,22 +1601,35 @@ const STYLE_VARS = {
   insights: "--insight", reference: "--reference", edge: "--edge", background: "--bg",
 };
 const STYLE_KEY = "sb-graph-style-v1";
+const STYLE_GLOW_MIGRATION_KEY = "sb-graph-glow-default-v2";
 const FACTORY_STYLE = data.defaultStyle || {
   colors: { essay: "#4fa8ff", concept: "#5fd3c4", entity: "#e8b657", insights: "#b48ce8",
     reference: "#8a8f96", edge: "#858b93", background: "#1b1e21" },
   edgeOpacity: 0.28, edgeVisibility: "auto", radiusBase: 5, radiusScale: 3, labelSize: 10,
-  glow: "leve", labels: "auto", starfield: true, gradient: true, sizeMode: "degree",
+  glow: "off", labels: "auto", starfield: true, gradient: true, sizeMode: "degree",
   spacing: 1.8, performance: "alta", collision: true,
   linkStrength: 3.5, chargeStrength: 2.5, friction: 0.65, homeStrength: 0.25,
   sphereShading: false, tagTint: false,
 };
-const MOBILE_OVERRIDES = data.defaultStyleMobileOverrides || { glow: "leve", starfield: false };
+const MOBILE_OVERRIDES = data.defaultStyleMobileOverrides || { starfield: false };
 const defaultStyle = DEVICE_IS_MOBILE ? { ...FACTORY_STYLE, ...MOBILE_OVERRIDES } : FACTORY_STYLE;
 
 function loadSavedStyle() {
   try {
     const raw = localStorage.getItem(STYLE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const saved = raw ? JSON.parse(raw) : null;
+    // v1 salvava a configuracao inteira, inclusive o antigo default "leve".
+    // Uma migracao unica troca esse default legado por "off" sem apagar as
+    // demais preferencias. Depois de marcada, uma escolha futura por glow
+    // "leve" ou "alto" volta a ser explicitamente respeitada.
+    if (saved && !localStorage.getItem(STYLE_GLOW_MIGRATION_KEY)) {
+      if (saved.glow === "leve") saved.glow = "off";
+      try {
+        localStorage.setItem(STYLE_KEY, JSON.stringify(saved));
+        localStorage.setItem(STYLE_GLOW_MIGRATION_KEY, "1");
+      } catch {}
+    }
+    return saved;
   } catch { return null; }
 }
 

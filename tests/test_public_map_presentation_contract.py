@@ -23,3 +23,16 @@ def test_map_chrome_uses_larger_nonwrapping_navigation_labels():
 
     assert "font: 600 14px/1 Inter" in source
     assert "white-space: nowrap;" in source
+
+def test_graph_default_has_no_node_halo_and_migrates_the_legacy_default_once():
+    graph = (ROOT / "scripts" / "build_graph.py").read_text(encoding="utf-8")
+
+    python_defaults = graph.split("GRAPH_STYLE_MOBILE_OVERRIDES", 1)[0]
+    factory_fallback = graph.split("const FACTORY_STYLE =", 1)[1].split("const MOBILE_OVERRIDES", 1)[0]
+
+    assert '"glow": "off",' in python_defaults
+    assert 'glow: "off"' in factory_fallback
+    assert 'const STYLE_GLOW_MIGRATION_KEY = "sb-graph-glow-default-v2";' in graph
+    assert 'saved.glow === "leve"' in graph
+    assert 'saved.glow = "off";' in graph
+

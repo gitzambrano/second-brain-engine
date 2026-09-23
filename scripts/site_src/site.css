@@ -263,9 +263,9 @@ h1, h2, h3 {
 
 /* --- Cover map ----------------------------------------------------------- */
 
-/* Um retrato parado do grafo real, com o mesmo desenho dele — mesma paleta,
-   mesmo raio por grau, mesmo halo no escuro. Sem moldura, sem fundo e sem
-   rótulo: flutua sobre a página em vez de virar mais um quadro nela.
+/* Um retrato parado do grafo real, com o mesmo desenho dele — mesma paleta
+   e mesmo raio por grau, sem halo decorativo no estado padrão. Sem moldura,
+   sem fundo e sem rótulo: flutua sobre a página em vez de virar mais um quadro nela.
 
    Continua sendo canvas, e não um PNG transparente gerado no build: o canvas
    acompanha o corpus sozinho, segue o tema sem precisar de dois arquivos, e a
