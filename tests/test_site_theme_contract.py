@@ -118,3 +118,21 @@ def test_the_expander_is_a_button_outside_the_card_link():
     source = Path(build_site.__file__).read_text(encoding="utf-8")
     assert 'class="card-expand" type="button"' in source
     assert 'class="card-summary" role="button"' not in source
+
+
+def test_canonical_template_and_public_maps_share_three_way_theme_control():
+    template = (ROOT / "scripts/essay_template.html").read_text(encoding="utf-8")
+    public_map = (ROOT / "scripts/lib/build_public_map.py").read_text(encoding="utf-8")
+    graph = (ROOT / "scripts/build_graph.py").read_text(encoding="utf-8")
+    sphere = (ROOT / "scripts/build_sphere.py").read_text(encoding="utf-8")
+
+    assert '[data-theme="sepia"]' in template
+    assert 'class="theme-disc"' in template
+    assert 'border:2px solid #111' in template
+    assert "['light', 'sepia', 'dark']" in public_map
+    assert 'width: 16px; height: 16px' in public_map
+    assert 'border: 2px solid #111' in public_map
+    assert 'READER_THEMES = ["light", "sepia", "dark"]' in graph
+    assert 'READER_THEMES = ["light", "sepia", "dark"]' in sphere
+    assert '◐</button>' not in graph
+    assert '◐</button>' not in sphere
