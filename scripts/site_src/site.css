@@ -920,3 +920,33 @@ h1, h2, h3 {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* SB_HEADER_CONTRACT:START */
+/* Header contract: identical metrics to public essay headers. */
+.topbar{height:68px}
+.brand{gap:11px;font-size:14px;font-weight:700;line-height:1.6}
+.topnav{gap:20px}
+.nav-link{font-size:14px;font-weight:500;line-height:1.6;color:var(--text)}
+.nav-link.active{font-weight:600;color:var(--text)}
+.subscribe-cta{
+  height:36px;min-height:36px;padding:0 12px;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--accent-soft);color:var(--text);
+  font:650 12.5px/1 var(--sans)
+}
+.icon-button{
+  width:36px;height:36px;border:1px solid var(--line);border-radius:10px;
+  background:var(--accent-soft)
+}
+@media (max-width:760px){
+  .topbar{height:60px}
+  .brand{gap:0}
+  .brand>span:last-child{display:none!important}
+  .topnav{gap:14px}
+  .topnav .nav-link.active{display:none!important}
+  .topnav .nav-link{font-size:13px;font-weight:500;line-height:1.6}
+  .subscribe-cta{height:36px;min-height:36px;padding:0 10px;font:650 12px/1 var(--sans)}
+  .icon-button{width:36px;height:36px}
+  #themeToggle>span.theme-disc{width:13px!important;height:13px!important}
+}
+/* SB_HEADER_CONTRACT:END */

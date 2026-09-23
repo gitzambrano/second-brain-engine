@@ -35,7 +35,19 @@
 :root[data-theme="sepia"] .masthead{background:#fbf8f1!important;color:var(--text)!important;border-bottom-color:var(--border)!important}
 :root[data-theme="sepia"] .masthead .hero-title{color:var(--text-bright)!important}
 .theme-disc{width:13px!important;height:13px!important;display:block!important;flex:none!important;box-sizing:border-box!important;border:0!important;border-radius:50%!important;background:center/100% 100% no-repeat url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2013%2013%22%3E%3Cpath%20d%3D%22M6.5%206.5L6.5%201A5.5%205.5%200%200%201%2011.263%209.25Z%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M6.5%206.5L11.263%209.25A5.5%205.5%200%200%201%201.737%209.25Z%22%20fill%3D%22%23ede3d2%22%2F%3E%3Cpath%20d%3D%22M6.5%206.5L1.737%209.25A5.5%205.5%200%200%201%206.5%201Z%22%20fill%3D%22%234a4844%22%2F%3E%3Cpath%20d%3D%22M6.5%206.5L6.5%201M6.5%206.5L11.263%209.25M6.5%206.5L1.737%209.25%22%20fill%3D%22none%22%20stroke%3D%22%236b655e%22%20stroke-width%3D%22.6%22%20stroke-linecap%3D%22butt%22%2F%3E%3Ccircle%20cx%3D%226.5%22%20cy%3D%226.5%22%20r%3D%225.5%22%20fill%3D%22none%22%20stroke%3D%22%233c3936%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E")!important;box-shadow:none!important;font-size:0!important;line-height:1!important}
+
 .theme-disc::after{content:none!important}
+@media(max-width:760px){
+  .brand>span:last-child{display:none!important}
+  .topnav .nav-link.active{display:none!important}
+  .topnav .nav-link{font-size:13px!important;font-weight:500!important;line-height:1.6!important}
+  .subscribe-cta{font:650 12px/1 var(--sans)!important;padding:0 10px!important}
+  .sb-brand{font-size:0!important;gap:0!important}
+  .sb-nav{gap:14px!important}
+  .sb-nav a:first-child{display:none!important}
+  .sb-nav a{font-size:13px!important;font-weight:500!important;line-height:1.6!important}
+  .sb-nav .sb-subscribe{font-size:12px!important;line-height:1!important;padding:0 10px!important}
+}
 .topnav .nav-link{color:var(--text)!important}
 .topnav .nav-link.active{color:var(--text)!important;font-weight:600!important}
 .subscribe-cta{color:var(--text)!important;border-radius:10px!important}
