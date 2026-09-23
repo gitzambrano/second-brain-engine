@@ -37,16 +37,24 @@ sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 
 SURFACES = [
     ("home-light-desktop", "index.html", "light", (1440, 900)),
+    ("home-sepia-desktop", "index.html", "sepia", (1440, 900)),
     ("home-dark-desktop", "index.html", "dark", (1440, 900)),
     ("home-mobile", "index.html", "light", (390, 844)),
     ("essay-light", "essays/dutch-roll.html", "light", (1440, 900)),
+    ("essay-sepia", "essays/dutch-roll.html", "sepia", (1440, 900)),
     ("essay-dark", "essays/dutch-roll.html", "dark", (1440, 900)),
     ("essay-mobile", "essays/dutch-roll.html", "light", (390, 844)),
-    ("graph", "graph.html", "light", (1440, 900)),
-    ("sphere", "sphere.html", "light", (1440, 900)),
+    ("graph-light", "graph.html", "light", (1440, 900)),
+    ("graph-sepia", "graph.html", "sepia", (1440, 900)),
+    ("sphere-light", "sphere.html", "light", (1440, 900)),
+    ("sphere-sepia", "sphere.html", "sepia", (1440, 900)),
 ]
 
-THEME_BG = {"light": (255, 255, 255), "dark": (9, 9, 9)}
+THEME_BG = {
+    "light": (255, 255, 255),
+    "sepia": (251, 248, 241),
+    "dark": (9, 9, 9),
+}
 
 
 def _chromium():
