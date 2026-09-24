@@ -140,3 +140,14 @@ y = 2
     assert {"TABLE_PIPE_UNESCAPED", "CALLOUT_EMPTY", "UNCLOSED_CODE_BLOCK", "UNCLOSED_MATH_BLOCK"} <= codes
 
 
+def test_unsupported_math_commands(mini_brain):
+    _insert_before_references(mini_brain, """
+$$
+\\oiint_{\\partial V} \\mathbf{u} \\cdot \\mathbf{n} \\, dS
+$$
+""")
+    _proc, codes = _codes(mini_brain)
+    assert "UNSUPPORTED_MATH_COMMAND" in codes
+
+
+

@@ -767,6 +767,25 @@ def check_essay(filepath: Path) -> dict:
         add("CRITICAL", "UNCLOSED_MATH_BLOCK",
             f"{math_runs} delimitador(es) $$ encontrados — bloco de matemática em display não fechado")
 
+    # Comandos LaTeX que quebram renderização no MathJax (Obsidian e HTML export).
+    # MathJax 3 não suporta \oiint, \oiiint (pacote esint/wasysym), renderizando-os
+    # em vermelho como erro de sintaxe.
+    UNSUPPORTED_MATH_COMMANDS = {
+        r"\oiint": (r"\iint", r"\oint"),
+        r"\oiiint": (r"\iiint", r"\oint"),
+        r"\ointclockwise": (r"\oint",),
+        r"\ointctrclockwise": (r"\oint",),
+        r"\varoiint": (r"\iint", r"\oint"),
+    }
+    for cmd, alternatives in UNSUPPORTED_MATH_COMMANDS.items():
+        if cmd in clean_for_math:
+            for ln_idx, line in enumerate(lines_clean, 1):
+                if cmd in line:
+                    alts_str = " ou ".join(alternatives)
+                    add("ERROR", "UNSUPPORTED_MATH_COMMAND",
+                        f"linha {ln_idx}: comando '{cmd}' não é suportado pelo MathJax (Obsidian/HTML) — use {alts_str}")
+
+
     if not fm_text:
         add("CRITICAL", "NO_FRONTMATTER", "Sem YAML frontmatter")
         return {"name": name, "issues": issues}

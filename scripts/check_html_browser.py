@@ -79,6 +79,10 @@ def audit_file(browser, path: Path, result: CheckResult) -> None:
           return text.includes('[[') && text.includes(']]');
           })(),
           rawFencedDiv: document.body.innerText.includes(':::{') || document.body.innerText.includes('::: {'),
+          mathErrors: (() => {
+            const errs = document.querySelectorAll('mjx-merror, [data-mjx-error], g[data-mml-node="mtext"][fill="red"], mtext[mathcolor="red"], mtext[color="red"]');
+            return [...errs].map(el => el.textContent.trim()).filter(Boolean);
+          })(),
           // Escala real do MathJax: altura renderizada dividida pela altura
           // declarada em `ex`. Numa fórmula espremida por `max-width` a razão
           // despenca e a equação vira um risco de 4px — a checagem de overflow
@@ -99,6 +103,12 @@ def audit_file(browser, path: Path, result: CheckResult) -> None:
             return {minCell: Math.min(...cell), medProse: med(prose), n: cell.length};
           })()
         })""")
+        if data.get("mathErrors"):
+            result.error(
+                "MATH_RENDER_ERROR",
+                f"{label}: MathJax render error(s): {data['mathErrors'][:5]}",
+                path.name,
+            )
         if data["docWidth"] > data["innerWidth"] + 2:
             result.error(
                 "PAGE_HORIZONTAL_OVERFLOW",

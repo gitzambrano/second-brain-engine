@@ -161,6 +161,7 @@ PROBE = r"""() => {
       .filter(id => id && !document.getElementById(id)),
     rawWikilink: /\[\[[^\]\n]{1,80}\]\]/.test(text),
     rawFencedDiv: text.includes(':::{') || text.includes('::: {'),
+    mathErrors: [...document.querySelectorAll('mjx-merror, [data-mjx-error], g[data-mml-node="mtext"][fill="red"], mtext[mathcolor="red"], mtext[color="red"]')].map(el => el.textContent.trim()).filter(Boolean),
     isEssay: !!document.querySelector('.sb-bar'),
     hasFab: !!document.querySelector('.sb-toc-fab'),
     tocLinks: document.querySelectorAll('#sbTocList a').length,
@@ -264,6 +265,8 @@ def audit_page(page, url: str, path: Path, label: str, result: CheckResult,
         result.error("RAW_WIKILINK", f"{label}: [[...]] visible in the page", name)
     if data["rawFencedDiv"]:
         result.error("RAW_FENCED_DIV", f"{label}: ::: block visible in the page", name)
+    if data.get("mathErrors"):
+        result.error("MATH_RENDER_ERROR", f"{label}: MathJax render error(s): {data['mathErrors'][:5]}", name)
 
     if data["isEssay"]:
         if data["editorialFonts"]:
