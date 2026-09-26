@@ -242,6 +242,8 @@ def audit_bodies() -> list[str]:
     for essay in essays:
         if essay.published:
             public_grams |= fingerprints(normalize_words(private_prose(essay)))
+        if essay.summary:
+            public_grams |= fingerprints(normalize_words(essay.summary))
 
     # n-grama -> slug do essay privado que o contém. O primeiro dono basta: o
     # relatório aponta um vazamento, e o Usuário abre o arquivo.
