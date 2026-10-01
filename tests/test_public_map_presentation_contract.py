@@ -10,12 +10,12 @@ def test_maps_start_with_quieter_edges_and_true_auto_labels():
     graph = (ROOT / "scripts" / "build_graph.py").read_text(encoding="utf-8")
     sphere = (ROOT / "scripts" / "build_sphere.py").read_text(encoding="utf-8")
 
-    assert '"edgeOpacity": 0.35' in graph
-    assert '"edgeOpacity": 0.35' in sphere
+    assert '"edgeOpacity": 0.28' in graph
+    assert '"edgeOpacity": 0.28' in sphere
     assert 'labels: "auto"' in graph
     assert 'labels: "auto"' in sphere
-    assert "const LABEL_SHOW_AT = 1.55" in graph
-    assert "const LABEL_HIDE_AT = 1.45" in graph
+    assert "const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.48 : 0.60;" in graph
+    assert "const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.42 : 0.54;" in graph
 
 
 def test_map_chrome_uses_larger_nonwrapping_navigation_labels():

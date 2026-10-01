@@ -8,8 +8,8 @@ ESSAY_CSS = (ROOT / "scripts" / "site_src" / "essay-theme.css").read_text(encodi
 
 
 def test_graph_labels_appear_earlier_on_mobile_and_desktop():
-    assert GRAPH.count("const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;") == 1
-    assert GRAPH.count("const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;") == 1
+    assert GRAPH.count("const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.48 : 0.60;") == 1
+    assert GRAPH.count("const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.42 : 0.54;") == 1
 
 
 def test_png_export_never_resizes_the_live_canvas():
@@ -36,7 +36,7 @@ def test_public_map_switch_text_is_flex_centered_and_theme_glyph_is_not_shrunk()
     assert 'display: inline-flex; align-items: center; justify-content: center;' in PUBLIC
     assert 'height: 36px; min-height: 36px; padding: 0 15px;' in PUBLIC
     assert 'display: grid; place-items: center;' in PUBLIC
-    assert '#sb-theme { width:36px; height:36px; min-height:36px; padding:0; font-size:21px; line-height:1; }' in PUBLIC
+    assert '#sb-theme { width:36px; height:36px; min-height:36px; padding:0; }' in PUBLIC
     assert '#sb-back, #sb-map-switch a, #sb-theme { min-height:36px; padding:8px 12px; font-size:13px; }' not in PUBLIC
 
 

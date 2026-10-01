@@ -1357,6 +1357,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 13px; color: var(--ink-dim); padding: 10px 2px; border-bottom: 1px solid #2b2f33; }
   .style-row:last-child { border-bottom: none; }
   .style-row span { flex: 1; }
+  .style-label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+  .style-help-icon { display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%; font-size: 10px; font-weight: 700; line-height: 1;
+    color: var(--ink-dim); border: 1px solid var(--panel-border); background: rgba(255,255,255,.05);
+    opacity: .7; transition: opacity .15s ease, color .15s ease, border-color .15s ease;
+    vertical-align: middle; flex: none; }
+  .style-label:hover .style-help-icon,
+  .style-label:focus .style-help-icon,
+  .style-label.help-active .style-help-icon { opacity: 1; color: var(--instrument-blue); border-color: var(--instrument-blue); }
+  .style-help-popup { position: fixed; z-index: 100; max-width: 280px; padding: 10px 14px;
+    background: var(--panel); color: var(--ink); border: 1px solid var(--panel-border);
+    border-radius: 8px; font-size: 12px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    pointer-events: auto; }
   .style-row input[type="color"] { width: 42px; height: 28px; padding: 0; border: 1px solid var(--panel-border);
     border-radius: 7px; background: none; cursor: pointer; }
   .style-slider input[type="range"] { flex: 1.4; accent-color: var(--instrument-blue); }
@@ -1528,6 +1541,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div id="modal-body"></div>
   </div>
 </div>
+<div id="style-help-popup" class="style-help-popup" role="tooltip" hidden></div>
 
 <div id="reader-overlay" role="dialog" aria-modal="true" aria-label="Leitor de ensaio">
   <div class="sb-progress"><div class="sb-progress-fill" id="reader-progress-fill"></div></div>
@@ -1837,7 +1851,23 @@ const endpoint = (v) => (typeof v === "object" ? v : nodeById.get(v));
 // e draw() leem `hiddenTypes` durante a inicialização no topo do script — um
 // `const` mais abaixo estouraria em ReferenceError (temporal dead zone) e
 // mataria o script inteiro, deixando o grafo em branco.
-const hiddenTypes = new Set(["reference"]);
+const HIDDEN_TYPES_KEY = "sb-hidden-types-v1";
+function loadHiddenTypes() {
+  try {
+    const raw = localStorage.getItem(HIDDEN_TYPES_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch {}
+  return new Set(["reference"]);
+}
+function saveHiddenTypes() {
+  try {
+    localStorage.setItem(HIDDEN_TYPES_KEY, JSON.stringify(Array.from(hiddenTypes)));
+  } catch {}
+}
+const hiddenTypes = loadHiddenTypes();
 
 function isNodeVisible(n) {
   return !hiddenTypes.has(n.type);
@@ -1993,8 +2023,8 @@ data.nodes.forEach(n => {
 // no zoom (abaixo) e recalculado toda vez que spacing/performance mudam.
 let currentTier = PERFORMANCE_TIERS[resolvePerformanceTier(styleConfig)];
 let labelsShown = false;
-const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.62 : 0.78;
-const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.56 : 0.72;
+const LABEL_SHOW_AT = DEVICE_IS_MOBILE ? 0.48 : 0.60;
+const LABEL_HIDE_AT = DEVICE_IS_MOBILE ? 0.42 : 0.54;
 
 // Some com os rótulos quando o tier não é "sempre mostrar" e o zoom está
 // afastado — em wikis de centenas de nós, texto é de longe a coisa mais
@@ -2875,6 +2905,7 @@ function selectNode(d) {
     hiddenTypes.delete(d.type);
     const chip = document.querySelector(`.legend-item[data-type="${d.type}"]`);
     if (chip) chip.classList.remove("disabled");
+    saveHiddenTypes();
     updateVisibility();
   }
 
@@ -2987,6 +3018,17 @@ function updateVisibility() {
   scheduleDraw();
 }
 
+function syncLegendDom() {
+  document.querySelectorAll(".legend-item[data-type]").forEach(el => {
+    const type = el.getAttribute("data-type");
+    if (hiddenTypes.has(type)) {
+      el.classList.add("disabled");
+    } else {
+      el.classList.remove("disabled");
+    }
+  });
+}
+
 document.querySelectorAll(".legend-item[data-type]").forEach(el => {
   el.addEventListener("click", () => {
     const type = el.getAttribute("data-type");
@@ -2997,9 +3039,12 @@ document.querySelectorAll(".legend-item[data-type]").forEach(el => {
       hiddenTypes.add(type);
       el.classList.add("disabled");
     }
+    saveHiddenTypes();
     updateVisibility();
   });
 });
+
+syncLegendDom();
 
 updateVisibility();
 
@@ -3718,49 +3763,60 @@ const GRAPH_THEMES = {
   },
 };
 
+const escapeAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const optLabel = (text, help) => help
+  ? `<span class="style-label" data-help="${escapeAttr(help)}">${text}<span class="style-help-icon" title="Ajuda">?</span></span>`
+  : `<span class="style-label">${text}</span>`;
+
 function renderStylePanel(seed) {
   const draft = JSON.parse(JSON.stringify(seed || styleConfig)); // rascunho — só grava de fato no "Salvar"
 
   const colorRow = (key) => `
     <label class="style-row">
-      <span>${STYLE_LABELS[key]}</span>
+      <span class="style-label">${STYLE_LABELS[key]}</span>
       <input type="color" data-color="${key}" value="${draft.colors[key]}">
     </label>`;
 
   const themeBtn = (key, t) => `<button class="btn theme-btn" data-theme="${key}">${t.label}</button>`;
 
+  const perfHelp = `Controla a física da simulação e detalhamento. Atualmente usando: ${resolvePerformanceTier(draft)} (${data.nodes.length} nós${DEVICE_IS_MOBILE ? ", aparelho móvel" : ""}).`;
+
   modalBody.innerHTML = `
     <h2>Estilo do grafo</h2>
     <div class="style-grid">
     <div class="style-section style-span2">
-      <p class="style-hint">Temas ajustam vários controles de uma vez — os itens abaixo continuam ajustáveis um a um depois.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="style-label" data-help="Temas pré-configurados ajustam vários controles de uma vez (cores, relevo e física). Você ainda pode personalizar cada item individualmente depois.">
+          Temas prontos
+          <span class="style-help-icon" title="Ajuda">?</span>
+        </span>
+      </div>
       <div class="theme-row">${Object.entries(GRAPH_THEMES).map(([k, t]) => themeBtn(k, t)).join("")}</div>
     </div>
     <div class="style-section">
       ${Object.keys(STYLE_LABELS).map(colorRow).join("")}
       <label class="style-row style-slider">
-        <span>Raio base da bolinha</span>
+        ${optLabel("Raio base da bolinha", "Tamanho mínimo de cada bolinha no grafo.")}
         <input type="range" id="st-radius-base" min="2" max="14" step="1" value="${draft.radiusBase}">
       </label>
       <label class="style-row style-slider">
-        <span>Escala do tamanho</span>
+        ${optLabel("Escala do tamanho", "Multiplicador de crescimento do raio com base no critério escolhido.")}
         <input type="range" id="st-radius-scale" min="0" max="8" step="0.5" value="${draft.radiusScale}">
       </label>
     </div>
     <div class="style-section">
       <label class="style-row">
-        <span>Tamanho da bolinha representa</span>
+        ${optLabel("Tamanho da bolinha representa", "Critério que define o diâmetro dos nós: número de conexões ou tamanho do essay (em bytes ou linhas). Referências não têm arquivo e ficam sempre no raio base.")}
         <select id="st-size-mode">
           <option value="degree" ${draft.sizeMode === "degree" ? "selected" : ""}>Nº de conexões</option>
           <option value="bytes" ${draft.sizeMode === "bytes" ? "selected" : ""}>Tamanho do essay (bytes)</option>
           <option value="lines" ${draft.sizeMode === "lines" ? "selected" : ""}>Tamanho do essay (linhas)</option>
         </select>
       </label>
-      <p class="style-hint">Referências não têm arquivo — nos modos de tamanho de essay elas ficam sempre no raio base. O raio base e a escala do tamanho agora ficam ao lado das cores, acima.</p>
     </div>
     <div class="style-section">
       <label class="style-row">
-        <span>Conexões (arestas) entre os nós</span>
+        ${optLabel("Conexões (arestas) entre os nós", "Modo de exibição das arestas: sempre visíveis, automáticas (esmaecem na busca e seleção) ou desligadas.")}
         <select id="st-edges">
           <option value="sempre" ${(draft.edgeVisibility ?? "sempre") === "sempre" ? "selected" : ""}>Sempre visível</option>
           <option value="auto" ${draft.edgeVisibility === "auto" ? "selected" : ""}>Automático (esmaece ao selecionar/buscar)</option>
@@ -3768,40 +3824,37 @@ function renderStylePanel(seed) {
         </select>
       </label>
       <label class="style-row style-slider">
-        <span>Opacidade das arestas</span>
+        ${optLabel("Opacidade das arestas", "Nível de transparência das linhas que ligam os nós.")}
         <input type="range" id="st-edge-opacity" min="0.1" max="1" step="0.05" value="${draft.edgeOpacity}">
       </label>
       <label class="style-row style-slider">
-        <span>Tamanho do rótulo</span>
+        ${optLabel("Tamanho do rótulo", "Tamanho da fonte dos nomes dos nós no grafo.")}
         <input type="range" id="st-label-size" min="8" max="18" step="1" value="${draft.labelSize}">
       </label>
       <label class="style-row style-slider">
-        <span>Espaçamento entre bolinhas</span>
+        ${optLabel("Espaçamento entre bolinhas", "Aumenta a distância mínima entre nós e o comprimento das arestas — útil quando o grafo está denso demais.")}
         <input type="range" id="st-spacing" min="0.6" max="3" step="0.2" value="${draft.spacing ?? 1.8}">
       </label>
-      <p class="style-hint">Sobe a distância mínima entre nós, a força que os empurra pra longe e o comprimento das arestas — útil quando o grafo fica denso demais pra ler.</p>
       <label class="style-row style-slider">
-        <span>Força elástica das conexões</span>
+        ${optLabel("Força elástica das conexões", "Intensidade com que as arestas puxam os nós conectados uns em direção aos outros.")}
         <input type="range" id="st-link-strength" min="0.2" max="7" step="0.4" value="${draft.linkStrength ?? 3.5}">
       </label>
       <label class="style-row style-slider">
-        <span>Força de repulsão entre nós</span>
+        ${optLabel("Força de repulsão entre nós", "Intensidade com que as bolinhas se afastam umas das outras no espaço.")}
         <input type="range" id="st-charge-strength" min="0.2" max="6" step="0.4" value="${draft.chargeStrength ?? 2}">
       </label>
       <label class="style-row style-slider">
-        <span>Atrito</span>
+        ${optLabel("Atrito", "Resistência ao movimento. Valores maiores fazem o grafo estabilizar e parar de balançar mais rápido.")}
         <input type="range" id="st-friction" min="0.05" max="1.25" step="0.1" value="${draft.friction ?? 0.65}">
       </label>
-      <p class="style-hint">Elástica: quanto maior, mais as arestas puxam os nós conectados com força. Repulsão: quanto maior, mais os nós se afastam uns dos outros. Atrito: quanto maior, mais rápido o grafo assenta e para de balançar.</p>
       <label class="style-row style-slider">
-        <span>Elasticidade de retorno</span>
+        ${optLabel("Elasticidade de retorno", "Puxa cada bolinha de volta à sua posição de layout após ser arrastada e solta. Em zero, a bolinha fica onde for solta.")}
         <input type="range" id="st-home-strength" min="0" max="0.6" step="0.02" value="${draft.homeStrength ?? 0.25}">
       </label>
-      <p class="style-hint">Puxa cada bolinha de volta pro lugar dela no layout quando ela é arrastada e solta — diferente da força elástica das conexões, que só rege a distância entre vizinhos, sem noção de posição absoluta. 0 desliga (a bolinha fica onde for solta).</p>
     </div>
     <div class="style-section">
       <label class="style-row">
-        <span>Nível de desempenho</span>
+        ${optLabel("Nível de desempenho", perfHelp)}
         <select id="st-performance">
           <option value="alta" ${(draft.performance ?? "alta") === "alta" ? "selected" : ""}>Alta (recomendado)</option>
           <option value="auto" ${draft.performance === "auto" ? "selected" : ""}>Automático</option>
@@ -3809,24 +3862,17 @@ function renderStylePanel(seed) {
           <option value="baixa" ${draft.performance === "baixa" ? "selected" : ""}>Baixa</option>
         </select>
       </label>
-      <p class="style-hint">
-        Controla a física da simulação e quando os rótulos somem ao afastar o zoom — não altera cor nem brilho.
-        No automático, este navegador/grafo está usando: <b>${resolvePerformanceTier(draft)}</b>
-        (${data.nodes.length} nós${DEVICE_IS_MOBILE ? ", aparelho móvel" : ""}).
-      </p>
       <label class="style-row">
-        <span>Colisão entre nós</span>
+        ${optLabel("Colisão entre nós", "Impede que bolinhas se sobreponham na tela. Desligar acelera o simulador em aparelhos mais lentos.")}
         <select id="st-collision">
           <option value="true" ${(draft.collision ?? true) !== false ? "selected" : ""}>Ligada (padrão)</option>
           <option value="false" ${draft.collision === false ? "selected" : ""}>Desligada (mais rápido)</option>
         </select>
       </label>
-      <p class="style-hint">Desligar evita que o simulador gaste tempo resolvendo sobreposição entre bolinhas — mais rápido em aparelhos fracos, ao custo de nós podendo se sobrepor na tela.</p>
     </div>
     <div class="style-section">
-      <p class="style-hint">Extras puramente decorativos — desligue os que não quiser, principalmente em wikis grandes ou no celular.</p>
       <label class="style-row">
-        <span>Brilho (glow) nos nós</span>
+        ${optLabel("Brilho (glow) nos nós", "Halo luminoso ao redor das bolinhas. Desligado economiza processamento.")}
         <select id="st-glow">
           <option value="off" ${draft.glow === "off" ? "selected" : ""}>Desligado</option>
           <option value="leve" ${draft.glow === "leve" ? "selected" : ""}>Leve (leve no processamento)</option>
@@ -3834,7 +3880,7 @@ function renderStylePanel(seed) {
         </select>
       </label>
       <label class="style-row">
-        <span>Rótulo (nome) dos nós</span>
+        ${optLabel("Rótulo (nome) dos nós", "Exibição dos nomes: automático (aparece ao aproximar o zoom), sempre visível ou sempre oculto.")}
         <select id="st-labels">
           <option value="auto" ${(draft.labels ?? "auto") === "auto" ? "selected" : ""}>Automático (some ao afastar o zoom)</option>
           <option value="sempre" ${draft.labels === "sempre" ? "selected" : ""}>Sempre visível</option>
@@ -3842,22 +3888,21 @@ function renderStylePanel(seed) {
         </select>
       </label>
       <label class="style-row">
-        <span>Gradiente nas bolinhas</span>
+        ${optLabel("Gradiente nas bolinhas", "Aplica preenchimento com gradiente de luz suave em cada nó.")}
         <input type="checkbox" id="st-gradient" ${draft.gradient ? "checked" : ""}>
       </label>
       <label class="style-row">
-        <span>Textura esférica nas bolinhas</span>
+        ${optLabel("Textura esférica nas bolinhas", "Adiciona reflexo e sombra para simular volume de esfera 3D em vez de disco chapado.")}
         <input type="checkbox" id="st-sphere-shading" ${draft.sphereShading ? "checked" : ""}>
       </label>
       <label class="style-row">
-        <span>Céu estrelado no fundo</span>
+        ${optLabel("Céu estrelado no fundo", "Exibe pontilhados sutis no fundo simulando constelações.")}
         <input type="checkbox" id="st-starfield" ${draft.starfield ? "checked" : ""}>
       </label>
       <label class="style-row">
-        <span>Tingir o fundo pelas tags</span>
+        ${optLabel("Tingir o fundo pelas tags", "Manchas escuras no fundo indicando regiões de concentração temática de tags.")}
         <input type="checkbox" id="st-tag-tint" ${draft.tagTint ? "checked" : ""}>
       </label>
-      <p class="style-hint">Textura esférica: brilho e sombra por cima da bolinha, pra parecer uma esfera 3D em vez de um disco chapado. Tingir por tag: manchas bem escuras (quase a cor de fundo) em torno de onde cada tag se concentra no grafo — um indício visual de "regiões temáticas", sutil de propósito.</p>
     </div>
     </div>
     <div class="style-actions">
@@ -3866,6 +3911,61 @@ function renderStylePanel(seed) {
     </div>`;
 
   const preview = () => applyStyle(draft); // aplica ao vivo no grafo por trás do modal, sem salvar ainda
+
+  const helpPopup = document.getElementById("style-help-popup");
+  const showHelp = (el, pin) => {
+    if (!helpPopup) return;
+    const text = el.getAttribute("data-help");
+    if (!text) return;
+    helpPopup.textContent = text;
+    helpPopup.hidden = false;
+    helpPopup.dataset.pinned = pin ? "true" : "false";
+    helpPopup.dataset.targetLabel = el.textContent;
+    el.classList.add("help-active");
+
+    const rect = el.getBoundingClientRect();
+    const pad = 10;
+    let top = rect.bottom + 6;
+    let left = rect.left;
+    const popRect = helpPopup.getBoundingClientRect();
+    if (left + popRect.width > window.innerWidth - pad) {
+      left = Math.max(pad, window.innerWidth - popRect.width - pad);
+    }
+    if (top + popRect.height > window.innerHeight - pad) {
+      top = Math.max(pad, rect.top - popRect.height - 6);
+    }
+    helpPopup.style.top = top + "px";
+    helpPopup.style.left = left + "px";
+  };
+
+  const hideHelp = (force) => {
+    if (!helpPopup) return;
+    if (force || helpPopup.dataset.pinned !== "true") {
+      helpPopup.hidden = true;
+      helpPopup.dataset.pinned = "false";
+      modalBody.querySelectorAll(".style-label.help-active").forEach(l => l.classList.remove("help-active"));
+    }
+  };
+
+  modalBody.querySelectorAll(".style-label[data-help]").forEach(lbl => {
+    lbl.addEventListener("mouseenter", () => {
+      if (helpPopup.dataset.pinned === "true") return;
+      showHelp(lbl, false);
+    });
+    lbl.addEventListener("mouseleave", () => {
+      hideHelp(false);
+    });
+    lbl.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!helpPopup.hidden && helpPopup.dataset.pinned === "true" && helpPopup.dataset.targetLabel === lbl.textContent) {
+        hideHelp(true);
+      } else {
+        hideHelp(true);
+        showHelp(lbl, true);
+      }
+    });
+  });
 
   modalBody.querySelectorAll(".theme-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3911,6 +4011,37 @@ function renderStylePanel(seed) {
     applyStyle(JSON.parse(JSON.stringify(defaultStyle)));
     renderStylePanel(); // redesenha o modal já com os controles no padrão
   });
+}
+
+document.addEventListener("click", (e) => {
+  const hp = document.getElementById("style-help-popup");
+  if (!hp || hp.hidden) return;
+  if (!e.target.closest("#style-help-popup") && !e.target.closest(".style-label[data-help]")) {
+    hp.hidden = true;
+    hp.dataset.pinned = "false";
+    document.querySelectorAll(".style-label.help-active").forEach(l => l.classList.remove("help-active"));
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const hp = document.getElementById("style-help-popup");
+    if (hp) {
+      hp.hidden = true;
+      hp.dataset.pinned = "false";
+      document.querySelectorAll(".style-label.help-active").forEach(l => l.classList.remove("help-active"));
+    }
+  }
+});
+const modalEl = document.getElementById("modal");
+if (modalEl) {
+  modalEl.addEventListener("scroll", () => {
+    const hp = document.getElementById("style-help-popup");
+    if (hp && !hp.hidden) {
+      hp.hidden = true;
+      hp.dataset.pinned = "false";
+      document.querySelectorAll(".style-label.help-active").forEach(l => l.classList.remove("help-active"));
+    }
+  }, { passive: true });
 }
 
 document.getElementById("btn-style").addEventListener("click", () => {
