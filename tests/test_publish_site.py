@@ -9,7 +9,7 @@ from conftest import SCRIPTS
 sys.path.insert(0, str(SCRIPTS))
 
 
-def test_publish_site_default_runs_one_seal_then_commits_and_pushes(monkeypatch):
+def test_publish_site_default_runs_one_seal_then_rewrites_history(monkeypatch):
     import publish_site
 
     calls: list[tuple[str, ...]] = []
@@ -21,6 +21,10 @@ def test_publish_site_default_runs_one_seal_then_commits_and_pushes(monkeypatch)
     )
     monkeypatch.setattr(publish_site, "site_has_changes", lambda: True)
     monkeypatch.setattr(publish_site, "publication_message", lambda: "Publicação do site: 2026-09-09")
+    rewrites: list[str] = []
+    monkeypatch.setattr(
+        publish_site, "rewrite_history", lambda site, message: rewrites.append(message) or "a" * 40
+    )
 
     assert publish_site.main([]) == 0
 
@@ -28,10 +32,10 @@ def test_publish_site_default_runs_one_seal_then_commits_and_pushes(monkeypatch)
         (sys.executable, str(SCRIPTS / "check_visibility_field.py")),
         (sys.executable, str(SCRIPTS / "build_site.py")),
         (sys.executable, str(SCRIPTS / "seal_publication.py")),
-        ("git", "add", "."),
-        ("git", "commit", "-m", "Publicação do site: 2026-09-09"),
-        ("git", "push", "origin", "main"),
     ]
+    # O site é publicado por reescrita de histórico (dois commits), nunca por
+    # `git commit` + `git push` comuns.
+    assert rewrites == ["Publicação do site: 2026-09-09"]
 
 
 def test_publish_site_does_not_commit_when_build_changes_nothing(monkeypatch, capsys):

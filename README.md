@@ -137,7 +137,7 @@ O routing detalhado e os contratos ficam em **[`AGENTS.md`](./AGENTS.md)** e nas
 | **Iteração** | `/expand`, `/chapter`, `/continuity`, `/proofread`, `/polish`, `/linkify`, `/review`, `/diagram` |
 | **Fontes e estudo** | `/import`, `/digest`, `/absorb`, `/study`, `/scout` |
 | **Manutenção** | `/organize`, `/sweep`, `/gaps`, `/connect`, `/merge`, `/delete`, `/plan`, `/stats`, `/status`, `/doctor` |
-| **Saída e consulta** | `/handout`, `/html`, `/pdf`, `/publish`, `/query`, `/synthesize` |
+| **Saída e consulta** | `/handout`, `/html`, `/pdf`, `/publish`, `/podcast`, `/query`, `/synthesize` |
 
 ### Subagents Especializados
 

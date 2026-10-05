@@ -17,3 +17,5 @@ html5lib==1.1
 playwright==1.60.0
 Pillow==12.2.0
 Unidecode==1.4.0
+# Fallback do ffmpeg para os podcasts quando não há ffmpeg no PATH.
+imageio-ffmpeg==0.6.0

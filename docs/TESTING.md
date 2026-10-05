@@ -87,6 +87,7 @@ python -m pytest -m browser
 | **Playwright + Chromium** | testes `browser` e validação visual |
 | **Pandoc** | HTML e construção do site nos testes de browser |
 | **LuaLaTeX** | PDF |
+| **ffmpeg** (PATH ou `imageio-ffmpeg`) | podcasts: recodificação, integridade e `tests/test_podcasts.py` (pulados sem ffmpeg) |
 
 Instalação do Chromium: `python -m playwright install chromium`.
 
@@ -97,3 +98,15 @@ Instalação do Chromium: `python -m playwright install chromium`.
 Bug mecânico determinístico: adicione regressão ao `mini-brain`, confirme falha antes do fix e passagem depois, então rode o gate aplicável.
 
 Nunca use essays reais do repositório privado como fixture.
+
+---
+
+## 🎧 Podcasts
+
+```bash
+python scripts/check_podcasts.py          # nomes, integridade, cópias, players e vazamento de conta
+python scripts/fix_podcasts.py            # renomeia nomes inequívocos
+python -m pytest -q tests/test_podcasts.py tests/test_publish_history.py
+```
+
+Os testes geram áudio sintético com o ffmpeg em `tmp_path` e nunca tocam `data/`. `check_repo.py --quick` inclui a varredura de vazamento de conta (e-mails e nomes dos perfis locais em arquivos versionados e em `site/`); o diagnóstico completo inclui o `check_podcasts.py` inteiro. O orçamento do site trata `assets/podcasts/` à parte: 25 MB por arquivo e 500 MB no total, fora dos 40 MB do site.

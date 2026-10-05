@@ -22,6 +22,11 @@ import console_encoding  # noqa: F401  (UTF-8 no console; ver o módulo)
 from repo_paths import SITE_ROOT
 from sanity_common import CheckResult
 
+# Podcasts: cada cópia publicada (AAC mono 48 kbps) e a soma de todas.
+PODCAST_PREFIX = "assets/podcasts/"
+PODCAST_FILE_KB = 25 * 1024
+PODCASTS_TOTAL_MB = 500
+
 # Teto em KB por padrão de caminho, relativo a SITE_ROOT. A primeira regra que
 # casa vence, então o específico vem antes do genérico.
 BUDGETS_KB: list[tuple[str, int]] = [
@@ -42,6 +47,8 @@ BUDGETS_KB: list[tuple[str, int]] = [
     ("assets/*.css", 128),
     ("assets/*.js", 128),
     ("assets/media/*", 1024),
+    # Áudio tem orçamento próprio (PODCASTS_TOTAL_MB) e fica fora do teto do site.
+    ("assets/podcasts/*", PODCAST_FILE_KB),
     ("essays/*.html", 1600),
 ]
 
@@ -71,11 +78,15 @@ def audit(root=None) -> CheckResult:
         return result
 
     total_kb = 0.0
+    podcast_kb = 0.0
     checked = 0
     for path in files:
         relative = path.relative_to(root).as_posix()
         kb = path.stat().st_size / 1024
-        total_kb += kb
+        if relative.startswith(PODCAST_PREFIX):
+            podcast_kb += kb
+        else:
+            total_kb += kb
         limit = budget_for(relative)
         if limit is None:
             continue
@@ -97,6 +108,11 @@ def audit(root=None) -> CheckResult:
     if total_mb > TOTAL_MB:
         result.error("SITE_OVER_BUDGET", f"site inteiro: {total_mb:.1f} MB excede {TOTAL_MB} MB")
 
+    podcast_mb = podcast_kb / 1024
+    if podcast_mb > PODCASTS_TOTAL_MB:
+        result.error("PODCASTS_OVER_BUDGET",
+                     f"podcasts: {podcast_mb:.1f} MB excede {PODCASTS_TOTAL_MB} MB")
+    result.meta["podcasts_mb"] = round(podcast_mb, 2)
     result.meta["files"] = len(files)
     result.meta["budgeted"] = checked
     result.meta["total_mb"] = round(total_mb, 2)

@@ -111,6 +111,7 @@ A coluna **Modo** descreve a execução da skill. O metadata declara seu contrat
 | PDF     | `/pdf`     | script  | Exportar e validar PDF                  |
 | HTML    | `/html`    | script  | Exportar e validar HTML standalone      |
 | Publish | `/publish` | ambos   | Publicar o Second Brain Atlas no site público via GitHub Pages |
+| Podcast | `/podcast` | ambos   | Ingerir, gerar (NotebookLM) e validar o podcast de um essay; o player só publica essay `public` |
 | Query   | `/query`   | leitura | Consultar o conhecimento já registrado |
 | Synthesize | `/synthesize` | leitura | Procurar padrões emergentes na combinação de páginas |
 
@@ -157,7 +158,7 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 
 - Nunca altere `visibility:` automaticamente; exige decisão explícita do Usuário.
 - Nenhum corpo não autorizado, link de leitura restrito ou caminho para `data/` pode sair.
-- `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`.
+- `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`, reescrevendo `main` para um histórico de dois commits (sem acumular binários antigos).
 - Os únicos GitHub Actions permitidos no pipeline de publicação ficam exclusivamente em `second-brain-site`: o gate mínimo de privacidade com deploy do Pages (`pages.yml`) e o anúncio de novos essays via Kit (`newsletter.yml`). **Não mover checks do engine/data para Actions.**
 - Contrato completo de dados: `conventions/SKILL.md`; workflow: `/publish`.
 

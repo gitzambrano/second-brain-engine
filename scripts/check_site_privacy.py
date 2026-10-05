@@ -163,6 +163,20 @@ def audit_pages(allowed: set[str]) -> list[str]:
     return errors
 
 
+def audit_podcasts(allowed: set[str]) -> list[str]:
+    """Áudio publicado só para essay público; nenhum outro arquivo na pasta."""
+    errors: list[str] = []
+    folder = SITE_ROOT / "assets" / "podcasts"
+    if not folder.is_dir():
+        return errors
+    for path in sorted(folder.iterdir()):
+        if not path.is_file() or path.suffix.lower() != ".m4a":
+            errors.append(f"unexpected file in assets/podcasts: {path.name}")
+        elif path.stem not in allowed:
+            errors.append(f"podcast of unauthorized essay in site: {path.name}")
+    return errors
+
+
 def normalize_words(text: str) -> list[str]:
     """Reduz o texto à sequência de palavras que sobrevive a uma reformatação.
 
@@ -286,6 +300,7 @@ def audit() -> list[str]:
     errors.extend(audit_maps(allowed))
     errors.extend(audit_catalogue(allowed))
     errors.extend(audit_pages(allowed))
+    errors.extend(audit_podcasts(allowed))
     errors.extend(audit_bodies())
 
     for path in sorted(SITE_ROOT.rglob("*")):

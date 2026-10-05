@@ -6,8 +6,17 @@ Uso:
 
 O comando não altera o corpus: ele exige os três repositórios limpos e
 sincronizados. O selo executa os gates de privacidade, orçamento e navegador
-uma única vez; depois disso, este script cria e envia o commit do artefato
-público.
+uma única vez; depois disso, este script publica o artefato.
+
+Histórico raso do site: cada publicação reescreve `main` para exatamente dois
+commits — um commit órfão com a árvore do HEAD anterior e, por cima, o commit
+da nova publicação. Assim o repositório público não acumula binários antigos
+(os podcasts). O workflow da newsletter compara
+`.github/newsletter-manifest.json` com `HEAD^`; o commit órfão carrega o
+manifesto anterior, então a comparação continua válida. Como o remoto é
+reescrito a cada vez, o site nunca faz `pull --rebase`: antes do build o
+checkout local é alinhado a `origin/main` (o site é projeção gerada, não tem
+trabalho próprio a preservar).
 """
 from __future__ import annotations
 
@@ -70,12 +79,48 @@ def repositories_ready() -> None:
 
     if not SITE_ROOT.is_dir():
         raise SystemExit(f"site: repositório ausente em {SITE_ROOT}")
-    run("git", "fetch", "origin", "--prune", cwd=SITE_ROOT)
-    counts = git_output("rev-list", "--left-right", "--count", "main...origin/main", cwd=SITE_ROOT)
-    ahead, behind = (int(part) for part in counts.split())
-    if behind > 0:
-        print(f"site: atualizando {behind} commit(s) da nuvem...")
-        run("git", "pull", "--rebase", "origin", "main", cwd=SITE_ROOT)
+    sync_site_checkout(SITE_ROOT)
+
+
+def sync_site_checkout(site: Path, remote: str = "origin", branch: str = "main") -> bool:
+    """Alinha o checkout do site ao remoto, que é reescrito a cada publicação.
+
+    Compara árvores, não histórico: as contagens ahead/behind perdem o sentido
+    quando `main` é reescrita. Árvores iguais não exigem nada; diferentes,
+    o checkout vira `origin/main` (o build o regenera por inteiro em seguida).
+    Devolve True quando houve reset.
+    """
+    run("git", "fetch", remote, "--prune", cwd=site)
+    remote_ref = f"{remote}/{branch}"
+    remote_tree = git_output("rev-parse", f"{remote_ref}^{{tree}}", cwd=site)
+    local_tree = git_output("rev-parse", "HEAD^{tree}", cwd=site)
+    if local_tree == remote_tree:
+        return False
+    print("site: checkout local difere de origin/main; alinhando (o site é regenerado pelo build)...")
+    run("git", "reset", "--hard", remote_ref, cwd=site)
+    return True
+
+
+def rewrite_history(site: Path, message: str, remote: str = "origin", branch: str = "main") -> str:
+    """Publica com histórico de dois commits e devolve o SHA da publicação.
+
+    1. commit órfão (sem pai) com a árvore do HEAD atual;
+    2. commit da publicação por cima dele, com a árvore do working tree;
+    3. `main` aponta para o novo commit; push forçado com lease explícito sobre
+       o SHA que o remoto tinha na última busca;
+    4. reflog expirado e `gc --prune=now`, para o binário antigo sair do disco.
+    """
+    old_remote = git_output("rev-parse", f"{remote}/{branch}", cwd=site)
+    old_tree = git_output("rev-parse", "HEAD^{tree}", cwd=site)
+    base = git_output("commit-tree", old_tree, "-m", "Publicação anterior", cwd=site)
+    run("git", "add", "-A", cwd=site)
+    new_tree = git_output("write-tree", cwd=site)
+    head = git_output("commit-tree", new_tree, "-p", base, "-m", message, cwd=site)
+    run("git", "update-ref", f"refs/heads/{branch}", head, cwd=site)
+    run("git", "push", f"--force-with-lease={branch}:{old_remote}", remote, branch, cwd=site)
+    run("git", "reflog", "expire", "--expire=now", "--all", cwd=site)
+    run("git", "gc", "--prune=now", "--quiet", cwd=site)
+    return head
 
 
 def site_has_changes() -> bool:
@@ -100,10 +145,8 @@ def main(argv: list[str] | None = None) -> int:
         print("site: nada a publicar")
         return 0
 
-    run("git", "add", ".", cwd=SITE_ROOT)
-    run("git", "commit", "-m", publication_message(), cwd=SITE_ROOT)
-    run("git", "push", "origin", "main", cwd=SITE_ROOT)
-    print("site: publicado")
+    head = rewrite_history(SITE_ROOT, publication_message())
+    print(f"site: publicado ({head[:10]}, histórico de 2 commits)")
     return 0
 
 

@@ -186,3 +186,138 @@
     }, { passive: true });
   }
 })();
+/* --- Podcast do ensaio ------------------------------------------------------ */
+(function () {
+  'use strict';
+  var player = document.querySelector('[data-sb-podcast]');
+  if (!player) return;
+  var audio = player.querySelector('audio');
+  var playBtn = player.querySelector('.sb-pc-play');
+  var seek = player.querySelector('.sb-pc-seek');
+  var timeEl = player.querySelector('.sb-pc-time');
+  var speedBtn = player.querySelector('.sb-pc-speed');
+  var SPEEDS = [1, 1.25, 1.5, 1.75, 2];
+  var speedIndex = 0;
+  var scrubbing = false;
+  var title = player.getAttribute('data-title') || document.title;
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    sec = Math.floor(sec);
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    var ss = (s < 10 ? '0' : '') + s;
+    return h ? h + ':' + (m < 10 ? '0' : '') + m + ':' + ss : m + ':' + ss;
+  }
+  function clampTime(t) {
+    var d = audio.duration;
+    return Math.max(0, isFinite(d) ? Math.min(t, d) : t);
+  }
+  function render() {
+    var d = audio.duration, t = audio.currentTime || 0;
+    var ready = isFinite(d) && d > 0;
+    seek.disabled = !ready;
+    if (!scrubbing) seek.value = ready ? Math.round((t / d) * 1000) : 0;
+    seek.style.setProperty('--pc-fill', (seek.value / 10) + '%');
+    timeEl.textContent = fmt(scrubbing && ready ? (seek.value / 1000) * d : t);
+    seek.setAttribute('aria-valuetext', fmt(t) + (ready ? ' de ' + fmt(d) : ''));
+  }
+  function setPlaying(on) {
+    player.classList.toggle('is-playing', on);
+    playBtn.setAttribute('aria-label', playBtn.getAttribute(on ? 'data-label-pause' : 'data-label-play'));
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = on ? 'playing' : 'paused';
+  }
+  function toggle() {
+    if (audio.paused) {
+      var p = audio.play();
+      if (p && p.catch) p.catch(function () { setPlaying(false); });
+    } else {
+      audio.pause();
+    }
+  }
+  function updatePosition() {
+    if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+    var d = audio.duration;
+    if (!isFinite(d) || d <= 0) return;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: d, playbackRate: audio.playbackRate || 1,
+        position: Math.min(audio.currentTime || 0, d)
+      });
+    } catch (e) { /* posição fora do intervalo durante o carregamento */ }
+  }
+  function skip(delta) {
+    audio.currentTime = clampTime((audio.currentTime || 0) + delta);
+    render();
+    updatePosition();
+  }
+  function setSpeed(i) {
+    speedIndex = i % SPEEDS.length;
+    var rate = SPEEDS[speedIndex];
+    audio.playbackRate = rate;
+    var label = String(rate).replace('.', ',') + '×';
+    speedBtn.textContent = label;
+    speedBtn.setAttribute('aria-label', 'Velocidade de reprodução: ' + label);
+  }
+
+  playBtn.addEventListener('click', toggle);
+  player.querySelector('.sb-pc-back').addEventListener('click', function () { skip(-15); });
+  player.querySelector('.sb-pc-fwd').addEventListener('click', function () { skip(15); });
+  speedBtn.addEventListener('click', function () { setSpeed(speedIndex + 1); });
+
+  seek.addEventListener('input', function () { scrubbing = true; render(); });
+  seek.addEventListener('change', function () {
+    var d = audio.duration;
+    if (isFinite(d) && d > 0) audio.currentTime = (seek.value / 1000) * d;
+    scrubbing = false;
+    render();
+    updatePosition();
+  });
+  // `preload="none"`: a duração só chega depois do primeiro play, e o slider
+  // fica desabilitado até lá. Tocar em qualquer controle pede os metadados.
+  player.addEventListener('pointerdown', function () {
+    if (!isFinite(audio.duration) && audio.preload === 'none') audio.preload = 'metadata';
+  }, { once: true });
+
+  audio.addEventListener('play', function () { setPlaying(true); });
+  audio.addEventListener('pause', function () { setPlaying(false); });
+  audio.addEventListener('ended', function () { setPlaying(false); render(); });
+  ['timeupdate', 'durationchange', 'loadedmetadata', 'seeked'].forEach(function (ev) {
+    audio.addEventListener(ev, render);
+  });
+  ['durationchange', 'loadedmetadata', 'ratechange', 'seeked'].forEach(function (ev) {
+    audio.addEventListener(ev, updatePosition);
+  });
+
+  // Espaço no slider alterna a reprodução em vez de rolar a página.
+  player.addEventListener('keydown', function (event) {
+    if (event.target === seek && event.key === ' ') { event.preventDefault(); toggle(); }
+  });
+
+  if ('mediaSession' in navigator && window.MediaMetadata) {
+    var art = [
+      { src: '../assets/icon-light-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '../assets/icon-light-512.png', sizes: '512x512', type: 'image/png' }
+    ];
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title, artist: 'Second Brain', album: 'Podcasts do Second Brain', artwork: art
+    });
+    var handlers = {
+      play: function () { audio.play(); },
+      pause: function () { audio.pause(); },
+      seekbackward: function (d) { skip(-((d && d.seekOffset) || 15)); },
+      seekforward: function (d) { skip((d && d.seekOffset) || 15); },
+      seekto: function (d) {
+        if (d && typeof d.seekTime === 'number') {
+          audio.currentTime = clampTime(d.seekTime);
+          render();
+          updatePosition();
+        }
+      }
+    };
+    Object.keys(handlers).forEach(function (action) {
+      try { navigator.mediaSession.setActionHandler(action, handlers[action]); } catch (e) { /* ação não suportada */ }
+    });
+  }
+  setSpeed(0);
+  render();
+})();

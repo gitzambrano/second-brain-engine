@@ -236,6 +236,69 @@ def favicon_link() -> str:
     return "".join(FAVICON_RE.findall(index)).replace('href="assets/', 'href="../assets/')
 
 
+BYLINE_RE = re.compile(r'(<p class="byline">.*?</p>)', re.S)
+
+ICON_PLAY = ('<svg class="sb-pc-ico sb-pc-ico-play" viewBox="0 0 24 24" aria-hidden="true">'
+             '<path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>')
+ICON_PAUSE = ('<svg class="sb-pc-ico sb-pc-ico-pause" viewBox="0 0 24 24" aria-hidden="true">'
+              '<rect x="6" y="5" width="4.2" height="14" rx="1.2"/>'
+              '<rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>')
+ICON_BACK = ('<svg class="sb-pc-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+             'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+             '<path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4.5v4.2h4.2"/></svg>')
+ICON_FWD = ('<svg class="sb-pc-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4.5v4.2h-4.2"/></svg>')
+ICON_DOWNLOAD = ('<svg class="sb-pc-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+                 'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+                 '<path d="M12 4v11"/><path d="m7.5 11 4.5 4.5 4.5-4.5"/><path d="M5 19.5h14"/></svg>')
+
+
+def podcast_player(slug: str, title: str) -> str:
+    """O player compacto, ou vazio quando não há podcast publicado.
+
+    O HTML só referencia `../assets/podcasts/<slug>.m4a`: nenhum caminho do
+    repositório de dados, nenhuma informação de conta. A duração vem da cópia
+    publicada, não do original.
+    """
+    from podcast_common import published_minutes
+
+    minutes = published_minutes(slug, SITE_ROOT)
+    if minutes is None:
+        return ""
+    src = f"../assets/podcasts/{html.escape(slug)}.m4a"
+    return (
+        f'<section class="sb-podcast" data-sb-podcast data-title="{html.escape(title, quote=True)}" '
+        f'aria-label="Podcast sobre este ensaio">'
+        f'<button type="button" class="sb-pc-btn sb-pc-play" aria-label="Reproduzir podcast" '
+        f'data-label-play="Reproduzir podcast" data-label-pause="Pausar podcast">{ICON_PLAY}{ICON_PAUSE}</button>'
+        f'<p class="sb-pc-label"><span class="sb-pc-label-text">Ouça um podcast gerado por IA sobre este ensaio</span>'
+        f'<span class="sb-pc-label-dur"> · {minutes} min</span></p>'
+        f'<div class="sb-pc-controls">'
+        f'<button type="button" class="sb-pc-btn sb-pc-back" aria-label="Voltar 15 segundos" '
+        f'title="Voltar 15 s">{ICON_BACK}<span class="sb-pc-n">15</span></button>'
+        f'<span class="sb-pc-time" aria-hidden="true">0:00</span>'
+        f'<input type="range" class="sb-pc-seek" min="0" max="1000" step="1" value="0" '
+        f'aria-label="Posição no podcast" aria-valuetext="0:00" disabled>'
+        f'<button type="button" class="sb-pc-btn sb-pc-fwd" aria-label="Avançar 15 segundos" '
+        f'title="Avançar 15 s">{ICON_FWD}<span class="sb-pc-n">15</span></button>'
+        f'<button type="button" class="sb-pc-btn sb-pc-speed" aria-label="Velocidade de reprodução: 1×" '
+        f'title="Velocidade">1×</button>'
+        f'<a class="sb-pc-btn sb-pc-dl" href="{src}" download="{html.escape(slug)}.m4a" '
+        f'aria-label="Baixar o podcast (m4a)" title="Baixar">{ICON_DOWNLOAD}</a>'
+        f'</div>'
+        f'<audio preload="none" src="{src}"></audio>'
+        f'</section>'
+    )
+
+
+def insert_podcast_player(page: str, slug: str, title: str) -> str:
+    player = podcast_player(slug, title)
+    if not player:
+        return page
+    return BYLINE_RE.sub(lambda m: m.group(1) + player, page, count=1)
+
+
 def site_chrome(essay, related) -> str:
     """Nav back to the Atlas, a floating summary, and public connections."""
     related_html = "".join(
@@ -315,6 +378,7 @@ def render(slug: str, output: Path) -> None:
     minutos = reading_minutes(plain_text(public_body_for_index(essay, allowed)))
     page = pandoc(body, title, subtitle, author_date, summary, status, minutos)
     page = strip_content_ornaments(page)
+    page = insert_podcast_player(page, slug, essay.title)
 
     theme = (SITE_SRC_DIR / "essay-theme.css").read_text(encoding="utf-8")
     # A Inter auto-hospedada, quando o build a baixou. As referências do cache

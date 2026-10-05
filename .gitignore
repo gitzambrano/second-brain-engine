@@ -62,3 +62,7 @@ Thumbs.db
 /scratch/
 .worktrees/
 scratch*.png
+
+# Estado local do engine: perfis de navegador, cooldowns, depuração, caches.
+# Pode conter sessões de conta e e-mails; nunca entra em nenhum repositório.
+/.local/

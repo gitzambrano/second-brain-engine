@@ -30,6 +30,12 @@ SITE_ROOT = Path(
     os.environ.get("SECOND_BRAIN_SITE_ROOT", CODE_ROOT / "site")
 ).expanduser().resolve()
 
+# Estado local do engine (cooldowns, perfis de navegador, depuração, caches de
+# validação). Nunca versionado: `.local/` está no .gitignore.
+LOCAL_DIR = Path(
+    os.environ.get("SECOND_BRAIN_LOCAL_DIR", CODE_ROOT / ".local")
+).expanduser().resolve()
+
 SCRIPTS_DIR = CODE_ROOT / "scripts"
 LIB_DIR = SCRIPTS_DIR / "lib"
 if str(LIB_DIR) not in sys.path:
@@ -46,6 +52,7 @@ CONCEPTS_DIR = WIKI_ROOT / "concepts"
 ENTITIES_DIR = WIKI_ROOT / "entities"
 INSIGHTS_DIR = WIKI_ROOT / "insights"
 HANDOUTS_DIR = WIKI_ROOT / "handouts"
+PODCASTS_DIR = WIKI_ROOT / "podcasts"
 ASSETS_DIR = WIKI_ROOT / "assets"
 SOURCES_DIR = WIKI_ROOT / "sources"
 REFERENCES_JSON = WIKI_ROOT / "references.json"

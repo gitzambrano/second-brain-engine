@@ -134,6 +134,12 @@ def quick(result: CheckResult) -> None:
         [sys.executable, str(SCRIPTS_DIR / "check_agents.py"), "--json"],
         result,
     )
+    # Nada de conta nem de e-mail no engine versionado ou no site; não lê o corpus.
+    run_status_command(
+        "account leak scan",
+        [sys.executable, str(SCRIPTS_DIR / "check_podcasts.py"), "--leaks-only", "--json"],
+        result,
+    )
     run_command(
         "core environment",
         [sys.executable, str(SCRIPTS_DIR / "check_env.py"), "--core", "--json"],
@@ -180,6 +186,9 @@ def wiki(result: CheckResult) -> None:
         path = SCRIPTS_DIR / script
         if path.exists():
             run_command(script, [sys.executable, str(path), *extra], result, parse_json_severity=parse_json)
+    podcasts = SCRIPTS_DIR / "check_podcasts.py"
+    if podcasts.exists():
+        run_status_command("check_podcasts.py", [sys.executable, str(podcasts), "--json"], result)
     for script in ("check_freshness.py", "check_visibility_field.py"):
         path = SCRIPTS_DIR / script
         if path.exists():
@@ -227,6 +236,7 @@ def site(result: CheckResult, visual: bool = False) -> None:
     checks = [
         ("check_site_privacy.py", []),
         ("check_site_budget.py", []),
+        ("check_podcasts.py", ["--no-deep", "--no-leaks"]),
     ]
     if visual:
         checks.insert(1, ("check_site_pages.py", ["--allow-skip-browser"]))

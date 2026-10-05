@@ -128,7 +128,7 @@ def _unlink(path: Path, attempts: int = 5) -> None:
             time.sleep(0.3)
 
 
-def _empty(directory: Path) -> None:
+def _empty(directory: Path, keep: frozenset[str] = frozenset()) -> None:
     """Remove everything inside a directory, keeping the directory itself.
 
     The checkout usually lives in a syncing folder (OneDrive/Dropbox) that holds
@@ -139,6 +139,8 @@ def _empty(directory: Path) -> None:
     if not directory.is_dir():
         return
     for child in sorted(directory.iterdir(), key=lambda p: len(p.parts), reverse=True):
+        if child.name in keep:
+            continue
         if child.is_dir():
             _empty(child)
             try:
@@ -162,6 +164,7 @@ SITE_ADMIN_FILES = {
     "README.md",
 }
 SITE_ADMIN_DIRS = {".git", ".github"}
+PRESERVED_ASSET_DIRS = frozenset({"podcasts"})
 
 
 def _keep_covers(root: Path) -> dict[str, bytes]:
@@ -189,7 +192,9 @@ def clean(root: Path) -> None:
         if path.is_dir():
             if path.name in SITE_ADMIN_DIRS:
                 continue
-            _empty(path)
+            # Os podcasts recodificados são caros (minutos de ffmpeg) e têm
+            # cache próprio; `sync_podcasts` reconcilia a pasta depois.
+            _empty(path, PRESERVED_ASSET_DIRS if path.name == "assets" else frozenset())
             if path.name not in GENERATED_DIRS:
                 try:
                     path.rmdir()
@@ -432,6 +437,15 @@ def render_essays(root: Path, essays, no_render: bool = False) -> None:
             raise SystemExit(proc.stdout + "\n" + proc.stderr)
 
 
+def sync_podcasts(root: Path, catalogue) -> dict:
+    """Publica só os podcasts de essays públicos; remove o resto."""
+    import podcast_common as pc
+
+    refs = pc.load_essays()
+    public = [refs[e.slug] for e in catalogue if e.published and e.slug in refs]
+    return pc.sync_site_podcasts(public, site_root=root)
+
+
 def build(root: Path, no_render: bool = False):
     catalogue = collect_all()
     essays = [e for e in catalogue if e.published]
@@ -459,6 +473,7 @@ def build(root: Path, no_render: bool = False):
                 f"{'…' if len(com_formula) > 3 else ''}). Publicar agora "
                 "colocaria LaTeX cru no lugar das equações."
             )
+    sync_podcasts(root, catalogue)
     minutes = write_data(root, catalogue)
     render_index(root, catalogue, minutes, fingerprints)
 

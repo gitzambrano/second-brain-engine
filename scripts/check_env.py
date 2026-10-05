@@ -14,6 +14,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import repo_paths  # noqa: F401  (põe lib/ no sys.path)
 from sanity_common import CheckResult
 
 
@@ -41,6 +42,17 @@ def audit(core_only: bool = False, strict: bool = False) -> CheckResult:
             result.info("EXECUTABLE_OK", f"{label}: {path}")
         else:
             result.add("EXECUTABLE_MISSING", "ERROR" if strict else "WARNING", f"{label} not found")
+
+    # ffmpeg: recodifica e valida os podcasts. O fallback é o pacote
+    # `imageio-ffmpeg` (`python -m pip install imageio-ffmpeg`).
+    import podcast_common
+
+    ffmpeg = podcast_common.find_ffmpeg()
+    if ffmpeg:
+        result.info("EXECUTABLE_OK", f"ffmpeg: {ffmpeg}")
+    else:
+        result.add("EXECUTABLE_MISSING", "ERROR" if strict else "WARNING",
+                   "ffmpeg not found (podcasts); install ffmpeg or `pip install imageio-ffmpeg`")
 
     if importlib.util.find_spec("playwright") is None:
         result.add("PLAYWRIGHT_MISSING", "ERROR" if strict else "WARNING", "Playwright Python package not installed")

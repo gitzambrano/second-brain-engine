@@ -45,7 +45,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`rename_essay_files.py`** | Migra os arquivos de essays para o slug completo do H1 e reaponta wikilinks e assets de figuras. | `python scripts/rename_essay_files.py --apply` |
 | **`visibility.py`** | Leitor utilitário que relata a distribuição de visibilidade do corpus (público, privado, oculto). | `python scripts/visibility.py` |
 | **`build_site.py`** | Compila os essays autorizados para HTML e gera os índices e mapas interativos em `site/`. | `python scripts/build_site.py` |
-| **`publish_site.py`** | Comando único de publicação: valida visibilidade, constrói, sela, cria o commit em `site/` e envia para `main`. Exige os três repositórios limpos e sincronizados. | `python scripts/publish_site.py` |
+| **`publish_site.py`** | Comando único de publicação: valida visibilidade, constrói, sela e reescreve `main` de `site/` com histórico raso de dois commits (`push --force-with-lease`, depois `gc`). Exige os três repositórios limpos e sincronizados. | `python scripts/publish_site.py` |
 | **`publicar.bat`** | Atalho Windows de duplo clique que navega para a raiz e executa `publish_site.py`. | `scripts\publicar.bat` |
 | **`check_site_privacy.py`** | **Sentinela estrita de privacidade**: garante que nenhum texto ou link não autorizado chegue a `site/`. | `python scripts/check_site_privacy.py` |
 | **`check_site_pages.py`** | Abre cada página do site construído num navegador real (celular e desktop) e audita overflow, imagens, âncoras, console e vazamento de Markdown, mais uma auditoria própria de `graph.html` e `sphere.html`. Sem navegador é **erro**; `--allow-skip-browser` degrada para SKIP em diagnóstico local. | `python scripts/check_site_pages.py` |
@@ -72,6 +72,10 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`check_gaps.py`** | Identifica lacunas léxicas, mecânicas e semânticas entre os nós da base. | `python scripts/check_gaps.py` |
 | **`check_title.py`** | Valida convenções tipográficas e ortográficas nos títulos de ensaios. | `python scripts/check_title.py` |
 | **`fix_lint.py`** | Aplica correções mecânicas automatizadas (remoção de tags redundantes, ordenação, etc.). | `python scripts/fix_lint.py` |
+| **`check_podcasts.py`** | Valida podcasts de essay: nome = slug, essay existente, integridade do áudio (ffmpeg), cópias e players no site, vazamento de conta. | `python scripts/check_podcasts.py` |
+| **`fix_podcasts.py`** | Renomeia podcasts de nome inequívoco para o slug do essay; lista os ambíguos sem tocar neles. | `python scripts/fix_podcasts.py` |
+| **`ingest_podcast.py`** | Valida, casa com o essay e arquiva um mp3/m4a em `wiki/podcasts/`. | `python scripts/ingest_podcast.py arquivo.m4a [essay]` |
+| **`notebooklm_podcast.py`** | Gera o podcast de um essay no NotebookLM por automação de navegador (sem LLM), com rodízio de perfis locais, e ingere o áudio. | `python scripts/notebooklm_podcast.py <essay>` |
 | **`retag.py`** | Utilitário para renomear ou migrar tags em lote nos arquivos da wiki. | `python scripts/retag.py tagA tagB` |
 | **`migrate_private_data.py`** | Utilitário para migração e reestruturação controlada do diretório de dados. | `python scripts/migrate_private_data.py` |
 
