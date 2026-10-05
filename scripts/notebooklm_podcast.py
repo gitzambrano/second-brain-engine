@@ -307,6 +307,12 @@ class Ui:
 
     def dismiss_overlays(self) -> int:
         """Fecha avisos e promoções do NotebookLM que cobrem a interface."""
+        try:
+            self.page.evaluate(
+                "() => { document.querySelectorAll('iframe[name=\"callout\"]').forEach(e => e.remove()); }"
+            )
+        except Exception:  # noqa: BLE001
+            pass
         closed = 0
         for _ in range(4):
             loc = self.page.locator(
@@ -406,7 +412,16 @@ def add_pasted_text(ui: Ui, text: str) -> None:
     box = None
     for attempt in range(3):
         ui.dismiss_overlays()
-        item = ui.find(pattern, ("button", "chip"), 20)
+        item = ui.find(pattern, ("button", "chip"), 4.0)
+        if item is None:
+            add_src = ui.find(
+                rx(r"Adicionar fonte", r"Adicionar fontes", r"adicione uma fonte", r"Add source", r"Add sources"),
+                ("button", "link"), 5.0,
+            )
+            if add_src is not None:
+                hi.human_click(page, add_src)
+                page.wait_for_timeout(2000)
+                item = ui.find(pattern, ("button", "chip"), 15.0)
         if item is None:
             raise FlowError("fonte: botão 'Texto copiado' não encontrado")
         if attempt == 0:
@@ -449,7 +464,7 @@ def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
     tile = page.locator("div[role='button'][aria-label='Resumo em Áudio'], "
                         "div[role='button'][aria-label='Audio Overview']").first
     tile.wait_for(state="visible", timeout=30000)
-    tile.hover()
+    tile.hover(force=True)
     hi.pause(0.4, 0.9)
     box = tile.bounding_box()
     hi.click_at(page, box["x"] + box["width"] - 18, box["y"] + box["height"] / 2, 24)
@@ -548,7 +563,7 @@ def download_audio(ui: Ui, dest_dir: Path) -> Path:
     page.on("response", lambda r: seen.append(r.url) if AUDIO_URL_RE.match(r.url) else None)
     item = page.locator("artifact-library-item").first
     item.wait_for(state="visible", timeout=30000)
-    item.hover()
+    item.hover(force=True)
     hi.pause(0.4, 0.9)
     hi.human_click(page, item.locator("button[aria-label='Abrir'], button[aria-label='Open']").first)
     deadline = time.time() + 60
