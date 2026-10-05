@@ -237,6 +237,7 @@ def favicon_link() -> str:
 
 
 BYLINE_RE = re.compile(r'(<p class="byline">.*?</p>)', re.S)
+SUMMARY_RE = re.compile(r'(<p class="cover-summary">.*?</p>)', re.S)
 
 ICON_PLAY = ('<svg class="sb-pc-ico sb-pc-ico-play" viewBox="0 0 24 24" aria-hidden="true">'
              '<path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>')
@@ -272,7 +273,8 @@ def podcast_player(slug: str, title: str) -> str:
         f'aria-label="Podcast sobre este ensaio">'
         f'<button type="button" class="sb-pc-btn sb-pc-play" aria-label="Reproduzir podcast" '
         f'data-label-play="Reproduzir podcast" data-label-pause="Pausar podcast">{ICON_PLAY}{ICON_PAUSE}</button>'
-        f'<p class="sb-pc-label"><span class="sb-pc-label-text">Ouça um podcast gerado por IA sobre este ensaio</span>'
+        f'<p class="sb-pc-label"><span class="sb-pc-label-full">Ouça um podcast gerado por IA sobre este ensaio</span>'
+        f'<span class="sb-pc-label-short">Ouça um podcast gerado por IA</span>'
         f'<span class="sb-pc-label-dur"> · {minutes} min</span></p>'
         f'<div class="sb-pc-controls">'
         f'<button type="button" class="sb-pc-btn sb-pc-back" aria-label="Voltar 15 segundos" '
@@ -296,7 +298,12 @@ def insert_podcast_player(page: str, slug: str, title: str) -> str:
     player = podcast_player(slug, title)
     if not player:
         return page
-    return BYLINE_RE.sub(lambda m: m.group(1) + player, page, count=1)
+    # Depois do resumo da capa; sem resumo, logo abaixo da assinatura.
+    for anchor in (SUMMARY_RE, BYLINE_RE):
+        page, n = anchor.subn(lambda m: m.group(1) + player, page, count=1)
+        if n:
+            break
+    return page
 
 
 def site_chrome(essay, related) -> str:

@@ -389,3 +389,26 @@ def test_notebooklm_default_runs_without_browser(tmp_path):
                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
     assert proc.returncode == 0, proc.stderr
     assert "perfis:" in proc.stdout
+
+
+def test_logged_out_detection_covers_trynow_landing():
+    import notebooklm_podcast as nb
+
+    class FakeText:
+        def __init__(self, n):
+            self.n = n
+
+        def count(self):
+            return self.n
+
+    class FakePage:
+        def __init__(self, url, landing=False):
+            self.url, self.landing = url, landing
+
+        def get_by_text(self, _pattern):
+            return FakeText(1 if self.landing else 0)
+
+    assert nb.Ui(FakePage("https://notebook.google.com/trynow")).logged_out()
+    assert nb.Ui(FakePage("https://accounts.google.com/signin")).logged_out()
+    assert nb.Ui(FakePage("https://notebook.google.com/", landing=True)).logged_out()
+    assert not nb.Ui(FakePage("https://notebook.google.com/notebook/abc")).logged_out()

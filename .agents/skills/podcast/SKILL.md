@@ -39,7 +39,7 @@ Gera o podcast no NotebookLM, sem gastar tokens de LLM:
 python scripts/notebooklm_podcast.py <essay>
 ```
 
-O script abre o NotebookLM com um perfil de navegador local, cria um caderno, cola o corpo do essay (sem frontmatter, Sumário e Conexões) como fonte, personaliza o Resumo em áudio em português do Brasil, no formato mais longo disponível, com o prompt de `.agents/skills/podcast/prompt.md`, espera a geração (até 30 min), baixa o áudio e o entrega a `ingest_podcast.py`.
+O script roda headless e abre o Gemini Notebook (ex-NotebookLM, `notebook.google.com`) com um perfil de navegador local, cria um caderno, cola o corpo do essay (sem frontmatter, Sumário e Conexões) como fonte, personaliza o Resumo em áudio em português do Brasil, na maior duração oferecida (em pt-BR, “Padrão”; “Longo” só existe em inglês), com o prompt de `.agents/skills/podcast/prompt.md`, espera a geração (até 30 min), baixa o áudio e o entrega a `ingest_podcast.py`.
 
 Contas e perfis:
 

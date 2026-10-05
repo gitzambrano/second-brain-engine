@@ -259,6 +259,21 @@
     speedBtn.setAttribute('aria-label', 'Velocidade de reprodução: ' + label);
   }
 
+  // Rótulo: forma completa quando cabe numa linha; senão a curta. Nunca corta.
+  var labelEl = player.querySelector('.sb-pc-label');
+  function fitLabel() {
+    if (!labelEl) return;
+    player.removeAttribute('data-short');
+    labelEl.classList.add('is-measuring');
+    var overflows = labelEl.scrollWidth > labelEl.clientWidth + 1;
+    labelEl.classList.remove('is-measuring');
+    if (overflows) player.setAttribute('data-short', '');
+  }
+  fitLabel();
+  if (window.ResizeObserver) new ResizeObserver(fitLabel).observe(player);
+  else window.addEventListener('resize', fitLabel);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLabel);
+
   playBtn.addEventListener('click', toggle);
   player.querySelector('.sb-pc-back').addEventListener('click', function () { skip(-15); });
   player.querySelector('.sb-pc-fwd').addEventListener('click', function () { skip(15); });

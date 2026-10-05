@@ -107,6 +107,7 @@ Nunca use essays reais do repositório privado como fixture.
 python scripts/check_podcasts.py          # nomes, integridade, cópias, players e vazamento de conta
 python scripts/fix_podcasts.py            # renomeia nomes inequívocos
 python -m pytest -q tests/test_podcasts.py tests/test_publish_history.py
+python -m pytest -q -m browser tests/test_podcast_player.py   # player em 10 larguras, claro e escuro
 ```
 
 Os testes geram áudio sintético com o ffmpeg em `tmp_path` e nunca tocam `data/`. `check_repo.py --quick` inclui a varredura de vazamento de conta (e-mails e nomes dos perfis locais em arquivos versionados e em `site/`); o diagnóstico completo inclui o `check_podcasts.py` inteiro. O orçamento do site trata `assets/podcasts/` à parte: 25 MB por arquivo e 500 MB no total, fora dos 40 MB do site.

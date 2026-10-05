@@ -4,7 +4,7 @@ Gera o podcast de um essay no NotebookLM por automação de navegador.
 
 Python puro + Playwright: zero tokens de LLM. O fluxo abre o NotebookLM com um
 perfil de navegador local, cria um caderno, cola o texto do essay como fonte,
-personaliza o Resumo em áudio (português do Brasil, formato mais longo, prompt de
+personaliza o Resumo em áudio (português do Brasil, maior duração oferecida, prompt de
 ``.agents/skills/podcast/prompt.md``), espera a geração, baixa o áudio e o
 entrega a ``ingest_podcast.py``.
 
@@ -43,7 +43,7 @@ import human_input as hi  # isort: skip
 
 import podcast_common as pc  # isort: skip
 
-NOTEBOOKLM_URL = "https://notebooklm.google.com"
+NOTEBOOKLM_URL = "https://notebook.google.com"  # Gemini Notebook (ex-NotebookLM)
 STATE_DIR = LOCAL_DIR / "notebooklm"
 DEFAULT_PROFILES_DIR = STATE_DIR / "profiles"
 STATE_FILE = STATE_DIR / "state.json"
@@ -285,6 +285,7 @@ class Ui:
 
     def click(self, pattern: re.Pattern, step: str, roles=("button", "menuitem", "tab", "link", "option"),
               timeout: float = 15.0):
+        self.dismiss_overlays()
         item = self.find(pattern, roles, timeout)
         if item is None:
             raise FlowError(f"{step}: elemento não encontrado ({pattern.pattern[:60]})")
@@ -292,6 +293,45 @@ class Ui:
         hi.pause(0.4, 1.1)
         self.check_notices()
         return item
+
+    def logged_out(self) -> bool:
+        """Deslogado: login do Google, ou a página /trynow do Gemini Notebook."""
+        url = self.page.url
+        if "accounts.google.com" in url or "/trynow" in url:
+            return True
+        try:
+            return bool(self.page.get_by_text(
+                re.compile(r"Fa[cç]a login no (Gemini )?Notebook|Sign in to (Gemini )?Notebook", re.I)).count())
+        except Exception:  # noqa: BLE001
+            return False
+
+    def dismiss_overlays(self) -> int:
+        """Fecha avisos e promoções do NotebookLM que cobrem a interface."""
+        closed = 0
+        for _ in range(4):
+            loc = self.page.locator(
+                ".cdk-overlay-container button[aria-label^='Fechar'], "
+                ".cdk-overlay-container button[aria-label^='Close'], "
+                ".cdk-overlay-container button[aria-label^='Dispensar']")
+            target = None
+            for i in range(loc.count()):
+                if loc.nth(i).is_visible():
+                    target = loc.nth(i)
+                    break
+            if target is None:
+                break
+            # Diálogos de trabalho (adicionar fonte, personalizar) também têm "Fechar": só fecha promoção.
+            overlay = self.page.locator(".cdk-overlay-container")
+            if (overlay.get_by_text(re.compile(r"Texto copiado|Copied text")).count()
+                    or overlay.locator("textarea").count()):
+                break
+            try:
+                hi.human_click(self.page, target, timeout=4000)
+            except Exception:  # noqa: BLE001
+                break
+            closed += 1
+            self.page.wait_for_timeout(700)
+        return closed
 
     def visible_text(self) -> str:
         try:
@@ -301,8 +341,8 @@ class Ui:
 
     def check_notices(self) -> None:
         """Quota, falha e logout aparecem como texto; qualquer passo pode revelá-los."""
-        if "accounts.google.com" in self.page.url:
-            raise NotLoggedIn("a sessão está deslogada (redirecionou para o login do Google)")
+        if self.logged_out():
+            raise NotLoggedIn("a sessão está deslogada")
         text = self.visible_text()
         if QUOTA_RE.search(text) and not re.search(r"limite de caracteres|character limit", text, re.I):
             snippet = QUOTA_RE.search(text).group(0)
@@ -329,9 +369,10 @@ def ensure_logged_in(ui: Ui) -> None:
     page = ui.page
     page.goto(NOTEBOOKLM_URL, wait_until="domcontentloaded", timeout=60000)
     page.wait_for_timeout(5000)
-    if "accounts.google.com" in page.url or ui.find(rx(r"^Fazer login$", r"^Sign in$"), ("link", "button"), 2):
+    if ui.logged_out():
         raise NotLoggedIn("a sessão está deslogada")
     ui.check_notices()
+    ui.dismiss_overlays()
 
 
 def create_notebook(ui: Ui) -> None:
@@ -341,27 +382,51 @@ def create_notebook(ui: Ui) -> None:
     ui.page.wait_for_timeout(2500)
 
 
+def _paste_box(page):
+    """Campo do diálogo "Texto copiado": o textarea visível que NÃO é a busca de fontes."""
+    for sel in ("textarea", "[contenteditable='true']", "div[role='textbox']"):
+        loc = page.locator(sel)
+        for i in range(loc.count()):
+            item = loc.nth(i)
+            try:
+                if not item.is_visible():
+                    continue
+                label = (item.get_attribute("aria-label") or "") + (item.get_attribute("placeholder") or "")
+            except Exception:  # noqa: BLE001
+                continue
+            if re.search(r"pesquis|search|consulta|query", label, re.I):
+                continue
+            return item
+    return None
+
+
 def add_pasted_text(ui: Ui, text: str) -> None:
     page = ui.page
-    ui.click(rx(r"Texto copiado", r"Colar texto", r"Copied text", r"Paste text"), "fonte: colar texto")
+    pattern = rx(r"Texto copiado", r"Colar texto", r"Copied text", r"Paste text")
     box = None
-    for _ in range(20):
-        for sel in ("textarea", "[contenteditable='true']", "div[role='textbox']"):
-            loc = page.locator(sel)
-            for i in range(loc.count()):
-                if loc.nth(i).is_visible():
-                    box = loc.nth(i)
-                    break
-            if box:
+    for attempt in range(3):
+        ui.dismiss_overlays()
+        item = ui.find(pattern, ("button", "chip"), 20)
+        if item is None:
+            raise FlowError("fonte: botão 'Texto copiado' não encontrado")
+        if attempt == 0:
+            hi.human_click(page, item)
+        else:
+            item.click()
+        for _ in range(12):
+            box = _paste_box(page)
+            if box is not None:
                 break
-        if box:
+            time.sleep(0.5)
+        if box is not None:
             break
-        time.sleep(0.5)
     if box is None:
-        raise FlowError("fonte: campo de texto não encontrado")
-    hi.human_type(page, box, text, timeout=30000)
-    hi.pause(0.5, 1.2)
-    ui.click(rx(r"^Inserir$", r"^Insert$", r"^Adicionar$", r"^Add$", r"Inserir"), "fonte: confirmar texto")
+        raise FlowError("fonte: diálogo de texto não abriu")
+    # Fonte longa: preenchimento direto (como uma colagem); mouse e pausas humanos em volta.
+    box.fill(text, timeout=60000)
+    hi.pause(0.6, 1.4)
+    ui.click(rx(r"^Inserir$", r"^Insert$", r"^Adicionar$", r"^Add$"), "fonte: confirmar texto",
+             roles=("button",), timeout=20)
     page.wait_for_timeout(8000)
 
 
@@ -378,53 +443,67 @@ def set_notebook_title(ui: Ui, title: str) -> None:
 
 def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
     page = ui.page
-    # O cartão "Resumo em áudio" tem um botão de personalizar (lápis).
-    ui.click(rx(r"Personalizar", r"Customi[sz]e"), "áudio: personalizar", timeout=40)
-    page.wait_for_timeout(1500)
+    ui.dismiss_overlays()
+    # O botão de personalizar é a seta no canto direito do cartão "Resumo em Áudio";
+    # clicar no corpo do cartão dispara a geração padrão.
+    tile = page.locator("div[role='button'][aria-label='Resumo em Áudio'], "
+                        "div[role='button'][aria-label='Audio Overview']").first
+    tile.wait_for(state="visible", timeout=30000)
+    tile.hover()
+    hi.pause(0.4, 0.9)
+    box = tile.bounding_box()
+    hi.click_at(page, box["x"] + box["width"] - 18, box["y"] + box["height"] / 2, 24)
+    dialog_ok = False
+    for _ in range(20):
+        if (page.locator("textarea[maxlength]").count()
+                and page.get_by_role("radio", name=rx(r"^Longo$", r"^Long$")).count()):
+            dialog_ok = True
+            break
+        time.sleep(0.5)
+    if not dialog_ok:
+        raise FlowError("áudio: diálogo de personalização não abriu")
+    hi.pause(0.6, 1.2)
 
     # Idioma: português (Brasil).
-    lang = ui.find(rx(r"Idioma", r"Language", r"Escolha o idioma", r"Choose language"),
-                   ("combobox", "button", "listbox"), 5)
-    if lang is not None:
-        hi.human_click(page, lang)
-        hi.pause(0.4, 0.9)
-        ui.click(rx(r"Portugu[eê]s \(Brasil\)", r"Portuguese \(Brazil\)", r"Portugu[eê]s.*Brasil"),
-                 "áudio: idioma pt-BR", roles=("option", "menuitem", "button"), timeout=10)
-
-    # Duração: a mais longa disponível.
-    longest = ui.find(rx(r"^Longo$", r"^Long$", r"Mais longo", r"Longest"),
-                      ("radio", "button", "tab", "option"), 4)
-    if longest is not None:
-        hi.human_click(page, longest)
-        hi.pause(0.4, 0.9)
-    else:
-        print("  aviso: opção de duração 'longa' não encontrada; segue com o padrão do NotebookLM")
-
-    # Prompt.
-    area = ui.find(rx(r"Sobre o que", r"What should", r"o que os apresentadores", r"focus"), ("textbox",), 6)
-    if area is None:
-        loc = page.locator("textarea")
-        area = loc.last if loc.count() else None
-    if area is None:
-        raise FlowError("áudio: campo de prompt não encontrado")
-    hi.human_type(page, area, prompt, clear_first=True, timeout=30000)
+    combo = page.locator("mat-select[role='combobox']").first
+    hi.human_click(page, combo)
     hi.pause(0.5, 1.0)
-    try:
-        written = area.input_value()
-    except Exception:  # noqa: BLE001
-        written = area.inner_text()
-    maxlen = None
-    try:
-        maxlen = area.get_attribute("maxlength")
-    except Exception:  # noqa: BLE001
-        pass
-    if len(written.strip()) < len(prompt.strip()) - 2 or (maxlen and int(maxlen) < len(prompt)):
+    option = page.get_by_role("option", name=rx(r"portugu[eê]s \(Brasil\)", r"Portuguese \(Brazil\)")).first
+    option.wait_for(state="attached", timeout=10000)
+    option.scroll_into_view_if_needed()
+    hi.human_click(page, option)
+    hi.pause(0.5, 1.0)
+
+    # Duração: a mais longa disponível. Em português o NotebookLM oferece só
+    # Curto e Padrão (o "Longo" existe apenas em inglês), então vale a última opção.
+    page.wait_for_timeout(1000)
+    radios = page.get_by_role("radio")
+    names = [radios.nth(i).inner_text().strip() for i in range(radios.count())]
+    print(f"  durações oferecidas: {names}")
+    hi.human_click(page, radios.nth(radios.count() - 1))
+    hi.pause(0.4, 0.9)
+
+    # Prompt (campo com maxlength; a cota do NotebookLM é conferida abaixo).
+    area = page.locator("textarea[maxlength]").first
+    maxlen = area.get_attribute("maxlength")
+    hi.human_click(page, area)
+    area.fill(prompt)
+    hi.pause(0.6, 1.2)
+    written = area.input_value()
+    if written.strip() != prompt.strip() or (maxlen and int(maxlen) < len(prompt)):
         msg = (f"PROMPT TRUNCADO: o NotebookLM aceitou {len(written)} de {len(prompt)} caracteres"
                f"{f' (maxlength={maxlen})' if maxlen else ''}")
         if not allow_truncated:
             raise FlowError(msg + "; encurte .agents/skills/podcast/prompt.md ou use --allow-truncated-prompt")
         print("  aviso: " + msg)
-    ui.click(rx(r"^Gerar$", r"^Generate$", r"Gerar"), "áudio: gerar", timeout=10)
+
+    # Confere a seleção antes de gerar.
+    lang_now = combo.inner_text().strip().splitlines()[0]
+    print(f"  idioma: {lang_now}; duração: {radios.nth(radios.count() - 1).inner_text().strip()}")
+    if not re.search(r"portugu[eê]s \(Brasil\)|Portuguese \(Brazil\)", lang_now, re.I):
+        raise FlowError(f"áudio: o idioma ficou '{lang_now}', não português (Brasil)")
+    ui.click(rx(r"Gere agora mesmo", r"Gerar agora", r"Generate now", r"^Gerar$", r"^Generate$"),
+             "áudio: gerar", roles=("button",), timeout=10)
 
 
 GENERATING_RE = re.compile(r"gerando|generating|criando|creating", re.I)
@@ -452,15 +531,38 @@ def wait_for_audio(ui: Ui, timeout_min: int) -> None:
     raise FlowError(f"tempo esgotado ({timeout_min} min) esperando o áudio")
 
 
+AUDIO_URL_RE = re.compile(r"^https://lh3\.googleusercontent\.com/(?:rd-)?notebooklm/")
+
+
 def download_audio(ui: Ui, dest_dir: Path) -> Path:
+    """Baixa o áudio pronto.
+
+    O item "Baixar" do menu fecha o navegador controlado, então o arquivo é
+    obtido do mesmo endereço que o player do NotebookLM usa: abrir o item
+    revela a URL (redireciona para o servidor de mídia) e o contexto, que
+    carrega a sessão, a baixa inteira.
+    """
     page = ui.page
-    ui.click(rx(r"Mais op[cç][oõ]es", r"^Mais$", r"More options", r"^More$"), "áudio: menu", ("button",), timeout=15)
-    with page.expect_download(timeout=10 * 60 * 1000) as info:
-        ui.click(rx(r"Fazer download", r"^Baixar", r"^Download"), "áudio: baixar", ("menuitem", "button"), timeout=10)
-    download = info.value
+    ui.dismiss_overlays()
+    seen: list[str] = []
+    page.on("response", lambda r: seen.append(r.url) if AUDIO_URL_RE.match(r.url) else None)
+    item = page.locator("artifact-library-item").first
+    item.wait_for(state="visible", timeout=30000)
+    item.hover()
+    hi.pause(0.4, 0.9)
+    hi.human_click(page, item.locator("button[aria-label='Abrir'], button[aria-label='Open']").first)
+    deadline = time.time() + 60
+    while not seen and time.time() < deadline:
+        page.wait_for_timeout(500)
+    if not seen:
+        raise FlowError("áudio: o player não revelou o endereço do arquivo")
+    response = page.context.request.get(seen[0], timeout=15 * 60 * 1000)
+    ctype = response.headers.get("content-type", "")
+    if not response.ok or "audio" not in ctype:
+        raise FlowError(f"áudio: download falhou (HTTP {response.status}, {ctype or 'sem tipo'})")
     dest_dir.mkdir(parents=True, exist_ok=True)
-    target = dest_dir / (download.suggested_filename or "podcast.m4a")
-    download.save_as(str(target))
+    target = dest_dir / "podcast.m4a"
+    target.write_bytes(response.body())
     return target
 
 
@@ -521,18 +623,24 @@ def generate_once(account: str, profile: Path, essay: pc.EssayRef, args) -> Path
             ui = Ui(page)
             try:
                 ensure_logged_in(ui)
-                create_notebook(ui)
-                add_pasted_text(ui, source)
-                set_notebook_title(ui, title)
-                customize_audio(ui, prompt, args.allow_truncated_prompt)
-                wait_for_audio(ui, args.timeout)
+                if args.notebook_url:
+                    page.goto(args.notebook_url, wait_until="domcontentloaded", timeout=60000)
+                    page.wait_for_timeout(4000)
+                else:
+                    create_notebook(ui)
+                if not args.existing_audio:
+                    if not args.skip_source:
+                        add_pasted_text(ui, source)
+                    set_notebook_title(ui, title)
+                    customize_audio(ui, prompt, args.allow_truncated_prompt)
+                    wait_for_audio(ui, args.timeout)
                 downloaded = download_audio(ui, STATE_DIR / "downloads")
                 if args.delete_notebook:
                     try:
                         delete_notebook(ui, title)
                     except FlowError as exc:
                         print(f"  aviso: exclusão do caderno falhou ({exc})")
-            except FlowError:
+            except Exception:  # noqa: BLE001 - qualquer falha deixa captura de tela
                 folder = dump_debug(page, "falha")
                 if folder:
                     print(f"  depuração salva em {folder}")
@@ -586,6 +694,7 @@ def report_default(profiles_dir: Path) -> int:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(line_buffering=True)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("essay", nargs="?", help="slug (ou título) do essay; omita para listar candidatos")
     ap.add_argument("--profiles-dir", help="pasta com um perfil de navegador por subpasta "
@@ -597,6 +706,11 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="gerar mesmo que o essay já tenha podcast")
     ap.add_argument("--allow-truncated-prompt", action="store_true",
                     help="seguir mesmo se o NotebookLM truncar o prompt")
+    ap.add_argument("--notebook-url", help="reutilizar um caderno já aberto em vez de criar outro")
+    ap.add_argument("--existing-audio", action="store_true",
+                    help="com --notebook-url: o áudio já foi gerado; só baixar e ingerir")
+    ap.add_argument("--skip-source", action="store_true",
+                    help="com --notebook-url: o caderno já tem a fonte; pula a colagem")
     ap.add_argument("--login", metavar="PASTA", help="abrir janela para login manual do perfil e sair")
     ap.add_argument("--dry-run", action="store_true", help="resolver essay, contas e prompt sem abrir o navegador")
     args = ap.parse_args()

@@ -389,19 +389,28 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 /* SB_HEADER_CONTRACT:END */
 
 /* --- Podcast do ensaio -------------------------------------------------------
-   Uma linha compacta sob a assinatura. Só existe na página quando há áudio
-   publicado. Mesmos tokens do Atlas; sem sombra, sem cor nova. */
+   Uma faixa compacta logo depois do resumo da capa. Só existe na página quando
+   há áudio publicado. Mesmos tokens do Atlas; sem sombra, sem cor nova.
+   Layout intrínseco: o flex-wrap leva os controles para uma segunda linha
+   quando a coluna não comporta tudo, sem breakpoints nem larguras fixas.
+   Largura: a capa tem 1,2rem de padding no <header> e outro 1,2rem no
+   .masthead-inner, enquanto .content tem só um (e abaixo de 640px os três
+   paddings mudam); --pc-delta devolve a diferença e o `min` com --max-width
+   mantém a mesma coluna do corpo. Os valores espelham essay_template.html. */
 .sb-podcast{
-  display:flex;align-items:center;gap:10px;box-sizing:border-box;
-  width:100%;max-width:760px;min-height:44px;margin:1.15rem auto 0;padding:5px 8px 5px 5px;
+  display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:2px;box-sizing:border-box;
+  --pc-delta:2.4rem;--pc-gut:1.2rem;
+  --pc-w:min(calc(100% + var(--pc-delta)),calc(var(--max-width,700px) - 2 * var(--pc-gut)));
+  width:var(--pc-w);max-width:none;min-width:0;
+  margin:1.4rem calc((100% - var(--pc-w)) / 2) 0;padding:6px 10px 6px 6px;
   border:1px solid var(--sb-line);border-radius:12px;background:var(--sb-surface-soft);
   color:var(--sb-text);text-align:left;text-transform:none;letter-spacing:0;
-  font:12.5px/1.2 Inter,ui-sans-serif,system-ui,sans-serif;
+  font:12.5px/1.25 Inter,ui-sans-serif,system-ui,sans-serif;
 }
 .sb-podcast audio{display:none;}
 .sb-pc-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:2px;flex:none;
-  box-sizing:border-box;min-width:34px;height:34px;margin:0;padding:0 6px;
+  box-sizing:border-box;min-width:36px;height:36px;margin:0;padding:0 6px;
   border:0;border-radius:9px;background:transparent;color:var(--sb-muted);
   font:600 12px/1 Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;
   text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
@@ -413,7 +422,7 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-pc-back .sb-pc-ico,.sb-pc-fwd .sb-pc-ico,.sb-pc-dl .sb-pc-ico{fill:none;}
 .sb-pc-n{font-size:9.5px;font-weight:700;margin-left:-1px;}
 .sb-pc-play{
-  width:34px;padding:0;border-radius:50%;background:var(--sb-primary);color:var(--sb-bg);
+  width:36px;padding:0;border-radius:50%;background:var(--sb-primary);color:var(--sb-bg);
 }
 .sb-pc-play:hover{background:var(--sb-primary);color:var(--sb-bg);filter:brightness(1.1);}
 .sb-pc-play .sb-pc-ico{width:15px;height:15px;}
@@ -421,22 +430,34 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
 .sb-pc-play .sb-pc-ico-pause{display:none;}
 .sb-podcast.is-playing .sb-pc-ico-play{display:none;}
 .sb-podcast.is-playing .sb-pc-ico-pause{display:block;}
+/* Rótulo: forma completa quando cabe; forma curta (sem "sobre este ensaio")
+   quando não. Nunca reticências. A escolha é feita por essay.js medindo o
+   texto real; sem JS a forma completa simplesmente quebra de linha. A
+   duração fica sempre visível. */
 .sb-pc-label{
-  flex:1 1 0;min-width:0;margin:0;display:flex;color:var(--sb-muted);
-  font:12.5px/1.2 Inter,ui-sans-serif,system-ui,sans-serif;
+  flex:1 1 150px;min-width:0;margin:0;color:var(--sb-muted);
+  font:12.5px/1.3 Inter,ui-sans-serif,system-ui,sans-serif;text-align:left;
 }
-.sb-pc-label-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sb-pc-label-dur{flex:none;white-space:pre;font-variant-numeric:tabular-nums;}
-.sb-pc-controls{display:flex;align-items:center;gap:2px;flex:none;}
+.sb-pc-label-short{display:none;}
+.sb-pc-label-dur{white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sb-podcast[data-short] .sb-pc-label-full{display:none;}
+.sb-podcast[data-short] .sb-pc-label-short{display:inline;}
+.sb-pc-label.is-measuring{white-space:nowrap;}
+.sb-pc-label.is-measuring .sb-pc-label-full{display:inline;}
+.sb-pc-label.is-measuring .sb-pc-label-short{display:none;}
+.sb-pc-controls{display:flex;align-items:center;gap:0;flex:1 1 100%;min-width:0;}
+/* Numa linha só apenas onde sobra espaço para o rótulo completo. */
+@media(min-width:1100px){.sb-pc-controls{flex:1 1 330px;}}
 .sb-pc-time{
-  min-width:2.6em;text-align:right;color:var(--sb-muted);
+  flex:none;min-width:2.6em;text-align:right;color:var(--sb-muted);
   font-variant-numeric:tabular-nums;font-size:11.5px;
 }
 .sb-pc-speed{min-width:40px;}
-/* Slider: a mesma aparência no Chrome, Safari e Firefox. */
+/* Slider: a mesma aparência no Chrome, Safari e Firefox. Encolhe antes de
+   qualquer botão sair da caixa. */
 .sb-pc-seek{
-  --pc-fill:0%;-webkit-appearance:none;appearance:none;flex:none;width:clamp(80px,12vw,112px);
-  height:20px;margin:0 6px;padding:0;background:transparent;cursor:pointer;
+  --pc-fill:0%;-webkit-appearance:none;appearance:none;flex:1 1 auto;width:auto;min-width:0;
+  height:32px;margin:0 6px;padding:0;background:transparent;cursor:pointer;
 }
 .sb-pc-seek:disabled{cursor:default;opacity:.55;}
 .sb-pc-seek::-webkit-slider-runnable-track{
@@ -450,11 +471,11 @@ body > .sb-progress:not(:has(.sb-progress-fill)) span{
   border:0;border-radius:50%;background:var(--sb-primary);
 }
 .sb-pc-seek::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--sb-primary);}
-@media(max-width:900px){
-  .sb-podcast{flex-wrap:wrap;row-gap:4px;padding:6px 8px 6px 6px;}
-  .sb-pc-label{flex:1 1 calc(100% - 52px);}
-  .sb-pc-controls{flex:1 1 100%;justify-content:space-between;gap:0;}
-  .sb-pc-seek{flex:1 1 auto;width:auto;min-width:60px;}
-  .sb-pc-btn{min-width:36px;height:36px;}
+@media(max-width:640px){.sb-podcast{--pc-delta:2.3rem;--pc-gut:1.05rem;}}
+@media(max-width:339px){
+  .sb-podcast{column-gap:8px;padding:5px 6px 5px 5px;}
+  .sb-pc-time{display:none;}
+  .sb-pc-seek{margin:0 4px;}
+  .sb-pc-btn{min-width:34px;padding:0 4px;}
 }
 @media print{.sb-podcast{display:none!important;}}
