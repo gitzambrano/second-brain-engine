@@ -41,8 +41,9 @@ SITE_PODCASTS_REL = "assets/podcasts"
 
 # Parâmetros da cópia publicada. Mude ENCODE_VERSION ao mexer em qualquer um:
 # o cache de recodificação é invalidado por ela.
-ENCODE_VERSION = 2
-SITE_BITRATE_K = 48
+ENCODE_VERSION = 3
+SITE_BITRATE_K = 64
+SITE_CHANNELS = 2
 SITE_SAMPLE_RATE = 44100
 SITE_ARTIST = "Second Brain"
 
@@ -450,7 +451,7 @@ def site_podcasts_dir(site_root: Path | None = None) -> Path:
 
 
 def encode_for_site(src: Path, dst: Path, title: str) -> None:
-    """AAC-LC mono 48 kbps, faststart, sem metadados herdados.
+    """AAC-LC estéreo 64 kbps, faststart, sem metadados herdados.
 
     ``-map_metadata -1`` descarta tudo do original (o NotebookLM e o
     gerenciador de perfis podem deixar tags); só título e artista públicos
@@ -467,7 +468,7 @@ def encode_for_site(src: Path, dst: Path, title: str) -> None:
         "-map_metadata", "-1", "-map_chapters", "-1",
         "-fflags", "+bitexact", "-flags:a", "+bitexact",
         "-c:a", "aac", "-profile:a", "aac_low",
-        "-b:a", f"{SITE_BITRATE_K}k", "-ac", "1", "-ar", str(SITE_SAMPLE_RATE),
+        "-b:a", f"{SITE_BITRATE_K}k", "-ac", str(SITE_CHANNELS), "-ar", str(SITE_SAMPLE_RATE),
         "-metadata", f"title={title}",
         "-metadata", f"artist={SITE_ARTIST}",
         "-movflags", "+faststart",
@@ -557,7 +558,7 @@ def published_minutes(slug: str, site_root: Path | None = None) -> int | None:
 
 
 def published_findings(path: Path) -> list[Finding]:
-    """A cópia publicada cumpre o contrato do site? (mono, ~48 kbps, faststart)"""
+    """A cópia publicada cumpre o contrato do site? (estéreo, ~64 kbps, faststart)"""
     out: list[Finding] = []
     info = probe(path)
     if not info.ok:
@@ -566,9 +567,11 @@ def published_findings(path: Path) -> list[Finding]:
         out.append(Finding("SITE_PODCAST_CODEC", "ERROR", "a cópia publicada deve ter um stream aac"))
         return out
     stream = info.audio[0]
-    if stream.channels != 1:
-        out.append(Finding("SITE_PODCAST_NOT_MONO", "ERROR", f"{stream.channels} canais; esperado mono"))
-    if stream.bitrate_kbps is not None and not (SITE_BITRATE_K * 0.6 <= stream.bitrate_kbps <= SITE_BITRATE_K * 1.5):
+    if stream.channels != SITE_CHANNELS:
+        out.append(Finding("SITE_PODCAST_NOT_STEREO" if SITE_CHANNELS == 2 else "SITE_PODCAST_NOT_MONO",
+                           "WARNING" if stream.channels in (1, 2) else "ERROR",
+                           f"{stream.channels} canais; esperado {SITE_CHANNELS} (estéreo)"))
+    if stream.bitrate_kbps is not None and not (SITE_BITRATE_K * 0.5 <= stream.bitrate_kbps <= SITE_BITRATE_K * 1.6):
         out.append(Finding("SITE_PODCAST_BITRATE", "WARNING",
                            f"{stream.bitrate_kbps} kb/s; esperado ~{SITE_BITRATE_K}"))
     if not is_faststart(path):

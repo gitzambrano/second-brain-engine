@@ -135,6 +135,9 @@ def rotation_order(accounts: list[str], state: dict, forced: str | None = None,
     if forced:
         if forced not in accounts:
             raise SystemExit(f"conta '{forced}' não existe; pastas: {', '.join(accounts) or '(nenhuma)'}")
+        if in_cooldown(state, forced, now):
+            print(f"conta '{forced}' está em cooldown até {state.get('accounts', {}).get(forced, {}).get('cooldown_until')}", file=sys.stderr)
+            return []
         return [forced]
     last = state.get("last_account")
     start = (accounts.index(last) + 1) % len(accounts) if last in accounts else 0
@@ -540,8 +543,11 @@ def wait_for_audio(ui: Ui, timeout_min: int) -> None:
         if not generating and (play is not None or (seen_generating and more is not None)):
             return
         # Ociosidade humana: rolagem e movimentos suaves entre as verificações.
-        hi.human_scroll(page, random.choice((-120, 120, 200)), steps=4)
-        hi.move_to(page, random.uniform(300, 1100), random.uniform(250, 700))
+        try:
+            hi.human_scroll(page, random.choice((-120, 120, 200)), steps=4)
+            hi.move_to(page, random.uniform(300, 1100), random.uniform(250, 700))
+        except Exception:  # noqa: BLE001
+            pass
         time.sleep(random.uniform(*POLL_SECONDS))
     raise FlowError(f"tempo esgotado ({timeout_min} min) esperando o áudio")
 

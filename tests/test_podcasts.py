@@ -118,7 +118,7 @@ def test_published_copy_is_mono_faststart_and_stripped(world):
 
     assert pc.published_findings(out) == []
     info = pc.probe(out)
-    assert info.audio[0].channels == 1 and info.audio[0].codec == "aac"
+    assert info.audio[0].channels == pc.SITE_CHANNELS and info.audio[0].codec == "aac"
     assert pc.is_faststart(out)
     meta = subprocess.run([FFMPEG, "-hide_banner", "-i", str(out)], capture_output=True, text=True,
                           encoding="utf-8", errors="replace").stderr
