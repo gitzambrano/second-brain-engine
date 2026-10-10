@@ -17,6 +17,11 @@ Siga este arquivo e as skills em `.agents/skills/`. `conventions/SKILL.md` é a 
 | `site/` | `second-brain-site` | público | projeção gerada dos essays autorizados |
 
 São três repositórios Git independentes, sem submodules. O engine ignora `data/` e `site/`.
+Clones locais são mantidos **super shallow** (máximo 5 commits; `site` super shallow `--depth 1`) para economia de disco.
+
+### Mídias Binárias e Podcasts
+- Originais gerados (`data/wiki/podcasts/*.m4a`) ficam fora do Git do `data` via `.gitignore`.
+- O repositório `site` armazena exclusivamente a projeção codificada para web (`site/assets/podcasts/*.m4a`) com histórico super shallow (`--depth 1`), permitindo que o GitHub Pages sirva os players de áudio sem acumular histórico pesado.
 
 ### Invariante de GitHub Actions — NÃO VIOLAR
 
