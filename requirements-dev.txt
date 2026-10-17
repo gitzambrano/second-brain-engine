@@ -1,0 +1,17 @@
+# Dependências de desenvolvimento, testes e automação local, com versão fixa.
+#
+# As versões são fixadas para garantir reprodutibilidade da suíte de testes,
+# linters e pipelines locais (build do site, verificação de páginas e auditoria de PDFs).
+#
+# Para subir uma versão: mude aqui, rode a suíte local e envie em um commit isolado.
+pytest==8.4.2
+ruff==0.16.5
+PyYAML==6.0.3
+PyMuPDF==1.27.2.3
+beautifulsoup4==4.15.0
+html5lib==1.1
+playwright==1.60.0
+Pillow==12.2.0
+Unidecode==1.4.0
+# Fallback do ffmpeg para os podcasts quando não há ffmpeg no PATH.
+imageio-ffmpeg==0.6.0
