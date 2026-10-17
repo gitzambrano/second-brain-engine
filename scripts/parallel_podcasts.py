@@ -101,14 +101,15 @@ def get_active_accounts(profiles_dir: Path) -> list[str]:
     return active
 
 
-def worker_loop(account: str, q: queue.Queue[str], results: dict[str, list[str]]):
+def worker_loop(account: str, q: queue.Queue[str], results: dict[str, list[str]],
+                force: bool = False, delete_notebook: bool = False, timeout: int | None = None):
     while True:
         try:
             slug = q.get_nowait()
         except queue.Empty:
             break
 
-        if pc.source_for(slug):
+        if pc.source_for(slug) and not force:
             safe_print(f"[{account}] SKIP: '{slug}' já possui podcast gerado.")
             results["skipped"].append(slug)
             q.task_done()
@@ -119,6 +120,12 @@ def worker_loop(account: str, q: queue.Queue[str], results: dict[str, list[str]]
         t0 = time.time()
 
         cmd = [sys.executable, str(SCRIPTS_DIR / "notebooklm_podcast.py"), slug, "--account", account]
+        if force:
+            cmd.append("--force")
+        if delete_notebook:
+            cmd.append("--delete-notebook")
+        if timeout:
+            cmd.extend(["--timeout", str(timeout)])
         proc = subprocess.run(cmd)
 
         elapsed = (time.time() - t0) / 60
@@ -138,7 +145,7 @@ def worker_loop(account: str, q: queue.Queue[str], results: dict[str, list[str]]
         q.task_done()
 
 
-def run_parallel(slugs: list[str]) -> int:
+def run_parallel(slugs: list[str], force: bool = False, delete_notebook: bool = False, timeout: int | None = None) -> int:
     profiles_dir = nlp.resolve_profiles_dir(None)
     accounts = get_active_accounts(profiles_dir)
     if not accounts:
@@ -157,7 +164,12 @@ def run_parallel(slugs: list[str]) -> int:
     threads: list[threading.Thread] = []
 
     for acc in accounts:
-        t = threading.Thread(target=worker_loop, args=(acc, q, results), name=f"Worker-{acc}", daemon=True)
+        t = threading.Thread(
+            target=worker_loop,
+            args=(acc, q, results, force, delete_notebook, timeout),
+            name=f"Worker-{acc}",
+            daemon=True,
+        )
         t.start()
         threads.append(t)
         # Espaçamento de 3 segundos na inicialização para não bater no Playwright simultâneo no exato mesmo milissegundo
@@ -183,10 +195,13 @@ def run_parallel(slugs: list[str]) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("slugs", nargs="*", help="slugs a gerar (omita para usar a fila padrão de 20)")
+    ap.add_argument("--force", action="store_true", help="sobrescrever podcasts existentes")
+    ap.add_argument("--delete-notebook", action="store_true", help="excluir caderno no NotebookLM após download")
+    ap.add_argument("--timeout", type=int, default=45, help="minutos de espera pela geração (padrão: 45)")
     args = ap.parse_args()
 
     queue_slugs = args.slugs if args.slugs else DEFAULT_QUEUE
-    return run_parallel(queue_slugs)
+    return run_parallel(queue_slugs, force=args.force, delete_notebook=args.delete_notebook, timeout=args.timeout)
 
 
 if __name__ == "__main__":

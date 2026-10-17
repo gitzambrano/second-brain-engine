@@ -142,7 +142,11 @@ def rotation_order(accounts: list[str], state: dict, forced: str | None = None,
     last = state.get("last_account")
     start = (accounts.index(last) + 1) % len(accounts) if last in accounts else 0
     ordered = accounts[start:] + accounts[:start]
-    return [a for a in ordered if not in_cooldown(state, a, now)]
+    return [
+        a for a in ordered 
+        if not in_cooldown(state, a, now) 
+        and state.get("accounts", {}).get(a, {}).get("last_status") != "deslogada"
+    ]
 
 
 def mark_account(state: dict, account: str, status: str, cooldown_hours: float = 0) -> None:
@@ -288,11 +292,13 @@ class Ui:
 
     def click(self, pattern: re.Pattern, step: str, roles=("button", "menuitem", "tab", "link", "option"),
               timeout: float = 15.0):
-        self.dismiss_overlays()
         item = self.find(pattern, roles, timeout)
         if item is None:
             raise FlowError(f"{step}: elemento não encontrado ({pattern.pattern[:60]})")
-        hi.human_click(self.page, item)
+        try:
+            hi.human_click(self.page, item)
+        except Exception:
+            item.click(force=True)
         hi.pause(0.4, 1.1)
         self.check_notices()
         return item
@@ -312,7 +318,10 @@ class Ui:
         """Fecha avisos e promoções do NotebookLM que cobrem a interface."""
         try:
             self.page.evaluate(
-                "() => { document.querySelectorAll('iframe[name=\"callout\"]').forEach(e => e.remove()); }"
+                """() => {
+                    document.querySelectorAll('iframe[name="callout"]').forEach(e => e.remove());
+                    document.querySelectorAll('[popover="manual"]').forEach(e => e.remove());
+                }"""
             )
         except Exception:  # noqa: BLE001
             pass
@@ -413,24 +422,38 @@ def add_pasted_text(ui: Ui, text: str) -> None:
     page = ui.page
     pattern = rx(r"Texto copiado", r"Colar texto", r"Copied text", r"Paste text")
     box = None
-    for attempt in range(3):
-        ui.dismiss_overlays()
+    for attempt in range(4):
         item = ui.find(pattern, ("button", "chip"), 4.0)
         if item is None:
-            add_src = ui.find(
-                rx(r"Adicionar fonte", r"Adicionar fontes", r"adicione uma fonte", r"Add source", r"Add sources"),
-                ("button", "link"), 5.0,
-            )
+            add_src = None
+            try:
+                btn = page.locator(".add-source-link, button:has-text('Adicionar fontes'), button:has-text('Adicionar fonte')").first
+                if btn.is_visible():
+                    add_src = btn
+            except Exception:
+                pass
+            if add_src is None:
+                add_src = ui.find(
+                    rx(r"Adicionar fonte", r"Adicionar fontes", r"adicione uma fonte", r"Add source", r"Add sources"),
+                    ("button", "link"), 5.0,
+                )
             if add_src is not None:
-                hi.human_click(page, add_src)
-                page.wait_for_timeout(2000)
+                try:
+                    add_src.click()
+                except Exception:
+                    add_src.click(force=True)
+                page.wait_for_timeout(3000)
                 item = ui.find(pattern, ("button", "chip"), 15.0)
         if item is None:
+            if attempt < 3:
+                page.wait_for_timeout(3000)
+                continue
             raise FlowError("fonte: botão 'Texto copiado' não encontrado")
-        if attempt == 0:
-            hi.human_click(page, item)
-        else:
+        try:
             item.click()
+        except Exception:
+            item.click(force=True)
+        page.wait_for_timeout(2000)
         for _ in range(12):
             box = _paste_box(page)
             if box is not None:
@@ -443,8 +466,18 @@ def add_pasted_text(ui: Ui, text: str) -> None:
     # Fonte longa: preenchimento direto (como uma colagem); mouse e pausas humanos em volta.
     box.fill(text, timeout=60000)
     hi.pause(0.6, 1.4)
-    ui.click(rx(r"^Inserir$", r"^Insert$", r"^Adicionar$", r"^Add$"), "fonte: confirmar texto",
-             roles=("button",), timeout=20)
+    confirmed = False
+    for b in page.locator("button").all():
+        try:
+            if b.is_visible() and b.inner_text().strip() in ("Inserir", "Insert", "Adicionar", "Add"):
+                b.click()
+                confirmed = True
+                break
+        except Exception:
+            pass
+    if not confirmed:
+        btn = page.locator("button:has-text('Inserir'), button:has-text('Insert'), button:has-text('Adicionar'), button:has-text('Add')").first
+        btn.click(force=True)
     page.wait_for_timeout(8000)
 
 
@@ -531,8 +564,12 @@ def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
     print(f"  idioma: {lang_now}; duração: {radios.nth(radios.count() - 1).inner_text().strip()}")
     if not re.search(r"portugu[eê]s \(Brasil\)|Portuguese \(Brazil\)", lang_now, re.I):
         raise FlowError(f"áudio: o idioma ficou '{lang_now}', não português (Brasil)")
-    ui.click(rx(r"Gere agora mesmo", r"Gerar agora", r"Generate now", r"^Gerar$", r"^Generate$"),
-             "áudio: gerar", roles=("button",), timeout=10)
+    gen_pattern = rx(r"Gere agora mesmo", r"Gerar agora", r"Generate now", r"^Gerar$", r"^Generate$")
+    gen_btn = page.locator("button").filter(has_text=gen_pattern).last
+    try:
+        hi.human_click(page, gen_btn)
+    except Exception:
+        gen_btn.click(force=True)
 
 
 GENERATING_RE = re.compile(r"gerando|generating|criando|creating", re.I)
@@ -551,7 +588,13 @@ def wait_for_audio(ui: Ui, timeout_min: int) -> None:
         seen_generating = seen_generating or generating
         play = ui.find(rx(r"^Reproduzir", r"^Play", r"Reproduzir (resumo|[áa]udio)"), ("button",), 1.5)
         more = ui.find(rx(r"Mais op[cç][oõ]es", r"^Mais$", r"More options", r"^More$"), ("button",), 1.0)
-        if not generating and (play is not None or (seen_generating and more is not None)):
+        artifact_btn = page.locator("artifact-library-item button[aria-label*='Abrir'], artifact-library-item button[aria-label*='Open']").first
+        has_artifact = False
+        try:
+            has_artifact = artifact_btn.is_visible()
+        except Exception:
+            pass
+        if not generating and (play is not None or (seen_generating and more is not None) or (seen_generating and has_artifact)):
             return
         # Ociosidade humana: rolagem e movimentos suaves entre as verificações.
         try:
@@ -588,13 +631,27 @@ def download_audio(ui: Ui, dest_dir: Path) -> Path:
         page.wait_for_timeout(500)
     if not seen:
         raise FlowError("áudio: o player não revelou o endereço do arquivo")
-    response = page.context.request.get(seen[0], timeout=15 * 60 * 1000)
-    ctype = response.headers.get("content-type", "")
-    if not response.ok or "audio" not in ctype:
-        raise FlowError(f"áudio: download falhou (HTTP {response.status}, {ctype or 'sem tipo'})")
+
+    body_bytes = None
+    try:
+        response = page.context.request.get(seen[0], timeout=15 * 60 * 1000)
+        ctype = response.headers.get("content-type", "")
+        if response.ok and "audio" in ctype:
+            body_bytes = response.body()
+    except Exception as exc:
+        print(f"  aviso: request via playwright falhou ({exc}); tentando urllib direto...", file=sys.stderr)
+
+    if body_bytes is None:
+        import urllib.request
+        req = urllib.request.Request(seen[0], headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            body_bytes = resp.read()
+
+    if not body_bytes:
+        raise FlowError("áudio: download retornou corpo vazio")
     dest_dir.mkdir(parents=True, exist_ok=True)
     target = dest_dir / "podcast.m4a"
-    target.write_bytes(response.body())
+    target.write_bytes(body_bytes)
     return target
 
 
