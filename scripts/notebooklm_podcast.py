@@ -474,7 +474,8 @@ def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
     dialog_ok = False
     for _ in range(20):
         if (page.locator("textarea[maxlength]").count()
-                and page.get_by_role("radio", name=rx(r"^Longo$", r"^Long$")).count()):
+                and (page.get_by_role("radio", name=rx(r"^Longo$", r"^Long$", r"^Padr[aã]o$", r"^Standard$")).count()
+                     or page.get_by_role("radio").count() >= 2)):
             dialog_ok = True
             break
         time.sleep(0.5)
