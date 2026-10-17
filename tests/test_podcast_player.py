@@ -7,7 +7,7 @@ teste não depende de nenhum áudio.
 
 Prende, em cada largura e em claro e escuro:
 
-- a caixa ocupa a coluna de texto do essay e cabe na viewport;
+- a caixa cabe na viewport, ocupa a coluna no celular e fica centralizada e mais estreita no desktop;
 - todo controle fica dentro da caixa, com alvo de toque >= 32 px;
 - nada transborda, nem a página nem o player;
 - o rótulo nunca é cortado, a duração fica visível e a forma curta só
@@ -172,9 +172,14 @@ def test_player_geometry(width, scheme, server):
     box, col = m["box"], m["col"]
     assert m["afterSummary"] and m["directlyAfter"], f"{tag}: player não vem logo após o resumo"
     assert m["summaryParent"], tag
-    # coluna: a mesma do corpo (tolerância de subpixel) e dentro da viewport
-    assert abs(box["l"] - col["l"]) <= 1.5 and abs(box["r"] - col["r"]) <= 1.5, (
-        f"{tag}: caixa {box['l']:.1f}-{box['r']:.1f} difere da coluna {col['l']:.1f}-{col['r']:.1f}")
+    # coluna: no celular ocupa a coluna do corpo; no desktop fica centralizado e mais estreito
+    if width <= 640:
+        assert abs(box["l"] - col["l"]) <= 1.5 and abs(box["r"] - col["r"]) <= 1.5, (
+            f"{tag}: caixa {box['l']:.1f}-{box['r']:.1f} difere da coluna {col['l']:.1f}-{col['r']:.1f}")
+    else:
+        assert box["l"] >= col["l"] - 1.5 and box["r"] <= col["r"] + 1.5, f"{tag}: fora da coluna"
+        assert abs((box["l"] - col["l"]) - (col["r"] - box["r"])) <= 1.5, f"{tag}: não está centralizado"
+        assert box["w"] <= 520, f"{tag}: quadro deveria ser estreito no desktop ({box['w']}px)"
     assert box["l"] >= 0 and box["r"] <= m["vw"], f"{tag}: fora da viewport"
     # nada transborda
     assert m["docScroll"] <= m["vw"], f"{tag}: rolagem horizontal ({m['docScroll']} > {m['vw']})"

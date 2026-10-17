@@ -462,6 +462,16 @@ def set_notebook_title(ui: Ui, title: str) -> None:
 def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
     page = ui.page
     ui.dismiss_overlays()
+    # Se uma nota/observação estiver aberta cobrindo os cartões do estúdio, volta pela trilha de navegação
+    try:
+        breadcrumb = page.locator(".panel-header-clickable, nav h2 span").filter(
+            has_text=re.compile(r"Est[úu]dio|Studio", re.I)
+        ).first
+        if breadcrumb.is_visible():
+            hi.human_click(page, breadcrumb)
+            page.wait_for_timeout(1500)
+    except Exception:  # noqa: BLE001
+        pass
     # O botão de personalizar é a seta no canto direito do cartão "Resumo em Áudio";
     # clicar no corpo do cartão dispara a geração padrão.
     tile = page.locator("div[role='button'][aria-label='Resumo em Áudio'], "
