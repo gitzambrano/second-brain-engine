@@ -64,7 +64,7 @@ A collection qmd `secondbrain` deve apontar para `DATA_ROOT/wiki`. Use `scripts/
 ```bash
 git clone https://github.com/gitzambrano/second-brain-engine.git second-brain
 cd second-brain
-python -m pip install -r requirements-ci.txt
+python -m pip install -r requirements-dev.txt
 ```
 
 ### 2. Preparar `data/` e `site/`
@@ -96,7 +96,7 @@ python scripts/check_repo.py --quick
 python -m pytest -q -m "not html and not pdf and not slow and not browser"
 ```
 
-Esse é o núcleo da CI e não exige Pandoc, LuaLaTeX ou Chromium. Essas dependências só são necessárias para exportação e testes visuais; consulte **[`TESTING.md`](./docs/TESTING.md)**.
+Esse é o núcleo da suíte de testes locais e não exige Pandoc, LuaLaTeX ou Chromium. Essas dependências só são necessárias para exportação e testes visuais; consulte **[`TESTING.md`](./docs/TESTING.md)**.
 
 ---
 

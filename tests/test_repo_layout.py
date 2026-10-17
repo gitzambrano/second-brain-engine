@@ -25,7 +25,7 @@ ROOT_ALLOWLIST = {
     "CLAUDE.md",
     "README.md",
     "pyproject.toml",
-    "requirements-ci.txt",
+    "requirements-dev.txt",
 }
 
 
