@@ -1,8 +1,12 @@
 Gere uma conversa entre os apresentadores em Português do Brasil com foco em FIDELIDADE ABSOLUTA ao texto-fonte. Sigam rigorosamente as regras abaixo:
 
 1. ESTRUTURA OBRIGATÓRIA:
+- Abertura Obrigatória (Primeiríssima Frase do Episódio):
+  * A conversa DEVE começar imperativamente com a seguinte frase dita pelo primeiro apresentador:
+    "Olá, hoje vamos falar do ensaio [Título do Ensaio] de Gustavo Zambrano sobre [Tema central do ensaio]."
+    (Substituam [Título do Ensaio] pelo título exato do texto e [Tema central do ensaio] pelo assunto principal analisado).
 - Introdução (Situar o Ouvinte e Anunciar a Tese):
-  * Comecem situando o ouvinte com clareza sobre o tema geral: expliquem do que se trata o ensaio e qual o problema central examinado. Evitem começos abruptos; contextualizem a discussão antes de aprofundar.
+  * Imediatamente após a frase de abertura, situem o ouvinte com clareza sobre o contexto e o problema central examinado. Evitem começos abruptos; contextualizem a discussão antes de aprofundar.
   * Em seguida, anunciem de forma explícita a tese central defendida pelo autor.
   * Apresentem uma síntese panorâmica fluida do percurso argumentativo. É TERMINANTEMENTE PROIBIDO enumerar seções ou capítulos (nunca usem frases como "no capítulo 1", "nos capítulos 2 e 3", "passando pela seção X"). Descrevam o arco da conversa de forma coesa e natural.
 - Desenvolvimento (Conceitos Fundamentais e o Fio da Meada):
