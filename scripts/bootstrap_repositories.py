@@ -1,12 +1,29 @@
 #!/usr/bin/env python3
-"""
-Cria os esqueletos dos repositórios aninhados data/ e site/.
+"""bootstrap_repositories.py - Cria os esqueletos dos repositórios aninhados data/ e site/.
 
-Sem argumentos: dry-run.
---create: cria diretórios e arquivos ausentes sem sobrescrever corpus.
---init-git: inicializa os dois repositórios Git aninhados no branch main.
+Inicializa a árvore canônica de diretórios para os repositórios Git aninhados:
+- data/: raw, plan, wiki (essays, concepts, entities, insights, handouts, sources), output.
+- site/: assets, essays, index.html, 404.html.
 
-O comando nunca cria remote no GitHub e nunca altera o índice Git do engine.
+Escopo:
+    Provisionamento inicial e testes. Sem argumentos executa dry-run.
+    Nunca sobrescreve corpus existente, nunca cria remotes no GitHub e nunca
+    altera o índice Git do engine.
+
+Entradas (Inputs):
+    Argumentos CLI opcionais:
+        --create    Cria a árvore de diretórios e arquivos mínimos ausentes
+        --init-git  Inicializa os repositórios Git em data/ e site/ (branch main)
+
+Saídas (Outputs):
+    Stdout: Lista de diretórios e arquivos criados ou planejados (dry-run).
+    Sistema de arquivos: Diretórios e arquivos esqueleto sob DATA_ROOT e SITE_ROOT.
+    Exit code: 0 em sucesso, 1 em erro de criação ou permissão.
+
+Uso:
+    python scripts/bootstrap_repositories.py            # dry-run
+    python scripts/bootstrap_repositories.py --create   # cria diretórios ausentes
+    python scripts/bootstrap_repositories.py --create --init-git # cria e inicializa Git
 """
 from __future__ import annotations
 

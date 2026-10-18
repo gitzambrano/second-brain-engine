@@ -1,37 +1,25 @@
 #!/usr/bin/env python3
-"""
-Assa o ícone do Atlas a partir da arte-mestra, em todos os tamanhos que um
-navegador pede.
+"""build_favicons.py - Gera os ícones e favicons do Atlas a partir da arte-mestra.
 
-A arte chega com o xadrez de transparência **desenhado nos pixels** — é um PNG
-opaco que apenas parece recortado. Recortar isso por proximidade de cinza
-comeria o brilho branco do miolo junto. O que separa arte de fundo aqui é
-croma: o xadrez é acromático (R=G=B) e a arte é azul ou dourada. A máscara sai
-da saturação, com rampa suave, e as bordas antialiasadas ficam limpas, sem a
-franja cinza que denuncia recorte malfeito.
+Processa a arte-mestra em site_src/brand/: recorta por croma, gera a variante dourada,
+ajusta espessura de traços para legibilidade em baixa resolução e exporta os arquivos
+necessários para navegadores desktop, mobile e PWA.
 
-O segundo problema é escala. A arte é uma filigrana de neurônios: reduzida a
-32 px vira mingau. Os tamanhos pequenos são gerados de uma versão com o traço
-engrossado antes da redução, então a marca continua legível na aba.
+Escopo:
+    Geração e otimização de imagens estáticas em SITE_ROOT e site_src/brand/.
 
-As duas variantes saem da MESMA arte, a azul. A dourada original tem um brilho
-quente espalhado pelo miolo que tinge os quadrados do xadrez: aqueles pixels
-ficam cromáticos de verdade e nenhuma regra de cor os separa do desenho — o
-recorte deixava um fantasma de tabuleiro no meio do cérebro. Recolorir a azul
-resolve isso e ainda entrega algo melhor: uma silhueta só, em duas cores da
-paleta do site, idênticas em forma.
+Entradas (Inputs):
+    Imagens SVG/PNG mestras em site_src/brand/.
+    Argumentos CLI opcionais:
+        --check    Valida a presença e dimensões dos favicons sem regerar
 
-Lê:
-    scripts/site_src/brand/brain-blue-source.png   (arte-mestra)
-    scripts/site_src/brand/brain-gold-source.png   (referência da cor dourada)
+Saídas (Outputs):
+    favicon.ico, apple-touch-icon.png e variantes PNG em SITE_ROOT/assets/brand/.
+    Exit code: 0 em sucesso, 1 em falha de processamento de imagem.
 
-Gera (em scripts/site_src/brand/, versionados; o build copia para o site):
-    icon-light-512.png  icon-dark-512.png     — a marca cheia, transparente
-    icon-light-180.png                        — apple-touch, com fundo opaco
-    icon-32.png  icon-32-dark.png  icon-16.png — traço engrossado
-    favicon.ico                               — 16/32/48 num arquivo
-
-Default sem argumentos: regerar tudo.
+Uso:
+    python scripts/build_favicons.py          # regera todos os favicons
+    python scripts/build_favicons.py --check  # verifica conformidade
 """
 from __future__ import annotations
 

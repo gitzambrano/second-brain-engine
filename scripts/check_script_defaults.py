@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
-"""Audita contratos globais dos scripts Python executáveis.
+"""check_script_defaults.py - Audita contratos globais dos scripts Python executáveis.
 
-Todo CLI em `scripts/*.py` deve ter um caminho útil sem argumentos. O checker
-também valida shims de `scripts/lib/` e compara os CLIs públicos com o catálogo
-`SCRIPTS.md`, para que scripts novos ou removidos não fiquem invisíveis.
+Verifica três invariantes fundamentais dos scripts em scripts/:
+1. Regra dos defaults sem argumentos: nenhum script pode exigir argumento posicional
+   obrigatório sem default ou modo de lote útil.
+2. Integridade dos shims de scripts/lib/: shims de módulo reexportam main() e têm <= 12 linhas.
+3. Alinhamento com o catálogo docs/SCRIPTS.md: todo script executável deve estar documentado,
+   e nenhum script obsoleto/removido pode constar na documentação.
+
+Escopo:
+    Validação estática (AST e regex) read-only em scripts/*.py e docs/SCRIPTS.md.
+
+Entradas (Inputs):
+    Scripts em scripts/*.py e catálogo em docs/SCRIPTS.md.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Status PASS, WARN ou FAIL com avisos de scripts não documentados ou erros de contrato.
+    JSON: {"check": "script-defaults", "status": "pass"|"warn"|"fail", "errors": 0, "warnings": 0, ...}
+    Exit code: 0 em conformidade, 1 em falha de contrato.
+
+Uso:
+    python scripts/check_script_defaults.py         # auditoria padrão
+    python scripts/check_script_defaults.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

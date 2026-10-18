@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""
-Modelo compartilhado da projeção pública.
+"""site_common.py - Modelo compartilhado de dados da projeção pública do site.
 
-Lê DATA_ROOT e nunca escreve lá. Tudo que é público passa por
-``collect_public()``: um essay chega ao site só quando o frontmatter o autoriza
-com ``visibility: public`` — ou com o legado ``visibility: publico`` e o antigo
-booleano ``publish: true``. Qualquer outro valor, inclusive a ausência do campo,
-é privado.
+Centraliza regras de negócio comuns do Atlas público:
+- Coleta de ensaios autorizados com collect_public() a partir de DATA_ROOT.
+- Cálculo unificado de tempo de leitura (220 palavras por minuto, ponderando equações LaTeX).
+- Extração de resumos, tags, metadados de frontmatter e formatação de datas.
+
+Escopo:
+    Módulo de biblioteca de leitura do corpus para build_site, check_site_privacy e check_site_pages.
+    Lê DATA_ROOT e nunca modifica dados da wiki.
+
+Entradas (Inputs):
+    Arquivos Markdown e frontmatter em DATA_ROOT/wiki/essays/.
+
+Saídas (Outputs):
+    Objetos de dados estruturados representando os ensaios e páginas da wiki.
 """
 from __future__ import annotations
 

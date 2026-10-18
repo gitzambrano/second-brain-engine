@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-"""
-check_dedupe.py - Relatório de quase-duplicatas no corpus inteiro, em 4
-classes: títulos de essays, títulos de concepts/entities, tags (acento/caixa/
-hífen/singular-plural sobre tags_in_use) e referências repetidas entre
-essays diferentes. Só lista candidatos - nunca funde nem apaga.
+"""check_dedupe.py - Relatório de quase-duplicatas no corpus inteiro da wiki.
 
-Lê:
-    wiki/{essays,concepts,entities,insights}/*.md  (títulos, tags, referências)
+Detecta títulos idênticos ou muito similares via difflib e Levenshtein:
+- Títulos de ensaios, conceitos e entidades.
+- Sinônimos e termos concorrentes em tags.
+- Referências bibliográficas duplicadas ou conflitantes entre ensaios.
 
-Gera:
-    stdout (relatório agrupado) ou JSON com --json
+Escopo:
+    Validação read-only de deduplicação em DATA_ROOT/wiki/.
+    Não funde nem apaga arquivos automaticamente. Decisões cabem ao mantenedor via /merge ou /organize.
+
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/ e wiki/references.json.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de candidatos a quase-duplicata com score de similaridade e trechos.
+    JSON: {"check": "dedupe", "status": "pass"|"warn", "issues": [...]}
+    Exit code: 0 sempre (relatório consultivo).
 
 Uso:
-    python scripts/check_dedupe.py                  # relatório completo
-    python scripts/check_dedupe.py --json           # saída JSON
-    python scripts/check_dedupe.py --threshold 0.9  # similaridade mínima
-
-Flags:
-    --threshold N   similaridade fuzzy mínima (default: 0.85)
-    --json          saída JSON para parse programático
+    python scripts/check_dedupe.py            # relatório completo de quase-duplicatas
+    python scripts/check_dedupe.py --json     # saída estruturada em JSON
 """
 
 import argparse

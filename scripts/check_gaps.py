@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
-"""
-check_gaps.py - Camada léxica de /gaps: candidatos a página nova ("órfão de
-cobertura": termo recorrente que nunca virou wikilink/página) e a wikilink
-ausente entre páginas existentes ("menção sem link"), tratando essays,
-concepts, entities e insights como peers. Heurístico: só lista candidatos
-ranqueados, nunca escreve em disco.
+"""check_gaps.py - Camada léxica e estrutural de detecção de lacunas de conhecimento.
 
-Lê:
-    wiki/{essays,concepts,entities,insights}/*.md
-    wiki/index.json  (cache de títulos/tags)
+Identifica termos e conceitos de alta relevância mencionados no corpus que ainda não
+possuem páginas próprias, bem como conexões ausentes entre conceitos relacionados.
 
-Gera:
-    stdout - Parte 1 (cobertura), Parte 2 (menções sem link),
-    Parte 3 (balanço por tag)
+Escopo:
+    Auditoria read-only em DATA_ROOT/wiki/. Não cria nem edita páginas.
+    Os candidatos identificados são alimentados na skill /connect para expansão orientada.
+
+Entradas (Inputs):
+    Corpus completo em DATA_ROOT/wiki/ e índice em wiki/index.json.
+    Argumentos CLI opcionais:
+        --skip-tags    Pula a verificação de tags órfãs
+        --json         Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista priorizada de conceitos faltantes e potenciais conexões.
+    JSON: {"check": "gaps", "status": "pass"|"warn", "issues": [...]}
+    Exit code: 0 em sucesso.
 
 Uso:
-    python scripts/check_gaps.py                # as três partes
-    python scripts/check_gaps.py --skip-tags     # só Partes 1-2 (usado por /gaps)
-    python scripts/check_gaps.py --tags-only     # só Parte 3 (usado por /organize)
-
-Flags:
-    --skip-tags   roda só cobertura e menções sem link
-    --tags-only   roda só o balanço de cobertura por tag
+    python scripts/check_gaps.py              # análise léxica padrão
+    python scripts/check_gaps.py --skip-tags  # foco em conceitos e entidades
+    python scripts/check_gaps.py --json       # saída estruturada em JSON
 """
 
 import argparse

@@ -1,10 +1,32 @@
 #!/usr/bin/env python3
-"""
-Diagnostica as dependências de runtime usadas pelo repositório e pelos exports.
+"""check_env.py - Diagnostica as dependências de runtime usadas pelo repositório e exports.
 
-Default sem argumentos: rodar o diagnóstico completo do ambiente. Motor de
-export ausente é aviso por padrão, porque as checagens centrais do repositório
-precisam funcionar num clone mínimo; ``--strict`` promove esses avisos a erro.
+Audita a presença e versões das dependências de sistema e pacotes Python:
+1. Python e módulos essenciais (PyYAML, PyMuPDF, BeautifulSoup4, html5lib).
+2. Motores externos de exportação (Pandoc, LuaLaTeX).
+3. Ambiente de testes e automação de navegador (Playwright, navegadores Chromium).
+
+Escopo:
+    Diagnóstico read-only do ambiente local de execução.
+    Default sem argumentos roda diagnóstico completo. Motores de export ausentes geram
+    avisos (WARNING) por padrão para permitir clones mínimos; --strict promove avisos a erro.
+
+Entradas (Inputs):
+    Argumentos CLI opcionais:
+        --core      Verifica apenas dependências do núcleo (Python e PyYAML)
+        --strict    Promove ferramentas de export e navegador ausentes a erro
+        --json      Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Relatório formatado com status de cada dependência e ferramenta.
+    JSON: {"check": "environment", "status": "pass"|"warn"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em sucesso/aviso, 1 em dependência obrigatória ausente.
+
+Uso:
+    python scripts/check_env.py           # diagnóstico completo
+    python scripts/check_env.py --core    # apenas dependências fundamentais
+    python scripts/check_env.py --strict  # exige todas as ferramentas externas
+    python scripts/check_env.py --json    # saída estruturada em JSON
 """
 from __future__ import annotations
 

@@ -1,20 +1,32 @@
 #!/usr/bin/env python3
-"""
-Abre cada página do site público construído num navegador real e a audita.
+"""check_site_pages.py - Abre cada página do site público num navegador real para auditoria visual.
 
-`check_html_browser.py` cobre o export HTML standalone. As páginas do site são
-outro artefato — o mesmo template de essay mais a sobreposição do Atlas, o
-cromo próprio e a folha de estilo própria — e ninguém estava olhando para elas.
-Este script olha: sobe SITE_ROOT numa porta local, abre cada página, espera o
-MathJax e reporta o que um leitor encontraria de fato.
+Inicia um servidor HTTP local temporário servindo SITE_ROOT e navega por todas as páginas
+públicas em viewports de celular (390x844) e desktop (1440x900) usando Playwright Chromium:
+- Detecta overflow horizontal e quebra de layout.
+- Verifica imagens quebradas e âncoras internas mortas.
+- Audita erros de console JavaScript e requisições HTTP falhas (404/500).
+- Confere renderização correta do MathJax e ausência de vazamento de Markdown cru.
 
-Verificado num celular e num desktop:
-    overflow horizontal, imagem quebrada, âncora interna morta, requisição que
-    falhou, erro de console, Markdown vazando no texto renderizado e — num
-    essay — a barra do site, um sumário com entradas e um título de capa sem
-    marcadores de Markdown.
+Escopo:
+    Auditoria read-only em navegador headless das páginas compiladas em SITE_ROOT.
+    Sem navegador disponível é tratado como erro; use --allow-skip-browser para diagnóstico local.
 
-Default sem argumentos: auditar todas as páginas de SITE_ROOT.
+Entradas (Inputs):
+    Arquivos HTML, CSS, JS e imagens em SITE_ROOT.
+    Argumentos CLI opcionais:
+        --allow-skip-browser    Degrada para SKIP caso o Playwright/Chromium não esteja instalado
+        --json                  Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de páginas auditadas em cada viewport e eventuais falhas de layout/console.
+    JSON: {"check": "site_pages", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 em defeito de layout, erro de console ou imagem quebrada.
+
+Uso:
+    python scripts/check_site_pages.py                      # auditoria padrão
+    python scripts/check_site_pages.py --allow-skip-browser  # permite pular se sem browser
+    python scripts/check_site_pages.py --json               # saída estruturada em JSON
 """
 from __future__ import annotations
 

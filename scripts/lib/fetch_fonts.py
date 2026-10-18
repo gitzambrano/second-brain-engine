@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""fetch_fonts.py - Baixa fontes do Google Fonts (só subset latino) e as
-auto-hospeda em cache local para o export HTML - mantém apenas o subset
-`latin`, cortando ~85% do peso das fontes embutidas.
+"""fetch_fonts.py - Baixa e embuti fontes tipográficas do Google Fonts offline.
 
-Lê:
-    CSS e woff2 do Google Fonts (rede)
+Baixa arquivos de fonte WOFF2 (apenas subset latino) para embutimento standalone
+em exports HTML e temas do site público:
+- Garante que documentos HTML sejam 100% autocontidos e funcionem offline.
+- Armazena cache local de fontes em scripts/fonts/.
 
-Gera:
-    output/html/_fonts/fonts.css + woff2 referenciados
-    (cache: nada é rebaixado se já existirem; falha de rede -> None e o
-    export segue com fontes do sistema)
+Escopo:
+    Módulo utilitário de tipografia e cache de fontes web.
 
-Uso:
-    from fetch_fonts import ensure_local_fonts
-    css_path = ensure_local_fonts(output_dir)   # caminho do fonts.css ou None
+Entradas (Inputs):
+    Definições de famílias tipográficas (Lora, Inter, JetBrains Mono).
 
-(Chamado pelo export HTML e pelo leitor embutido dos grafos; sem CLI.)
+Saídas (Outputs):
+    Arquivos WOFF2 em cache e strings base64 para inclusão inline no CSS.
 """
 
 import re

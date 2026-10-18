@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
-"""
-Gera o podcast de um essay no NotebookLM por automação de navegador.
+"""notebooklm_podcast.py - Gera o podcast de um essay no NotebookLM por automação de navegador.
 
-Python puro + Playwright: zero tokens de LLM. O fluxo abre o NotebookLM com um
-perfil de navegador local, cria um caderno, cola o texto do essay como fonte,
-personaliza o Resumo em áudio (português do Brasil, maior duração oferecida, prompt de
-``.agents/skills/podcast/prompt.md``), espera a geração, baixa o áudio e o
-entrega a ``ingest_podcast.py``.
+Automação ponta a ponta sem dependência de APIs fechadas de LLM:
+- Sobe o navegador Chrome com perfil local persistente mantendo login do Google.
+- Cria caderno com o texto canônico do essay, dispara o Audio Overview e aguarda o download.
+- Ingere o áudio resultante em DATA_ROOT/wiki/podcasts/<slug>.m4a e valida com ffmpeg.
 
-Contas = pastas. Cada subpasta de ``--profiles-dir`` é um perfil persistente do
-Chrome e um candidato de conta; o rodízio segue a ordem alfabética das pastas.
-O script nunca digita senha: sessão deslogada é reportada, e ``--login PASTA``
-abre uma janela para o próprio Usuário entrar.
+Escopo:
+    Automação de navegador Playwright e gerador de áudio.
+    Requer perfil do Chrome autenticado em local/ e essay alvo existente na wiki.
 
-Estado em runtime (cooldowns, última conta, depuração) fica em
-``.local/notebooklm/`` e nunca entra em nenhum repositório.
+Entradas (Inputs):
+    Texto do ensaio em DATA_ROOT/wiki/essays/<slug>.md e perfil do Chrome.
+    Argumentos CLI:
+        essay_slug            Slug do ensaio a processar (posicional obrigatório ou default)
+        --force               Gera novo podcast mesmo se já existir em disco
+        --delete-notebook     Apaga o caderno no NotebookLM após baixar o áudio
+        --profile NOME        Seleciona perfil específico do Chrome em local/
 
-    python scripts/notebooklm_podcast.py <essay>        # gera
-    python scripts/notebooklm_podcast.py --login <pasta>  # login manual, janela visível
+Saídas (Outputs):
+    Arquivo de áudio baixado e ingerido em wiki/podcasts/<slug>.m4a.
+    Stdout: Log de cada etapa da automação com tempos de processamento.
+    Exit code: 0 em sucesso, 1 em falha de automação ou timeout.
 
-Default sem argumentos: listar os essays públicos sem podcast, do mais recente
-ao mais antigo, e o estado dos perfis. Não abre navegador.
+Uso:
+    python scripts/notebooklm_podcast.py meu-ensaio           # gera áudio para o ensaio
+    python scripts/notebooklm_podcast.py meu-ensaio --force   # força regeração
 """
 from __future__ import annotations
 

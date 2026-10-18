@@ -1,11 +1,29 @@
 #!/usr/bin/env python3
-"""Read-only heuristic freshness lint for temporal claims in essays.
+"""check_freshness.py - Auditoria heurística read-only de alegações temporais em essays.
 
-Flags sentences making a present-tense claim ("atualmente", "estado da arte",
-"versão atual") inside an essay whose ``updated:`` date is old enough that the
-claim deserves re-checking. Purely advisory: warnings never block.
+Sinaliza frases no presente ("atualmente", "estado da arte", "versão atual", etc.)
+dentro de ensaios cuja data de ``updated:`` ultrapassa o limiar de frescor configurado,
+indicando que a afirmação pode merecer revisão bibliográfica ou contextual.
 
-No-argument default: audit every essay with a 365-day threshold.
+Escopo:
+    Validação read-only puramente consultiva. Warnings nunca bloqueiam CI.
+    Default sem argumentos audita todos os essays com limiar de 365 dias.
+
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/essays/*.md.
+    Argumentos CLI opcionais:
+        --days INT    Limiar de dias desde updated: (padrão: 365)
+        --json        Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de frases temporais encontradas por essay com número de dias decorridos.
+    JSON: {"check": "freshness", "status": "pass"|"warn", "errors": 0, "warnings": [...]}
+    Exit code: 0 sempre (apenas avisos consultivos).
+
+Uso:
+    python scripts/check_freshness.py             # auditoria com limiar padrão de 365 dias
+    python scripts/check_freshness.py --days 180  # limiar mais estrito de 6 meses
+    python scripts/check_freshness.py --json      # saída estruturada em JSON
 """
 from __future__ import annotations
 

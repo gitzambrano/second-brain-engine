@@ -1,12 +1,32 @@
 #!/usr/bin/env python3
-"""
-Executa a geração de podcasts em paralelo usando as contas disponíveis no NotebookLM.
+"""parallel_podcasts.py - Executa a geração de podcasts em paralelo distribuída entre contas Google.
 
-Cada conta ativa executa em uma thread/worker independente com seu próprio perfil do
-Chrome headless, processando múltiplos essays simultaneamente a partir de uma fila compartilhada.
+Distribui a fila de ensaios entre múltiplos workers concorrentes no NotebookLM:
+- Cada conta ativa roda em uma thread independente com seu próprio perfil do Chrome headless.
+- Controla rate limits e rotação automática de perfis para maximizar throughput.
+- Sincroniza downloads e delega a ingestão segura do áudio ao pipeline canônico.
 
-    python scripts/parallel_podcasts.py               # processa a fila padrão
-    python scripts/parallel_podcasts.py slug1 slug2   # processa slugs específicos
+Escopo:
+    Orquestrador paralelo de geração via automação Playwright Chromium.
+    Padrão sem argumentos processa a fila canônica compartilhada.
+
+Entradas (Inputs):
+    Fila padrão de slugs ou argumentos posicionais informados na linha de comando.
+    Perfis locais do Chrome configurados sob local/.
+    Argumentos CLI opcionais:
+        slugs                Lista de slugs específicos a processar
+        --force              Sobrescreve podcasts já existentes
+        --delete-notebook    Exclui o caderno temporário no NotebookLM após o download
+        --timeout INT        Tempo limite em minutos por ensaio (padrão: 45)
+
+Saídas (Outputs):
+    Arquivos de áudio gravados em DATA_ROOT/wiki/podcasts/<slug>.m4a.
+    Stdout: Sumário de execução paralela com sucessos, pulados e falhas por conta.
+    Exit code: 0 em sucesso, 1 em falha crítica de todos os workers.
+
+Uso:
+    python scripts/parallel_podcasts.py                       # processa fila em paralelo
+    python scripts/parallel_podcasts.py slug-1 slug-2         # processa alvos específicos
 """
 from __future__ import annotations
 

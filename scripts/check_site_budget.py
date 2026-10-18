@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
-"""
-Orçamento de tamanho dos artefatos públicos.
+"""check_site_budget.py - Orçamento de tamanho e integridade dos artefatos públicos.
 
-Um site estático não avisa quando engorda. `search-index.json` chegou a 2,2 MB
-carregando o texto integral de todos os essays para uma busca que lê os cartões
-do DOM e nunca baixou o arquivo — ninguém percebeu porque nada media. Aqui cada
-artefato público tem um teto declarado, e passar do teto é decisão consciente
-(subir o número, com o motivo no commit), não um acúmulo silencioso.
+Audita os limites de tamanho em disco dos arquivos servidos pelo site público para
+prevenir inchaço acidental ou inclusão de dados desnecessários em bundles estáticos:
+- Tetos específicos para index.html, 404.html, graph.html, sphere.html, etc.
+- Orçamento global para podcasts em áudio (teto por arquivo individual e total conjunto).
 
-Os limites são generosos de propósito: o alarme é para crescimento de ordem de
-grandeza, não para variação de um essay a mais.
+Escopo:
+    Auditoria estática read-only do tamanho de arquivos em SITE_ROOT.
+    Ultrapassar o teto declarado exige justificativa expressa e revisão dos limites declarados.
 
-Default sem argumentos: auditar SITE_ROOT.
+Entradas (Inputs):
+    Arquivos em SITE_ROOT.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Tamanho medido vs. orçamento para cada categoria e artefato público.
+    JSON: {"check": "site_budget", "status": "pass"|"warn"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 se algum artefato estourar o orçamento declarado.
+
+Uso:
+    python scripts/check_site_budget.py         # auditoria de tamanho padrão
+    python scripts/check_site_budget.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

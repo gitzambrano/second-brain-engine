@@ -1,12 +1,28 @@
 #!/usr/bin/env python3
-"""
-Executa a geração em lote de podcasts para uma lista ordenada de essays.
+"""batch_podcasts.py - Executa a geração em lote sequencial de podcasts no NotebookLM.
 
-    python scripts/batch_podcasts.py               # gera a fila padrão (20 essays)
-    python scripts/batch_podcasts.py slug1 slug2   # gera slugs específicos
+Processa uma fila ordenada de ensaios delegando a geração de áudio ao notebooklm_podcast.py:
+- Pula automaticamente ensaios que já possuam podcast gerado em wiki/podcasts/.
+- Continua a execução do lote mesmo se um ensaio sofrer falha transitória individual.
+- Apresenta sumário consolidado com contagem de sucessos, pulados e falhas.
 
-Pula automaticamente os essays que já tiverem podcast gerado. Continua para o
-próximo essay em caso de falha transitória individual.
+Escopo:
+    Orquestrador de geração em lote via automação de navegador do NotebookLM.
+    Padrão sem argumentos processa a fila canônica pré-configurada de ensaios.
+
+Entradas (Inputs):
+    Fila padrão de slugs ou argumentos posicionais informados na linha de comando.
+    Argumentos CLI opcionais:
+        slugs         Lista de slugs de essays específicos a gerar em sequência
+
+Saídas (Outputs):
+    Arquivos de áudio ingeridos em DATA_ROOT/wiki/podcasts/<slug>.m4a.
+    Stdout: Log de progresso do lote com tempos de geração por ensaio.
+    Exit code: 0 em sucesso geral, 1 se todos os ensaios do lote falharem.
+
+Uso:
+    python scripts/batch_podcasts.py                          # processa fila padrão
+    python scripts/batch_podcasts.py slug-1 slug-2            # processa slugs específicos
 """
 from __future__ import annotations
 

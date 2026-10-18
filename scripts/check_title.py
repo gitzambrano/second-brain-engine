@@ -1,10 +1,33 @@
 #!/usr/bin/env python3
-"""
-Checagem de título exato e aproximado antes de criar página.
+"""check_title.py - Checagem de título exato e aproximado antes de criar página.
 
-O default sem argumentos audita o corpus inteiro em busca de colisão de título
-normalizado exato e de colisão aproximada. Informar um título preserva o modo
-original de consulta por candidato.
+Verifica se um título candidato (ou títulos existentes em lote) colide com páginas
+já criadas na wiki, usando normalização de maiúsculas/minúsculas, acentuação e
+similaridade fuzzy (difflib) com aliases e títulos H1.
+
+Escopo:
+    Validação read-only de títulos e aliases em DATA_ROOT/wiki/.
+    Default sem argumentos audita o corpus inteiro procurando colisões exatas e
+    quase-colisões entre páginas do mesmo tipo.
+
+Entradas (Inputs):
+    Arquivos Markdown em wiki/essays, concepts, entities, insights, handouts, sources.
+    Argumentos CLI opcionais:
+        title                 Título candidato a verificar (posicional opcional)
+        --type TYPE           Tipo da página (essay, concept, entity, insight, handout, source)
+        --threshold FLOAT     Limiar de similaridade fuzzy (0.0 a 1.0, padrão: 0.82)
+        --exact-only          Verifica apenas colisão exata após normalização
+        --json                Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de candidatos similares encontrados com score e arquivo correspondente.
+    JSON: {"check": "check_title", "status": "pass"|"warn"|"fail", "issues": [...]}
+    Exit code: 0 se livre (ou no default global), 1 se colisão exata for detectada.
+
+Uso:
+    python scripts/check_title.py                         # auditoria de colisão em todo o corpus
+    python scripts/check_title.py "Meu Novo Conceito"     # consulta para novo título
+    python scripts/check_title.py "Conceito" --type concept --threshold 0.85
 """
 import argparse
 import difflib

@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
-"""
-Caminhos canônicos da estrutura de três repositórios aninhados.
+"""repo_paths.py - Caminhos canônicos da arquitetura de três repositórios aninhados.
 
-Padrão:
-    CODE_ROOT = este checkout público do second-brain-engine
-    DATA_ROOT = CODE_ROOT / "data"  (repo Git privado aninhado)
-    SITE_ROOT = CODE_ROOT / "site"  (repo Git público aninhado)
+Centraliza a resolução de caminhos para todo o ecossistema Second Brain:
+- CODE_ROOT: diretório raiz deste repositório público (second-brain-engine).
+- DATA_ROOT: repositório privado aninhado em data/ (ou variável SECOND_BRAIN_DATA_ROOT).
+- SITE_ROOT: repositório público aninhado em site/ (ou variável SECOND_BRAIN_SITE_ROOT).
+- Caminhos derivados: wiki, plan, raw, output, scripts, assets.
 
-Testes e worktrees podem sobrescrever as raízes aninhadas com:
-    SECOND_BRAIN_DATA_ROOT
-    SECOND_BRAIN_SITE_ROOT
+Escopo:
+    Módulo de biblioteca e utilitário CLI read-only.
+    Default sem argumentos imprime os caminhos efetivos configurados no ambiente.
 
-Default sem argumentos é read-only e imprime os caminhos efetivos.
+Entradas (Inputs):
+    Variáveis de ambiente opcionais SECOND_BRAIN_DATA_ROOT e SECOND_BRAIN_SITE_ROOT.
+
+Saídas (Outputs):
+    Stdout: Resumo dos caminhos canônicos resolvidos quando executado como script.
+    Python: Objetos Path exportados para uso em todos os scripts do engine.
+    Exit code: 0 em sucesso.
+
+Uso:
+    python scripts/repo_paths.py                  # exibe caminhos canônicos resolvidos
 """
 from __future__ import annotations
 

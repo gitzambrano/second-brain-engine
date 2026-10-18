@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
-"""
-Valida o isolamento dos Gits aninhados e a identidade de cada repositório.
+"""check_git_isolation.py - Valida o isolamento dos Gits aninhados e a identidade de cada repositório.
 
-O padrão é read-only. data/ e site/ ausentes são avisos, para que clones
-esqueleto de CI continuem válidos. --strict transforma repo aninhado ausente e
-remote errado ou ausente em erro.
+Verifica a regra arquitetural dos 3 repositórios Git independentes (. engine, data/ e site/):
+garante que o engine ignore data/ e site/ no .gitignore, que não haja submodules,
+que remotes correspondam aos repositórios esperados e que nenhum arquivo de repo aninhado
+esteja versionado no pai.
+
+Escopo:
+    Validação read-only de repositórios Git. data/ e site/ ausentes são tratados como avisos
+    para permitir clones esqueleto. --strict promove ausência de repo aninhado ou remote
+    incorreto a erro bloqueante.
+
+Entradas (Inputs):
+    Estrutura de diretórios e configuração Git em CODE_ROOT, DATA_ROOT e SITE_ROOT.
+    Argumentos CLI opcionais:
+        --strict    Exige presença estrita e remotes corretos de data/ e site/
+        --json      Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Status PASS, WARN ou FAIL com mensagens descritivas de isolamento Git.
+    JSON: {"check": "git_isolation", "status": "pass"|"warn"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em sucesso/aviso, 1 em violação de isolamento Git.
+
+Uso:
+    python scripts/check_git_isolation.py           # diagnóstico padrão
+    python scripts/check_git_isolation.py --strict  # modo rigoroso
+    python scripts/check_git_isolation.py --json    # saída estruturada em JSON
 """
 from __future__ import annotations
 

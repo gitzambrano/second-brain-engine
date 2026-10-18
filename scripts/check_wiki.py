@@ -1,39 +1,33 @@
 #!/usr/bin/env python3
-"""
-check_wiki.py - Lint unificado da wiki, em dois níveis:
+"""check_wiki.py - Linter unificado de integridade e estilo da wiki.
 
-- Por essay: issues {severity, code, message} (CRITICAL|ERROR|WARNING|INFO)
-  cobrindo frontmatter obrigatório, H1+byline, Sumário/Referências/Conexões,
-  tipografia, travessões (máx. 2), bullets residuais, HTML/símbolos
-  residuais, idioma, wikilinks mortos e fora de Conexões.
-- De corpus: órfãos, wiki/index.md, manifesto de sources, estrutura de
-  wiki/sources/**, plan/plano.md, insights — pulados com aviso quando o
-  escopo é um essay único.
+Executa auditoria profunda em dois níveis:
+1. Nível de essay: frontmatter obrigatório, formato de byline, H1 canônico, Sumário,
+   estrutura de callouts, referências, ausência de metadiscurso ou tópicos soltos no corpo.
+2. Nível de corpus: resolução de todos os [[wikilinks]], ausência de links quebrados (dead links)
+   e validação de tags controladas.
 
-Somente-leitura: a correção mecânica é do fix_lint.py. Regra completa de
-cada checagem em conventions/SKILL.md.
+Escopo:
+    Validação read-only de todo o conteúdo da wiki em DATA_ROOT/wiki/.
+    Não realiza edições em disco; use scripts/fix_lint.py para correções mecânicas determinísticas.
 
-Lê:
-    wiki/{essays,concepts,entities,insights}/*.md, wiki/sources/manifest.md,
-    wiki/index.md, plan/plano.md
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/ (essays, concepts, entities, insights, handouts).
+    Argumentos CLI opcionais:
+        slug          Valida um único essay isoladamente
+        --strict      Promove avisos a erro bloqueante (modo CI)
+        --json        Emite diagnóstico formatado em JSON
 
-Gera:
-    stdout (relatório) + output/comprehensive_lint_output.txt no escopo corpus;
-    --json para parse programático. Com --strict, CRITICAL/ERROR retornam 1.
+Saídas (Outputs):
+    Stdout: Relatório detalhado com contagem de erros, avisos e sugestões de estilo.
+    JSON: {"check": "wiki", "status": "pass"|"warn"|"fail", "errors": 0, "warnings": 0, ...}
+    Exit code: 0 em conformidade (ou warnings sem --strict), 1 em erros objetivos.
 
 Uso:
-    python scripts/check_wiki.py                       # corpus inteiro (default)
-    python scripts/check_wiki.py --all                 # idem, explícito
-    python scripts/check_wiki.py xadrez-computacional  # essay único (posicional)
-    python scripts/check_wiki.py --file <slug>         # alias de compatibilidade
-    python scripts/check_wiki.py --json                # saída JSON
-
-Flags:
-    slug        essay alvo (posicional, opcional)
-    --file/-f   caminho do essay (alternativa ao slug)
-    --all       força corpus inteiro
-    --json      saída JSON para parse programático
-    --strict    bloqueia CI em CRITICAL/ERROR
+    python scripts/check_wiki.py                    # auditoria de todo o corpus
+    python scripts/check_wiki.py meu-ensaio         # auditoria de um ensaio específico
+    python scripts/check_wiki.py --strict           # modo estrito bloqueante
+    python scripts/check_wiki.py --json             # saída estruturada em JSON
 """
 
 import argparse

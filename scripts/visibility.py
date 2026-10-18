@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""
-Três níveis de visibilidade de essay, lidos do frontmatter.
+"""visibility.py - Leitor e validador de visibilidade de ensaios a partir do frontmatter.
 
-    public   o texto é legível no site público
-    private  catalogado e mapeado por título e resumo; o texto não sai
-    hidden   ausente de tudo — site, índice da wiki e grafo da wiki
+Centraliza as regras de permissão de publicação de ensaios:
+- Identifica os níveis canônicos: public (público), private (privado) e hidden (oculto).
+- Suporta valores legados (ex: publish: true/false, visibility: publico/privado/oculto).
+- Classifica ensaios ausentes ou com valores inválidos estritamente como privados por segurança.
 
-O campo é `visibility:`. O booleano antigo `publish: true` continua valendo como
-`public`, então essays escritos antes de o campo existir seguem funcionando.
+Escopo:
+    Módulo utilitário e CLI read-only.
+    Padrão sem argumentos imprime a distribuição e resumo de visibilidade do corpus.
 
-    visibility: public          # legível
-    visibility: private         # listado, não legível   (também é o padrão)
-    visibility: hidden          # nem listado
-    publish: true               # grafia antiga de `visibility: public`
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/essays/*.md.
 
-A ausência é o estado seguro: um essay sem nenhum dos dois campos é privado.
+Saídas (Outputs):
+    Stdout: Estatísticas consolidadas de contagem de essays públicos, privados e ocultos.
+    Python: Funções utilitárias is_public(), is_hidden(), get_visibility() para outros scripts.
+    Exit code: 0 em sucesso.
 
-Default sem argumentos: relatar como o corpus se distribui entre os níveis.
+Uso:
+    python scripts/visibility.py                  # exibe resumo da distribuição de visibilidade
 """
 from __future__ import annotations
 

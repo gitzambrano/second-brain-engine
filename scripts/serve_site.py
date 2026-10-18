@@ -1,8 +1,24 @@
 #!/usr/bin/env python3
-"""
-Serve o site público gerado localmente, para inspeção.
+"""serve_site.py - Servidor HTTP local leve para inspeção do site público gerado.
 
-Default sem argumentos: servir SITE_ROOT em http://127.0.0.1:8000. Read-only.
+Inicia um servidor HTTP local simples (http.server) servindo os arquivos compilados
+em SITE_ROOT, permitindo inspecionar o Atlas no navegador antes do deploy público.
+
+Escopo:
+    Utilitário read-only de desenvolvimento e inspeção local. Não altera arquivos.
+
+Entradas (Inputs):
+    Arquivos compilados em SITE_ROOT.
+    Argumentos CLI opcionais:
+        --port PORT    Porta TCP para o servidor HTTP (padrão: 8000)
+
+Saídas (Outputs):
+    Stdout: URL local de acesso (ex: http://127.0.0.1:8000) e log de requisições.
+    Exit code: 0 ao encerrar (Ctrl+C).
+
+Uso:
+    python scripts/serve_site.py                  # serve em http://127.0.0.1:8000
+    python scripts/serve_site.py --port 8080      # serve na porta 8080
 """
 from __future__ import annotations
 

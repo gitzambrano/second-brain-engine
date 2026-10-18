@@ -1,30 +1,26 @@
 #!/usr/bin/env python3
-"""
-build_sphere.py - Grafo ESFÉRICO da wiki: os mesmos nós e arestas do
-build_graph.py distribuídos na superfície de uma esfera girável. Layout
-pré-calculado (Fibonacci + relaxamento restrito à casca); o cliente não roda
-simulação nenhuma - apenas rotação e projeção por frame.
+"""build_sphere.py - Visualização esférica tridimensional da topologia da wiki.
 
-Lê:
-    idêntico ao build_graph.py (importa dele a extração de nós/arestas,
-    tag gaps, fallback mermaid e leitor embutido):
-    wiki/essays|concepts|entities|insights/*.md + wiki/references.json
+Mapeia o grafo de conhecimento sobre a superfície de uma esfera 3D interativa
+via Three.js, destacando clusters semânticos, densidade de conexões e rotas conceituais.
 
-Gera (em output/graph/, sem tocar nos artefatos canônicos do plano):
-    MySecondBrain_sphere.html            globo interativo — versão LEVE (grafo + link .md), arquivo canônico
-    MySecondBrain_sphere.reader.html     versão COMPLETA com os essays embutidos
-    sphere.json                          grafo completo + ux/uy/uz por nó
-    sphere.md                            fallback Mermaid
+Escopo:
+    Geração de artefato derivado 3D em DATA_ROOT/output/sphere/ e SITE_ROOT/sphere.html.
+    Nunca altera conteúdo da wiki; artefato derivado gerado automaticamente.
+
+Entradas (Inputs):
+    DATA_ROOT/wiki/ e índice consolidado de nós e arestas.
+    Argumentos CLI opcionais:
+        --public    Filtra dados para o formato de publicação
+        --output    Caminho customizado de saída
+
+Saídas (Outputs):
+    output/sphere/index.html (ou SITE_ROOT/sphere.html).
+    Exit code: 0 em sucesso, 1 em erro de renderização.
 
 Uso:
-    python scripts/build_sphere.py               # default: gera AS DUAS variantes (leve + reader)
-    python scripts/build_sphere.py --reader      # gera só a completa (essays embutidos)
-    python scripts/build_sphere.py --no-reader   # gera só a leve (globo + link .md)
-
-Flags:
-    --reader | --no-reader   gerar apenas uma das variantes. Sem flag, o
-                             script gera as duas, cada uma com nome próprio:
-                             leve → MySecondBrain_sphere.html; completa → MySecondBrain_sphere.reader.html
+    python scripts/build_sphere.py            # gera globo interno em output/sphere/
+    python scripts/build_sphere.py --public   # gera versão pública
 """
 
 import argparse

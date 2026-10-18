@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
-"""
-Impõe o que o site público pode e o que não pode expor.
+"""check_site_privacy.py - Sentinela estrita de privacidade do site público.
 
-A decisão do Usuário, que este checador codifica:
+Garante que nenhuma informação privada ou não autorizada chegue a SITE_ROOT:
+- Catálogo e mapas: apenas título, resumo, tags, datas e conexões públicas.
+- Corpo de texto: somente ensaios com ``visibility: public`` podem ter texto publicado.
+- Varridura n-gram: analisa todo o HTML do site contra o texto de ensaios privados para
+  garantir ausência de vazamento acidental de trechos privados.
+- Validação de esquema dos nós do grafo contra allowlist estrita.
 
-    público  título, resumo, tags, datas, status de rascunho, conexões e a URL
-             externa de uma entrada de bibliografia — para a base inteira
-    privado  o corpo de qualquer página, qualquer caminho para dentro do repo
-             privado, e link que abra algo que não seja um essay autorizado
+Escopo:
+    Validação read-only de privacidade entre DATA_ROOT e SITE_ROOT.
+    Gate bloqueante de publicação — falha impede qualquer deploy.
 
-Ou seja: um essay não publicado é catalogado e mapeado, por título e resumo, e
-não abre. Um site estático não esconde o que serve: tudo na linha "público"
-acima é legível por qualquer pessoa.
+Entradas (Inputs):
+    Arquivos gerados em SITE_ROOT e arquivos privados em DATA_ROOT/wiki/.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
 
-Os mapas embutem os dados como base64 deflacionado dentro do HTML, então este
-checador infla essa carga e inspeciona os nós de verdade, em vez de procurar
-texto com grep. Cada nó é validado contra a allowlist de
-`build_public_map.assert_public_schema`: chave fora do schema reprova.
+Saídas (Outputs):
+    Stdout: Status PASS ou FAIL com detalhamento de vazamentos ou campos não permitidos.
+    JSON: {"check": "site_privacy", "status": "pass"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em conformidade total de privacidade, 1 se houver qualquer vazamento.
 
-O corpo de cada essay privado é varrido inteiro, em n-gramas deslizantes, contra
-todos os arquivos publicados — ver `audit_bodies` para o tamanho da janela e o
-desconto do que já é público.
-
-Default sem argumentos: auditar SITE_ROOT e reportar PASS/FAIL.
+Uso:
+    python scripts/check_site_privacy.py         # auditoria de privacidade padrão
+    python scripts/check_site_privacy.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

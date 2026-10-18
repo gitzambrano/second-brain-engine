@@ -1,9 +1,18 @@
-"""Build the private site-side newsletter manifest from public essay metadata.
+"""build_newsletter_manifest.py - Constrói o manifesto de newsletter a partir de metadados de essays.
 
-Only essays already authorized for public publication can enter this manifest.
-An essay is eligible when its front matter contains ``newsletter_issue: N``.
-The output lives under the site's ``.github/`` directory, so it is available to
-GitHub Actions but is never part of the Pages artifact.
+Filtra ensaios públicos elegíveis que possuam o campo ``newsletter_issue: N`` no frontmatter:
+- Extrai título, subtítulo, resumo, tempo de leitura e URL canônica.
+- O manifesto gerado fica sob .github/ no site e alimenta a ação de notificação via Kit.
+
+Escopo:
+    Módulo de biblioteca de publicação de newsletter.
+    Gera manifesto privado no repositório site/, fora do artefato público servido pelo Pages.
+
+Entradas (Inputs):
+    Metadados de ensaios públicos em SITE_ROOT/essays/.
+
+Saídas (Outputs):
+    Gravação de SITE_ROOT/.github/newsletter-manifest.json.
 """
 from __future__ import annotations
 

@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
-"""Valida que o arquivo de cada essay seja o slug do seu H1 completo."""
+"""check_essay_slugs.py - Valida que o nome do arquivo de cada essay seja o slug determinístico do seu H1.
+
+Garante a regra canônica de nomenclatura: o arquivo de todo essay deve ter o nome exatamente
+igual ao título H1 completo transliterado para ASCII kebab-case (sem truncamentos ou desvios).
+
+Escopo:
+    Validação estática read-only em DATA_ROOT/wiki/essays/*.md.
+    Para renomeação automática corretiva, use scripts/rename_essay_files.py.
+
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/essays/*.md.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de arquivos de essay fora do padrão canônico com o slug esperado.
+    JSON: {"check": "essay_slugs", "status": "pass"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 se houver arquivo com slug divergente do H1.
+
+Uso:
+    python scripts/check_essay_slugs.py         # validação padrão
+    python scripts/check_essay_slugs.py --json  # saída estruturada em JSON
+"""
 
 from __future__ import annotations
 

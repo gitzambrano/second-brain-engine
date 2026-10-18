@@ -1,31 +1,26 @@
 #!/usr/bin/env python3
-"""
-build_graph.py - Grafo PLANO canônico da wiki: nós e conexões em 2D
-(força-dirigida), HTML interativo com índice, gaps, painel de estilo e
-leitor de essays embutido.
+"""build_graph.py - Grafo 2D interativo da wiki para navegação conceitual.
 
-Lê:
-    wiki/essays|concepts|entities|insights/*.md   títulos, wikilinks, frontmatter
-    wiki/references.json                          referências citadas por essay
+Gera visualização force-directed interativa em Canvas/WebGL mostrando as relações
+entre ensaios, conceitos, entidades e insights da wiki.
 
-Gera (em output/graph/):
-    MySecondBrain.html            grafo interativo — versão LEVE (grafo + link .md), arquivo canônico
-    MySecondBrain.reader.html     versão COMPLETA com os essays embutidos (leitura premium offline, ~6 MB)
-    graph.md                      fallback Mermaid
-    graph.json                    nós/arestas/tag_gaps/isolated (lido por /organize)
-    graph.html                    redirect para MySecondBrain.html
+Escopo:
+    Geração de artefato derivado em DATA_ROOT/output/graph/ e SITE_ROOT/graph.html.
+    Nunca altera conteúdo da wiki; artefato derivado gerado automaticamente.
+
+Entradas (Inputs):
+    DATA_ROOT/wiki/ (essays, concepts, entities, insights) e index.json.
+    Argumentos CLI opcionais:
+        --public    Filtra dados para o formato estrito de publicação (sem nós privados)
+        --output    Caminho customizado de saída do arquivo HTML
+
+Saídas (Outputs):
+    output/graph/index.html (ou SITE_ROOT/graph.html) e dados embutidos.
+    Exit code: 0 em sucesso, 1 em erro de geração.
 
 Uso:
-    python scripts/build_graph.py               # default: gera AS DUAS variantes (leve + reader)
-    python scripts/build_graph.py --reader      # gera só a completa (essays embutidos)
-    python scripts/build_graph.py --no-reader   # gera só a leve (grafo + link .md)
-
-Flags:
-    --reader | --no-reader   gerar apenas uma das variantes. Sem flag, o
-                             script gera as duas, cada uma com nome próprio:
-                             leve → MySecondBrain.html; completa → MySecondBrain.reader.html
-
-Variante esférica: scripts/build_sphere.py (importa deste arquivo).
+    python scripts/build_graph.py             # gera grafo interno em output/graph/
+    python scripts/build_graph.py --public    # gera versão sanitizada pública
 """
 
 import argparse

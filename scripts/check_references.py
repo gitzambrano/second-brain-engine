@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
-"""
-check_references.py - Valida o conteúdo da seção `## Referências` dos
-essays contra o padrão AIAA (conventions/SKILL.md). Somente-leitura: a
-correção mecânica é do fix_lint.py, que importa os parsers deste módulo.
+"""check_references.py - Valida o conteúdo e a formatação da seção '## Referências'.
 
-Lê:
-    wiki/essays/*.md  (todos, ou um essay via slug/--file)
+Audita a integridade bibliográfica dos ensaios:
+- Numeração estrita e ordem crescente ([1], [2], ...).
+- Todas as citações no corpo devem existir nas referências, e vice-versa.
+- Presença de data de acesso para fontes mutáveis (links web, artigos online).
+- Links válidos com esquema https:// ou doi.org.
 
-Gera:
-    stdout (relatório ou JSON com --json). Códigos:
-    REFERENCIA_FORMATO_INVALIDO  ERROR    entrada fora do padrão [N] *Título*...
-    DUPLICATE_REFERENCIA         ERROR    mesma URL duas vezes no mesmo essay
-    LINK_NOT_IN_REFERENCIAS      ERROR    URL citada no corpo sem entrada
-    REFERENCIA_SEM_LINK          WARNING  entrada sem link
+Escopo:
+    Validação read-only em DATA_ROOT/wiki/essays/*.md. Não modifica arquivos.
+
+Entradas (Inputs):
+    Arquivos de ensaio em DATA_ROOT/wiki/essays/*.md.
+    Argumentos CLI opcionais:
+        slug          Slug opcional de um ensaio específico para validar isoladamente
+        --json        Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de inconformidades bibliográficas agrupadas por ensaio e código.
+    JSON: {"check": "references", "status": "pass"|"warn"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 se houver erros bibliográficos bloqueantes.
 
 Uso:
-    python scripts/check_references.py              # todos os essays
-    python scripts/check_references.py meu-essay    # essay único (slug)
-    python scripts/check_references.py --file x.md  # caminho explícito
-    python scripts/check_references.py --json       # saída JSON
-
-Flags:
-    slug        essay alvo (posicional, opcional)
-    --file/-f   caminho do essay (alternativa ao slug)
-    --json      saída JSON para parse programático
+    python scripts/check_references.py              # audita todos os ensaios
+    python scripts/check_references.py meu-ensaio   # audita um ensaio específico
+    python scripts/check_references.py --json       # saída estruturada em JSON
 """
 
 import argparse

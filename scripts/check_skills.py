@@ -1,10 +1,29 @@
 #!/usr/bin/env python3
-"""Audita contratos estáticos de skills, subagents e suas referências.
+"""check_skills.py - Audita contratos estáticos de skills, subagents e suas referências.
 
-`check_agents.py` audita fonte, mirrors, adapters e hook de bootstrap. Este
-checker audita o conteúdo canônico em `.agents/`: frontmatter, metadata do
-Second Brain, ferramentas permitidas, comandos, scripts e invariantes
-editoriais que podem ser verificados estaticamente.
+Verifica a conformidade formal das skills em ``.agents/skills/`` e agentes em ``.agents/agents/``:
+1. Frontmatter YAML canônico (name, description, license, metadata).
+2. Tabela de metadados: command, mode (leitura/mutador/ambos/script), triggers, context, tools.
+3. Ferramentas permitidas (allowed-tools) compatíveis com o modo declarado.
+4. Nomes de comandos únicos e referências a scripts existentes.
+5. Invariantes editoriais de estilo e ausência de caminhos hardcoded.
+
+Escopo:
+    Validação estática read-only em arquivos .agents/skills/*/SKILL.md e .agents/agents/*.md.
+
+Entradas (Inputs):
+    Arquivos Markdown e YAML em .agents/skills/ e .agents/agents/.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de issues com severidade (ERROR, WARNING, INFO) e sumário de conformidade.
+    JSON: {"check": "skills", "status": "pass"|"warn"|"fail", "errors": 0, "warnings": 0, ...}
+    Exit code: 0 em conformidade (ou warnings), 1 em erro de contrato ou frontmatter inválido.
+
+Uso:
+    python scripts/check_skills.py         # auditoria padrão
+    python scripts/check_skills.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

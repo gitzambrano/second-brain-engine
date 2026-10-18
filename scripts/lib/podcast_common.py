@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""
-Núcleo compartilhado dos podcasts de essay.
+"""podcast_common.py - Núcleo compartilhado de processamento e auditoria de podcasts de áudio.
 
-Cada essay pode ter um podcast de áudio. O original vive em
-``DATA_ROOT/wiki/podcasts/<slug>.m4a|mp3`` (grande, só em disco). O site recebe
-uma cópia recodificada e enxuta em ``SITE_ROOT/assets/podcasts/<slug>.m4a``,
-somente para essays ``public``.
+Reúne funções essenciais para a manipulação dos podcasts dos ensaios:
+- Localização e execução do ffmpeg no ambiente.
+- Inspeção de áudio, metadados de contêiner, taxa de amostragem e duração.
+- Casamento inteligente entre nomes de arquivos de áudio e slugs de ensaios.
+- Recodificação otimizada em mono 48 kbps AAC com faststart para publicação web.
 
-Este módulo reúne o que build, checkers, fixer, ingestão e geração precisam
-dividir: localizar o ffmpeg, inspecionar áudio, validar integridade, casar nome
-de arquivo com essay, recodificar para o site e sincronizar a pasta publicada.
+Escopo:
+    Módulo de biblioteca compartilhado entre checkers, build_site, fixers e scripts de ingestão.
 
-Não há ffprobe garantido no ambiente (o ``imageio-ffmpeg`` traz só o ffmpeg),
-então a inspeção lê a saída de ``ffmpeg -i``. Se um ffprobe existir ele não é
-necessário.
+Entradas (Inputs):
+    Arquivos de áudio em DATA_ROOT/wiki/podcasts/ e SITE_ROOT/assets/podcasts/.
 
-Módulo de biblioteca: sem CLI.
+Saídas (Outputs):
+    Metadados de áudio, planos de renomeação e fluxos de recodificação.
 """
 from __future__ import annotations
 

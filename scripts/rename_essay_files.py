@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
-"""Renomeia essays para o slug determinístico de seu H1 e repara referências.
+"""rename_essay_files.py - Renomeia arquivos de essays para o slug determinístico de seu H1.
 
-O nome canônico é o título completo do essay transliterado para kebab-case.
-Além dos Markdown, o migrador renomeia assets ``<slug>_figN`` e reaponta
-wikilinks no corpus inteiro.
+Aplica a convenção normativa de nomenclatura: o nome do arquivo em wiki/essays/
+deve ser exatamente o slug kebab-case do seu título H1:
+- Renomeia o arquivo Markdown correspondente.
+- Renomeia os assets associados (<slug>_figN.ext).
+- Reaponta automaticamente todos os [[wikilinks]] no corpus inteiro.
+
+Escopo:
+    Mutador determinístico da wiki em DATA_ROOT/wiki/.
+    Sem argumentos opera em modo dry-run (apenas lista os planos de renomeação).
+
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/essays/*.md e assets em wiki/assets/.
+    Argumentos CLI opcionais:
+        --apply    Executa as renomeações e atualizações de links em disco
+
+Saídas (Outputs):
+    Stdout: Lista de arquivos a renomear e contagem de referências atualizadas.
+    Sistema de arquivos: Arquivos renomeados e wikilinks atualizados quando --apply é usado.
+    Exit code: 0 em sucesso, 1 em caso de conflito de slug.
+
+Uso:
+    python scripts/rename_essay_files.py          # dry-run consultivo
+    python scripts/rename_essay_files.py --apply  # aplica renomeações e reaponta links
 """
 from __future__ import annotations
 

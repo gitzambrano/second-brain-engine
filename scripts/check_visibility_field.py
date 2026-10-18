@@ -1,13 +1,30 @@
 #!/usr/bin/env python3
-"""
-Validação read-only da allowlist de publicação no frontmatter dos essays.
+"""check_visibility_field.py - Validação read-only da allowlist de publicação no frontmatter dos essays.
 
-Só o booleano YAML ``true`` autoriza publicação. A string ``"true"`` — ou
-qualquer outro valor de aparência verdadeira — é reportada como inválida e
-tratada como privada.
+Audita a integridade do campo ``visibility:`` (ou legado ``publish:``) em todos os essays:
+- Apenas ``public`` (ou o booleano YAML ``true``) autoriza publicação do corpo no site.
+- Valores como ``private``, ``hidden``, valores desconhecidos ou ausência do campo são tratados como privados.
+- Strings como ``"true"`` são reportadas como inválidas para evitar vazamentos acidentais.
 
-Default sem argumentos: listar a allowlist atual e validá-la.
-    --expect-only "<busca>"  exige exatamente um essay público casando com a busca
+Escopo:
+    Validação estática read-only em DATA_ROOT/wiki/essays/*.md.
+    Default sem argumentos lista a allowlist atual e valida sua conformidade.
+
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/essays/*.md.
+    Argumentos CLI opcionais:
+        --expect-only BUSCA   Exige exatamente um essay público casando com a busca
+        --json                Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de essays públicos autorizados e eventuais inconsistências.
+    JSON: {"check": "visibility_field", "status": "pass"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em conformidade, 1 se houver campo inválido ou se a expectativa falhar.
+
+Uso:
+    python scripts/check_visibility_field.py                        # valida allowlist inteira
+    python scripts/check_visibility_field.py --expect-only "dutch"  # valida alvo exclusivo
+    python scripts/check_visibility_field.py --json                 # saída estruturada em JSON
 """
 from __future__ import annotations
 

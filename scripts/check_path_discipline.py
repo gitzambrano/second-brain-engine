@@ -1,11 +1,27 @@
 #!/usr/bin/env python3
-"""
-Barra script de corpus que fixa caminhos wiki/plan/raw/output locais ao engine.
+"""check_path_discipline.py - Barra scripts que fixam caminhos wiki/plan/raw/output locais ao engine.
 
-Corpus e artefatos privados gerados precisam ser resolvidos por ``repo_paths``,
-para caírem em DATA_ROOT e nunca no checkout público do engine.
+Audita scripts do repositório garantindo que caminhos de dados privados (wiki, plan, raw, output)
+sejam sempre resolvidos via ``repo_paths`` (DATA_ROOT) e nunca construídos diretamente
+a partir da raiz do engine público (CODE_ROOT).
 
-Default sem argumentos: auditar todos os scripts e reportar PASS/FAIL.
+Escopo:
+    Validação estática read-only em scripts Python de SCRIPTS_DIR.
+    Exceções permitidas declaradas em EXEMPT (como o próprio repo_paths.py).
+
+Entradas (Inputs):
+    Arquivos Python em scripts/*.py.
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Status PASS ou FAIL com linhas e padrões proibidos encontrados.
+    JSON: {"check": "path_discipline", "status": "pass"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em conformidade, 1 se houver caminho hardcoded proibido.
+
+Uso:
+    python scripts/check_path_discipline.py         # auditoria padrão
+    python scripts/check_path_discipline.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

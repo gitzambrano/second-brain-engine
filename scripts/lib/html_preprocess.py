@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Explicit native Obsidian callout preprocessor for Second Brain exports.
+"""html_preprocess.py - Pré-processador nativo de callouts do Obsidian para exports do Second Brain.
 
-Contract:
-- only ``> [!type] Optional title`` starts a callout;
-- only canonical Obsidian types are accepted;
-- the type identifier alone selects the visual family;
-- title and body are never inspected to infer or change the type;
-- a plain ``>`` block is always a normal quote;
-- Markdown inside a callout remains Markdown, including headings, lists,
-  tables, fenced code and nested callouts;
-- the surrounding essay shell is untouched.
+Converte blocos de citação tipados (> [!tipo] Título) para marcação HTML padronizada (.box):
+- Reconhece os tipos nativos canônicos do Obsidian (note, tip, warning, quote, example, etc.).
+- Converte tabelas, listas e equações internas sem corromper a hierarquia do documento.
+- Preserva blockquotes normais como citações convencionais.
+
+Escopo:
+    Módulo de biblioteca de parsing e transformação Markdown -> HTML.
+    Compartilhado entre export_essay_html.py, export_essay_pdf.py e render_public_essay.py.
+
+Entradas (Inputs):
+    String de texto Markdown de ensaio.
+
+Saídas (Outputs):
+    Texto Markdown pré-processado pronto para compilação via Pandoc.
 """
 from __future__ import annotations
 

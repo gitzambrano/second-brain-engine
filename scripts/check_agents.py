@@ -1,10 +1,29 @@
 #!/usr/bin/env python3
-"""Audita a arquitetura canônica de agentes.
+"""check_agents.py - Audita a arquitetura canônica de agentes e subagents.
 
-Contrato atual: `.agents/` é a fonte editável; `.claude/skills|agents/` são
-mirrors byte a byte; `.codex/agents/*.toml` são adapters derivados; o hook
-`SessionStart` executa o sync. A auditoria verifica que fonte, derivados, hook e
-documentação representam esse mesmo contrato.
+Valida a integridade da cadeia de sincronização:
+1. Fonte única editável é exclusivamente ``.agents/``.
+2. Espelhos em ``.claude/skills/`` e ``.claude/agents/`` são idênticos byte a byte.
+3. Adaptadores em ``.codex/agents/*.toml`` estão sincronizados com seus pares em .md.
+4. Hook de sessão em ``.claude/settings.json`` e documentação no AGENTS.md e CLAUDE.md
+   obedecem ao contrato (sem menção a plugins obsoletos ou descompasso).
+
+Escopo:
+    Validação estática read-only da arquitetura de agentes no engine.
+
+Entradas (Inputs):
+    Diretórios .agents/, .claude/, .codex/ e documentação (AGENTS.md, CLAUDE.md, docs/AGENTS.md).
+    Argumentos CLI opcionais:
+        --json    Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Status PASS ou FAIL com divergências entre fonte e espelhos ou termos obsoletos.
+    JSON: {"check": "agents", "status": "pass"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em conformidade, 1 se houver descompasso (drift) ou inconsistência.
+
+Uso:
+    python scripts/check_agents.py         # auditoria padrão
+    python scripts/check_agents.py --json  # saída estruturada em JSON
 """
 from __future__ import annotations
 

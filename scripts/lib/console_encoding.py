@@ -1,11 +1,16 @@
-"""Força UTF-8 (errors="replace") em stdout/stderr dos scripts da wiki.
+"""console_encoding.py - Força codificação UTF-8 em stdout e stderr no Windows.
 
-Efeito acontece no import - não há função a chamar. Necessário porque o
-console padrão do Windows (cp1252) não cobre caracteres como `─` e `⚠`
-usados nos relatórios.
+Reconfigura sys.stdout e sys.stderr para UTF-8 com errors="replace", evitando que
+caracteres especiais, acentuações e emojis quebrem a execução em terminais cp1252/Windows.
 
-Uso:
-    import console_encoding  # noqa: F401  (primeiro import do script)
+Escopo:
+    Módulo utilitário importado no início dos scripts executáveis CLI.
+
+Entradas (Inputs):
+    Nenhuma; modifica descritores de stdout/stderr em tempo de execução.
+
+Saídas (Outputs):
+    Garante que impressões em console não disparem UnicodeEncodeError.
 """
 
 import sys

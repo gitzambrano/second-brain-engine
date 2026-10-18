@@ -1,9 +1,28 @@
 #!/usr/bin/env python3
-"""
-Renomeia ou consolida uma tag em toda a wiki.
+"""retag.py - Renomeia ou consolida tags em todo o corpus da wiki.
 
-O default sem argumentos é read-only e imprime o inventário completo de tags.
-Uma renomeação ainda exige ``old_tag`` e ``new_tag``; invocação parcial é erro.
+Atualiza metadados de tags no frontmatter das páginas da wiki e no manifest.md:
+- Substitui uma tag antiga por uma nova em todas as páginas afetadas.
+- Padrão sem argumentos opera em modo read-only imprimindo o inventário de tags em uso.
+
+Escopo:
+    Mutador de metadados em DATA_ROOT/wiki/. Altera apenas a lista de tags no frontmatter.
+
+Entradas (Inputs):
+    Arquivos em wiki/essays, concepts, entities, insights e wiki/sources/manifest.md.
+    Argumentos CLI:
+        old_tag    Tag existente a ser substituída (posicional opcional)
+        new_tag    Novo nome da tag (posicional opcional)
+        --apply    Confirma a escrita em disco (sem --apply opera em dry-run)
+
+Saídas (Outputs):
+    Stdout: Inventário de tags em uso ou lista de arquivos modificados com contagens.
+    Exit code: 0 em sucesso, 1 em argumentos parciais ou inválidos.
+
+Uso:
+    python scripts/retag.py                       # lista todas as tags em uso
+    python scripts/retag.py "TagAntiga" "TagNova" # dry-run da renomeação
+    python scripts/retag.py "TagAntiga" "TagNova" --apply
 """
 import argparse
 import re

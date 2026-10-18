@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
-"""
-Renderiza os essays públicos com o mesmo pipeline do export HTML.
+"""render_public_essay.py - Renderiza essays públicos utilizando o pipeline do export HTML.
 
-O export já resolve a tipografia do essay: `html_preprocess.transform_markdown`
-converte as convenções de blockquote do corpus em caixas tipadas, veredictos,
-pull-quotes e cards, e `essay_template.html` monta a capa, a assinatura, os
-filetes de capítulo, os ornamentos, a medida justificada e as notas de rodapé.
-Reimplementar qualquer parte disso para o site significaria manter dois
-renderizadores que divergem.
+Aplica o mesmo motor de renderização do export standalone aos ensaios publicados no site:
+- Utiliza Pandoc + essay_template.html com html_preprocess para fidelidade tipográfica.
+- Sobrepõe os elementos específicos do site: navegação do Atlas, sumário flutuante e player de áudio.
+- Otimiza imagens para caminhos compartilhados em vez de dados embutidos base64.
 
-Então este módulo chama o `prepare_for_pandoc` do próprio export e o template
-dele, e só então sobrepõe o site:
+Escopo:
+    Módulo de biblioteca para compilação de páginas públicas de ensaio em SITE_ROOT/essays/.
+    Renderiza exclusivamente ensaios autorizados com visibility: public.
 
-    * um override de tema — paleta, fundo e fonte do site;
-    * o cromo do site — volta para o Atlas, sumário flutuante, essays relacionados;
-    * imagens compartilhadas em vez de data URIs, para a página ficar em dezenas
-      de kilobytes.
+Entradas (Inputs):
+    Arquivo de ensaio em DATA_ROOT/wiki/essays/<slug>.md e assets de imagem.
 
-Só essays autorizados com `visibility: public` podem ser renderizados.
-
-Default sem argumentos: renderizar todo essay público em SITE_ROOT/essays.
+Saídas (Outputs):
+    Arquivo HTML gerado em SITE_ROOT/essays/<slug>.html.
 """
 from __future__ import annotations
 

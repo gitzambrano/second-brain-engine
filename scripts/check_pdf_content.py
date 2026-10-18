@@ -1,9 +1,30 @@
 #!/usr/bin/env python3
-"""
-Checador semântico e de integridade dos PDFs exportados, via PyMuPDF.
+"""check_pdf_content.py - Checador semântico e de integridade dos PDFs exportados via PyMuPDF.
 
-Default sem argumentos: auditar cada ``output/pdf/*.pdf``. Um repositório
-esqueleto sem PDF nenhum é um SKIP válido, não uma falha.
+Inspeciona o conteúdo textual dos documentos PDF gerados em output/pdf/:
+- Presença de título completo, autor, byline e sumário executivo.
+- Verificação da seção de referências bibliográficas preservada.
+- Confirmação de que a seção de conexões internas foi devidamente removida.
+- Validação de dimensões da página (A4 padrão com tolerância).
+
+Escopo:
+    Validação semântica read-only em DATA_ROOT/output/pdf/*.pdf.
+    Repositório esqueleto sem PDFs exportados reporta SKIP válido.
+
+Entradas (Inputs):
+    Arquivos PDF em DATA_ROOT/output/pdf/*.pdf e ensaios Markdown correspondentes.
+    Argumentos CLI opcionais:
+        arquivo.pdf     Arquivo PDF específico para validar
+        --json          Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de ensaios validados e eventuais omissões de conteúdo.
+    JSON: {"check": "pdf_content", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 em falha semântica de conteúdo.
+
+Uso:
+    python scripts/check_pdf_content.py                 # audita todos os exports PDF
+    python scripts/check_pdf_content.py output/pdf/x.pdf # audita arquivo específico
 """
 from __future__ import annotations
 

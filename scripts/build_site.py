@@ -1,17 +1,33 @@
 #!/usr/bin/env python3
-"""
-Compila o Jardim Digital público em SITE_ROOT a partir da allowlist de publicação.
+"""build_site.py - Compila o Jardim Digital público em SITE_ROOT a partir da allowlist de publicação.
 
-O site é uma projeção de mão única. O catálogo e o mapa cobrem a base inteira;
-só um essay autorizado com ``visibility: public`` (ou o legado ``publish:
-true``) tem o texto renderizado e linkado. A busca é de catálogo — filtra os
-cartões da capa por título, resumo e tags, nunca pelo corpo. Nada mais do
-repositório privado de dados é copiado, nunca.
+Projeta a base de conhecimento para o site público estático:
+- Catálogo e mapas (grafo e globo) cobrem todos os nós da base (títulos, tags, resumos).
+- Somente ensaios com ``visibility: public`` (ou legado ``publish: true``) têm seus corpos
+  completos renderizados via Pandoc e linkados para leitura.
+- Gera cards de capa, páginas HTML individuais, busca estática no cliente e assets web.
 
-Default sem argumentos: reconstruir o site inteiro.
-    --manifest   imprime o que seria publicado, não escreve nada
-    --check      confere um site existente contra a allowlist atual
-    --no-render  pula a renderização do Pandoc (só estrutura e índice)
+Escopo:
+    Compilação da projeção pública em SITE_ROOT. Lê DATA_ROOT e nunca modifica dados da wiki.
+    Todo o conteúdo privado é omitido por construção (mão única).
+
+Entradas (Inputs):
+    DATA_ROOT/wiki/essays/*.md, concepts, entities, insights, manifest.md.
+    Templates e assets em site_src/ (CSS, JS, brand, layout).
+    Argumentos CLI opcionais:
+        --manifest   Apenas imprime o inventário do que seria publicado sem escrever em disco
+        --check      Compara o site gerado existente contra a allowlist atual
+        --no-render  Gera estrutura, índices e mapas pulando a renderização pesada do Pandoc
+        --json       Emite estatísticas de build formatadas em JSON
+
+Saídas (Outputs):
+    Arquivos HTML, CSS, JS e JSON gerados em SITE_ROOT (index.html, essays/*.html, graph.html, etc.).
+    Exit code: 0 em sucesso, 1 em erro de compilação ou violação de allowlist.
+
+Uso:
+    python scripts/build_site.py             # compilação completa do site
+    python scripts/build_site.py --manifest  # visualiza o que seria publicado
+    python scripts/build_site.py --no-render # compilação rápida para testes estruturais
 """
 from __future__ import annotations
 

@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
-"""
-Checagens mecânicas dos podcasts de essay.
+"""check_podcasts.py - Auditoria mecânica e sentinela dos podcasts de áudio dos essays.
 
-Três frentes, todas read-only:
+Executa checagens em três frentes complementares:
+1. Originais (DATA_ROOT/wiki/podcasts/): nome do arquivo corresponde ao slug de um essay existente;
+   integridade do áudio via ffmpeg (contêiner m4a/mp3, taxa, duração plausível).
+2. Publicados (SITE_ROOT/assets/podcasts/): todo essay público com podcast possui cópia mono
+   otimizada (~48 kbps com faststart) e player correspondente em site/essays/.
+3. Vazamento de privacidade: assegura que nenhum e-mail de conta Google ou nome de perfil
+   local conste no engine versionado ou no site público.
 
-    originais   ``DATA_ROOT/wiki/podcasts/``: o nome é o slug de um essay, o
-                essay existe, o áudio é íntegro (ffmpeg decodifica, um stream,
-                aac/mp3, duração e tamanho plausíveis, extensão = contêiner,
-                decodificação completa com cache por tamanho+mtime)
-    publicado   ``SITE_ROOT/assets/podcasts/``: cada cópia pertence a um essay
-                público, todo essay público com original tem cópia e player,
-                nenhum player sem áudio, cópia mono ~48 kbps com faststart
-    vazamento   nada de e-mail de conta nem nome de perfil local no engine
-                versionado nem em ``site/``
+Escopo:
+    Auditoria estritamente read-only em DATA_ROOT e SITE_ROOT.
+    Default sem argumentos executa a auditoria completa nas três frentes.
 
-Nome errado vem com sugestão por similaridade; ``fix_podcasts.py`` renomeia os
-casos inequívocos.
+Entradas (Inputs):
+    Arquivos de áudio em DATA_ROOT/wiki/podcasts/ e SITE_ROOT/assets/podcasts/.
+    Argumentos CLI opcionais:
+        --leaks-only    Audita exclusivamente vazamentos de e-mail e perfis locais
+        --json          Emite diagnóstico formatado em JSON
 
-Default sem argumentos: auditar originais, site e vazamentos.
+Saídas (Outputs):
+    Stdout: Relatório formatado com status de integridade, sincronização e privacidade.
+    JSON: {"check": "podcasts", "status": "pass"|"warn"|"fail", "errors": [...], "warnings": [...]}
+    Exit code: 0 em conformidade, 1 em caso de arquivo corrompido, vazamento ou dessincronia.
+
+Uso:
+    python scripts/check_podcasts.py              # auditoria completa
+    python scripts/check_podcasts.py --leaks-only # verificação rápida de vazamentos
+    python scripts/check_podcasts.py --json       # saída estruturada em JSON
 """
 from __future__ import annotations
 

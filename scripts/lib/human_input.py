@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""
-Entrada humanizada para automação de navegador (Playwright, API síncrona).
+"""human_input.py - Emulação de entrada humanizada para automação de navegador com Playwright.
 
-Movimento de mouse com curva de Bézier cúbica e duração pela lei de Fitts
-(T = a + b·log2(1 + D/W)), ponto de clique com dispersão gaussiana truncada,
-micro-tremor, tempo de pressão entre mousedown e mouseup, digitação com pausas
-e rolagem em impulsos.
+Implementa padrões de comportamento humano em interações com o navegador:
+- Trajetórias de mouse via curvas de Bézier cúbicas com temporização pela lei de Fitts.
+- Dispersão gaussiana truncada nos cliques e pausas realistas de digitação e rolagem.
+- Previne detecções automatizadas e bloqueios em portais web como o NotebookLM.
 
-Módulo de biblioteca: sem CLI. Recebe a ``page`` do Playwright; não importa
-Playwright.
+Escopo:
+    Módulo de biblioteca para automação de browser. Recebe a página Playwright (API síncrona).
+
+Entradas (Inputs):
+    Objeto page do Playwright e coordenadas de elementos alvo.
+
+Saídas (Outputs):
+    Ações de navegação, cliques e digitação executadas de forma natural.
 """
 from __future__ import annotations
 

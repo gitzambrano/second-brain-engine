@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""
-build_references.py - Agrega a seção `## Referências` de todos os essays
-em bibliografia consolidada no padrão AIAA (formato em conventions/SKILL.md).
-Nunca editados à mão - sempre regenerados. Não valida formato
-(check_references.py) nem decide duplicatas (check_dedupe.py).
+"""build_references.py - Agrega e consolida a seção '## Referências' de todos os essays.
 
-Lê:
-    wiki/essays/*.md   seção `## Referências` de cada essay
+Extrai todas as citações bibliográficas estruturadas, deduplica fontes, valida URLs
+e constrói o índice geral de referências da wiki.
 
-Gera:
-    wiki/references.json   bibliografia consolidada (lida por build_graph.py)
-    wiki/references.md     a mesma bibliografia em Markdown
+Escopo:
+    Geração mecânica de catálogo bibliográfico em DATA_ROOT/wiki/. Artefato derivado gerado
+    a partir das seções '## Referências' dos ensaios. Nunca editar à mão.
+
+Entradas (Inputs):
+    DATA_ROOT/wiki/essays/*.md.
+
+Saídas (Outputs):
+    wiki/references.json  Estrutura normalizada com ID, citação, autor, ano, link e backlinks.
+    wiki/references.md    Catálogo navegável em Markdown de todas as fontes citadas.
+    Exit code: 0 em sucesso, 1 em erro de parsing.
 
 Uso:
-    python scripts/build_references.py        # sem flags
+    python scripts/build_references.py        # reconstrói catálogo bibliográfico
 """
 
 import datetime

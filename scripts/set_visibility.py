@@ -1,23 +1,32 @@
 #!/usr/bin/env python3
-"""
-Define a visibilidade de um essay no frontmatter.
+"""set_visibility.py - Define a visibilidade de essays no frontmatter YAML.
 
-Três níveis, descritos em `visibility.py`:
+Atualiza de forma segura e determinística o nível de publicação de ensaios:
+- allow: define ``visibility: public`` para disponibilizar o texto no site.
+- deny: define ``visibility: private`` mantendo catálogo e omitindo o corpo.
+- hide: define ``visibility: hidden`` ocultando do catálogo e de mapas.
+- set-exclusive: torna público apenas o essay selecionado, marcando todos os demais como privados.
 
-    public   o texto é legível no site público
-    private  catalogado e mapeado por título e resumo; o texto não sai
-    hidden   ausente de tudo, inclusive do índice e do grafo da própria wiki
+Escopo:
+    Mutador explícito de metadados em DATA_ROOT/wiki/essays/*.md.
+    Padrão sem argumentos opera em modo read-only exibindo o inventário de visibilidade.
 
-Sem argumentos: lista o corpus por nível.
+Entradas (Inputs):
+    Arquivos em DATA_ROOT/wiki/essays/*.md.
+    Argumentos CLI:
+        action          Ação a executar: 'allow', 'deny', 'hide', 'set-exclusive' ou 'status'
+        target          Slug ou fragmento do título do essay alvo
 
-    python scripts/set_visibility.py set-exclusive "Dutch Roll"
-    python scripts/set_visibility.py allow <slug>
-    python scripts/set_visibility.py deny  <slug>
-    python scripts/set_visibility.py hide  <slug>
+Saídas (Outputs):
+    Frontmatter atualizado dos essays em disco.
+    Stdout: Confirmação da alteração com títulos e novos valores de visibilidade.
+    Exit code: 0 em sucesso, 1 em caso de alvo não encontrado ou ambíguo.
 
-`set-exclusive` torna público exatamente um essay e devolve todos os outros
-públicos para privado. Nunca mexe num essay oculto, e aborta se a busca não
-resolver para exatamente um essay.
+Uso:
+    python scripts/set_visibility.py                              # lista visibilidade de todos
+    python scripts/set_visibility.py allow meu-ensaio             # torna o ensaio público
+    python scripts/set_visibility.py deny meu-ensaio              # torna o ensaio privado
+    python scripts/set_visibility.py set-exclusive meu-ensaio     # publica exclusivamente este
 """
 from __future__ import annotations
 

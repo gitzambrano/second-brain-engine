@@ -1,10 +1,30 @@
 #!/usr/bin/env python3
-"""
-Validação em navegador dos arquivos HTML standalone exportados.
+"""check_html_browser.py - Validação em navegador real dos arquivos HTML standalone exportados.
 
-Default sem argumentos: auditar cada ``output/html/*.html`` nos viewports de
-celular e de desktop. Se não existir HTML (modo esqueleto, normal), reportar
-SKIP.
+Abre os arquivos HTML exportados em output/html/ num navegador Chromium headless (Playwright)
+nos viewports de celular (390x844) e desktop (1440x900):
+- Detecta overflow horizontal de texto, imagens, tabelas e fórmulas matemáticas.
+- Verifica esmagamento de equações em células de tabela.
+- Valida o carregamento do MathJax local e renderização de fontes tipográficas.
+
+Escopo:
+    Auditoria em navegador headless de artefatos exportados em DATA_ROOT/output/html/.
+    Repositório esqueleto sem HTMLs exportados reporta SKIP válido.
+
+Entradas (Inputs):
+    Arquivos em DATA_ROOT/output/html/*.html.
+    Argumentos CLI opcionais:
+        arquivo.html    Arquivo HTML específico para validar
+        --json          Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Relatório com dimensões inspecionadas e overflow detectado.
+    JSON: {"check": "html_browser", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 em caso de overflow ou erro visual.
+
+Uso:
+    python scripts/check_html_browser.py                  # audita todos os exports HTML
+    python scripts/check_html_browser.py output/html/x.html # audita arquivo específico
 """
 from __future__ import annotations
 

@@ -1,10 +1,30 @@
 #!/usr/bin/env python3
-"""
-Auditoria estrutural do HTML standalone exportado.
+"""check_html_structure.py - Auditoria estrutural do HTML standalone exportado.
 
-Default sem argumentos: auditar cada ``output/html/*.html``. O checador combina
-checagens rápidas por padrão no fonte com checagens de DOM quando o
-BeautifulSoup está disponível.
+Valida a integridade semântica e do DOM nos arquivos HTML exportados em output/html/:
+- Cabeçalhos bem formados e hierarquia correta (H1, H2, H3).
+- Resolução de fórmulas matemáticas e ausência de LaTeX não processado.
+- Delimitação correta de callouts (.box) para evitar que caixas engulam capítulos.
+- Ausência de tags abertas ou corrompidas.
+
+Escopo:
+    Validação estática read-only em DATA_ROOT/output/html/*.html.
+    Default sem argumentos audita todos os arquivos HTML exportados.
+
+Entradas (Inputs):
+    Arquivos HTML em DATA_ROOT/output/html/*.html.
+    Argumentos CLI opcionais:
+        arquivo.html    Arquivo HTML específico para validar
+        --json          Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Lista de arquivos HTML auditados e falhas estruturais detectadas.
+    JSON: {"check": "html_structure", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade, 1 em erro estrutural bloqueante.
+
+Uso:
+    python scripts/check_html_structure.py                  # audita todos os exports HTML
+    python scripts/check_html_structure.py output/html/x.html # audita arquivo específico
 """
 from __future__ import annotations
 

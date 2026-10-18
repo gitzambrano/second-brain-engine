@@ -1,12 +1,30 @@
 #!/usr/bin/env python3
-"""
-Compara invariantes semânticos entre Markdown, HTML e PDF.
+"""check_export_parity.py - Compara invariantes semânticos entre Markdown, HTML e PDF.
 
-Isto deliberadamente não é regressão de bytes nem de pixels. O que se checa é
-se a informação exportável sobreviveu ao pipeline. ``## Conexões`` é a exceção
-conhecida: precisa permanecer no Markdown e sumir dos dois formatos externos.
+Valida a paridade do conteúdo textual entre as três representações de cada ensaio:
+- Confere se parágrafos, fórmulas matemáticas e referências do Markdown fonte
+  estão integralmente presentes tanto no HTML quanto no PDF exportados.
+- Trata normalizações tipográficas (aspas inteligentes, travessões) para comparação precisa.
+- Garante que '## Conexões' esteja ausente nos dois formatos externos de exportação.
 
-Default sem argumentos: auditar todo essay que tenha HTML e PDF.
+Escopo:
+    Auditoria read-only de paridade semântica em DATA_ROOT.
+    Default sem argumentos audita todos os ensaios que tenham HTML e PDF gerados.
+
+Entradas (Inputs):
+    Arquivos em wiki/essays/*.md, output/html/*.html e output/pdf/*.pdf.
+    Argumentos CLI opcionais:
+        slug          Slug opcional de um ensaio específico
+        --json        Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Comparação de paridade por ensaio e reporte de elementos divergentes.
+    JSON: {"check": "export_parity", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em paridade perfeita, 1 se houver perda de conteúdo entre formatos.
+
+Uso:
+    python scripts/check_export_parity.py              # valida paridade em todo o corpus
+    python scripts/check_export_parity.py meu-ensaio   # valida ensaio específico
 """
 from __future__ import annotations
 

@@ -1,12 +1,30 @@
 #!/usr/bin/env python3
-"""Fecha o workspace de forma determinística.
+"""close_workspace.py - Fecha o workspace de forma determinística (fechamento mecânico).
 
-Sem subcommand, executa `prepare`.
+Orquestra a sequência de fechamento de sessão ou trabalho substantivo:
+1. prepare: pre-flight (sync de skills), fixes mecânicos (lint, podcast renames),
+   rebuilds de derivados (index, references, graph, sphere, stats) e post-flight checks.
+2. commit: roda prepare e cria commits locais independentes nos repositórios data e engine.
+3. push: confere worktrees limpas e faz git push independente em data e engine.
 
-Ações:
-- prepare: pre-flight, fixes mecânicos, rebuilds e post-flight.
-- commit: executa prepare e cria commits locais separados em data e engine.
-- push: exige worktrees limpas e envia data e engine separadamente.
+Escopo:
+    Automação mecânica do ciclo de vida dos repositórios locais. Nunca publica site/
+    nem reescreve prosa editorial.
+
+Entradas (Inputs):
+    Subcomandos e argumentos CLI opcionais:
+        action          Subcomando: 'prepare' (padrão), 'commit' ou 'push'
+        -m, --message   Mensagem descritiva para os commits locais (usado com 'commit')
+
+Saídas (Outputs):
+    Stdout: Log de execução de cada etapa do pipeline com status descritivo.
+    Exit code: 0 em sucesso em todas as etapas, 1 em falha de gate ou execução abortada.
+
+Uso:
+    python scripts/close_workspace.py                  # executa 'prepare' (padrão)
+    python scripts/close_workspace.py prepare          # etapa de pré-fechamento e rebuilds
+    python scripts/close_workspace.py commit -m "msg"  # prepara e faz commits locais
+    python scripts/close_workspace.py push             # envia branches aos remotes
 """
 from __future__ import annotations
 

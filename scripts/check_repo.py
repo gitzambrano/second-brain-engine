@@ -1,11 +1,36 @@
 #!/usr/bin/env python3
-"""
-Portão unificado de qualidade do repositório.
+"""check_repo.py - Portão unificado de qualidade do repositório.
 
-O default sem argumentos é o diagnóstico mais completo que é útil (``full``). Um
-clone esqueleto recém-criado é válido: as checagens de corpus e de export
-reportam SKIP quando não há o que inspecionar. O checador nunca cria nem edita
-conteúdo da wiki.
+Executa a bateria consolidada de auditorias de qualidade: isolamento Git, contratos
+de CLI, integridade de caminhos, validação estática de skills/agentes, integridade
+do corpus da wiki, integridade dos exports (HTML/PDF) e do site público.
+
+Escopo:
+    Validação read-only de repositórios, scripts e artefatos. Nunca cria nem edita
+    conteúdo da wiki. Suporta clones esqueleto recém-criados (checagens de corpus e
+    export reportam SKIP quando ausentes).
+
+Entradas (Inputs):
+    Argumentos CLI opcionais:
+        --quick          Validação rápida (scripts, git, paths, defaults, agents, leaks)
+        --wiki           Auditoria do corpus da wiki (slugs, links, referências, dedupe, gaps)
+        --exports        Auditoria de exports HTML e PDF (estrutura, navegadores, layout)
+        --site           Auditoria do site público (privacidade, páginas, budget, digest)
+        --architecture   Auditoria dos 3 repositórios Git isolados e contratos de agentes
+        --full           Executa todos os grupos acima (padrão sem argumentos)
+        --visual         Habilita checagens visuais interativas em navegador
+        --json           Emite resultado estruturado em JSON para stdout
+        --fail-on-warning Converte warnings em código de saída diferente de zero
+
+Saídas (Outputs):
+    Stdout: Relatório formatado com status PASS / WARN / FAIL / SKIP e lista de issues.
+    JSON: Objeto estruturado com check, status, errors, warnings, info, skipped, issues.
+    Exit code: 0 em sucesso (ou warnings quando permitidos), 1 em falha crítica/erro.
+
+Uso:
+    python scripts/check_repo.py              # execução full padrão
+    python scripts/check_repo.py --quick      # checagem rápida pré-commit
+    python scripts/check_repo.py --json       # saída legível por máquina
 """
 from __future__ import annotations
 

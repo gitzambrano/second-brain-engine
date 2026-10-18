@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
-"""
-stats.py - Dashboard read-only da saúde da wiki: contagens e sinais de
-integridade (essays por tag/tipo, órfãos, sources sem manifest, handouts,
-itens do plano, travessões). Nunca modifica nada - corrigir é trabalho de
-check_wiki.py/fix_lint.py.
+"""stats.py - Dashboard analítico read-only da saúde e métricas da wiki.
 
-Lê:
-    wiki/{essays,concepts,entities,sources,handouts,insights}/** e plan/plano.md
+Calcula métricas globais e distribuição de conteúdo do ecossistema:
+- Contagem de páginas por tipo (essays, concepts, entities, insights, sources, handouts).
+- Volume de palavras, densidade de conexões e distribuição de tags.
+- Verificação de nós órfãos e cobertura de referências bibliográficas.
 
-Gera:
-    stdout (relatório); com --save também output/stats/stats-YYYY-MM-DD.md
+Escopo:
+    Diagnóstico read-only em DATA_ROOT/wiki/.
+    Sem flags emite relatório em stdout; --save grava snapshot em output/stats/.
+
+Entradas (Inputs):
+    Arquivos Markdown e índices em DATA_ROOT/wiki/.
+    Argumentos CLI opcionais:
+        --save    Grava o dashboard formatado em DATA_ROOT/output/stats/stats.md
+        --json    Emite métricas estruturadas em JSON para stdout
+
+Saídas (Outputs):
+    Stdout: Dashboard formatado no terminal com tabelas e gráficos ASCII.
+    Arquivo opcional em output/stats/stats.md quando --save é informado.
+    Exit code: 0 em sucesso.
 
 Uso:
-    python scripts/stats.py            # imprime o relatório
-    python scripts/stats.py --save     # grava snapshot datado além do stdout
-
-Flags:
-    --save   grava o relatório em output/stats/stats-YYYY-MM-DD.md
+    python scripts/stats.py                                   # dashboard no terminal
+    python scripts/stats.py --save                            # grava snapshot em output/stats/
+    python scripts/stats.py --json                            # saída estruturada em JSON
 """
 
 import argparse

@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
-"""
-Renomeia podcasts de ``wiki/podcasts`` cujo nome não é o slug de um essay.
+"""fix_podcasts.py - Renomeia arquivos de áudio em wiki/podcasts cujo nome não seja o slug do essay.
 
-Só age em casamento inequívoco (nome normalizado igual ao slug, ao título ou a
-um segmento do título; ou similaridade muito alta com margem sobre o segundo
-candidato). Os ambíguos e órfãos são listados com candidatos e ficam intactos.
+Analisa arquivos de áudio em DATA_ROOT/wiki/podcasts/ e aplica renomeações determinísticas:
+- Identifica casamentos inequívocos por título normalizado ou correspondência de alta confiança.
+- Lista arquivos ambíguos ou órfãos sem modificá-los, solicitando resolução do mantenedor.
 
-Default sem argumentos: renomear os inequívocos e relatar o resto.
+Escopo:
+    Mutador seguro em DATA_ROOT/wiki/podcasts/.
+    Padrão sem argumentos renomeia casos inequívocos e relata pendências.
+
+Entradas (Inputs):
+    Arquivos em DATA_ROOT/wiki/podcasts/ e catálogo de essays em wiki/essays/*.md.
+    Argumentos CLI opcionais:
+        --dry-run    Apenas exibe os planos de renomeação sem tocar nos arquivos
+
+Saídas (Outputs):
+    Stdout: Lista de renomeações executadas ou pendentes.
+    Sistema de arquivos: Arquivos renomeados para <slug>.m4a / <slug>.mp3.
+    Exit code: 0 em sucesso.
+
+Uso:
+    python scripts/fix_podcasts.py                # renomeia inequívocos automaticamente
+    python scripts/fix_podcasts.py --dry-run      # visualiza renomeações planejadas
 """
 from __future__ import annotations
 

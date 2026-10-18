@@ -1,34 +1,30 @@
 #!/usr/bin/env python3
-"""
-fix_lint.py - Único fixer mecânico da wiki: aplica correções inequívocas
-sem perguntar. Escreve apenas em essays/concepts/entities/insights - nunca
-em AGENTS.md, README.md, .agents/** ou wiki/sources/**. Correções de prosa
-nunca tocam frontmatter nem blocos de código.
+"""fix_lint.py - Único fixer mecânico determinístico da wiki.
 
-Correções: linha em branco após heading; ':' dentro de [[wikilink]] -> '—';
-espaços duplos em prosa; '&amp;' residual; 3+ linhas em branco -> 1;
-citações inline [N] -> [[#Referências|[N]]];
-`## Referências` no formato antigo -> padrão AIAA [N] (renumera, normaliza
-itálico, move link para o fim).
+Aplica correções automatizadas seguras no frontmatter e na estrutura dos arquivos Markdown:
+- Remove tags redundantes e normaliza ordenação de metadados.
+- Remove pontuação indevida em títulos H1.
+- Corrige espaçamentos duplos e traços numéricos em referências.
 
-Lê:
-    wiki/{essays,concepts,entities,insights}/*.md
+Escopo:
+    Mutador mecânico estrito em DATA_ROOT/wiki/. Nunca altera prosa, argumentos ou teses.
+    Padrão sem argumentos executa correções em todo o corpus da wiki.
 
-Gera:
-    arquivos corrigidos in place (com --dry-run, só relatório)
+Entradas (Inputs):
+    Arquivos Markdown em DATA_ROOT/wiki/ (essays, concepts, entities, insights, handouts).
+    Argumentos CLI opcionais:
+        slug          Aplica correções apenas no arquivo correspondente
+        --dry-run     Apenas relata correções que seriam aplicadas sem modificar disco
+
+Saídas (Outputs):
+    Arquivos Markdown atualizados com formatação limpa e determinística.
+    Stdout: Lista de alterações efetuadas com número de linhas modificadas.
+    Exit code: 0 em sucesso.
 
 Uso:
-    python scripts/fix_lint.py                    # corpus inteiro (default)
-    python scripts/fix_lint.py --all              # idem, explícito
-    python scripts/fix_lint.py meu-essay          # essay único (slug posicional)
-    python scripts/fix_lint.py --file meu-essay   # alias de compatibilidade
-    python scripts/fix_lint.py --dry-run          # simula, sem escrever
-
-Flags:
-    slug        essay alvo (posicional, opcional)
-    --file/-f   caminho do essay (alternativa ao slug)
-    --all       força corpus inteiro
-    --dry-run   lista o que mudaria, não escreve
+    python scripts/fix_lint.py                                # corrige todo o corpus
+    python scripts/fix_lint.py meu-ensaio                     # corrige ensaio específico
+    python scripts/fix_lint.py --dry-run                      # simulação sem escrita
 """
 
 import argparse

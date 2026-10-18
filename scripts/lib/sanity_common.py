@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
-"""
-Modelo compartilhado de resultado dos checadores de sanidade do repositório.
+"""sanity_common.py - Modelo compartilhado de resultados dos checadores de sanidade.
 
-Default sem argumentos: imprimir o vocabulário de severidade e o contrato de
-código de saída.
+Define a estrutura unificada CheckResult para todos os checadores de qualidade do repositório:
+- Vocabulário canônico de severidades: ERROR, WARNING, INFO, SKIP.
+- Padronização de mensagens de erro, caminhos de arquivo, linhas e contexto.
+- Exportação consistente em formato texto para console e JSON estruturado.
+
+Escopo:
+    Módulo de biblioteca base para check_repo, check_wiki, check_env e demais validadores.
+
+Entradas (Inputs):
+    Chamadas de registro de resultados em tempo de execução dos checadores.
+
+Saídas (Outputs):
+    Impressão formatada em console e dicionário serializável para JSON.
 """
 from __future__ import annotations
 

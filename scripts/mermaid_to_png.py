@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
-"""
-Converte arquivos Mermaid .mmd em PNG via Mermaid CLI (mmdc).
+"""mermaid_to_png.py - Converte diagramas conceituais Mermaid (.mmd) em imagens PNG.
 
-O default sem argumentos descobre todo ``*.mmd`` sob wiki/assets e plan e
-converte todos. Se não existir nenhum, o lote completo é um sucesso vazio.
+Descobre e processa definições de diagramas Mermaid em wiki/assets/ e plan/:
+- Localiza o binário Mermaid CLI (mmdc) no sistema ou npm global.
+- Renderiza diagramas com alta resolução (fator de escala 2x por padrão).
+- Permite compilação estática de diagramas para embutir em ensaios e exports.
+
+Escopo:
+    Compilador de imagens em DATA_ROOT/wiki/assets/ e plan/.
+    Padrão sem argumentos converte todos os arquivos *.mmd encontrados.
+
+Entradas (Inputs):
+    Arquivos *.mmd em wiki/assets/ e plan/.
+    Argumentos CLI opcionais:
+        arquivo.mmd    Arquivo específico a converter
+        --scale INT    Fator de escala de renderização (padrão: 2)
+
+Saídas (Outputs):
+    Arquivos PNG gerados no mesmo diretório do arquivo .mmd original.
+    Stdout: Lista de conversões concluídas com tempo e resolução.
+    Exit code: 0 em sucesso, 1 em erro do Mermaid CLI.
+
+Uso:
+    python scripts/mermaid_to_png.py              # converte todos os diagramas da wiki
+    python scripts/mermaid_to_png.py diagrama.mmd # converte diagrama específico
 """
 import argparse
 import os

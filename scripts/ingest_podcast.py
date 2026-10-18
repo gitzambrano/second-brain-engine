@@ -1,16 +1,31 @@
 #!/usr/bin/env python3
-"""
-Ingere um podcast (mp3/m4a) na wiki: valida, casa com o essay e arquiva.
+"""ingest_podcast.py - Ingere e arquiva um podcast de áudio (mp3/m4a) na wiki.
 
-    python scripts/ingest_podcast.py arquivo.m4a [essay]
+Valida um arquivo de áudio gerado externamente e o posiciona no repositório de dados:
+- Confere o formato de áudio e integridade de streams via ffmpeg.
+- Identifica o essay correspondente por título ou slug informado.
+- Move ou copia o arquivo para DATA_ROOT/wiki/podcasts/<slug>.m4a (ou .mp3).
 
-O destino é ``DATA_ROOT/wiki/podcasts/<slug>.<ext>``. ``essay`` pode ser o slug,
-o título ou qualquer trecho dele; sem ``essay`` o nome do arquivo é casado com os
-slugs e títulos. Só age quando o casamento é inequívoco: com ambiguidade lista
-os candidatos e sai com código 2, sem tocar em nada.
+Escopo:
+    Mutador em DATA_ROOT/wiki/podcasts/.
+    Padrão sem argumentos lista podcasts já arquivados na base.
 
-Default sem argumentos: validar os podcasts já em ``wiki/podcasts`` e renomear os
-de nome inequívoco (o mesmo que ``fix_podcasts.py``), mostrando o que sobra.
+Entradas (Inputs):
+    Arquivo de áudio fonte (mp3 ou m4a).
+    Argumentos CLI:
+        audio_file    Caminho do arquivo de áudio a ser ingerido (posicional opcional)
+        target_essay  Slug ou título do ensaio alvo correspondente (opcional)
+        --copy        Copia em vez de mover o arquivo original
+
+Saídas (Outputs):
+    Arquivo arquivado em DATA_ROOT/wiki/podcasts/<slug>.ext.
+    Stdout: Confirmação de ingestão com tamanho e duração do podcast.
+    Exit code: 0 em sucesso, 1 em caso de arquivo inválido ou alvo não encontrado.
+
+Uso:
+    python scripts/ingest_podcast.py                          # lista podcasts existentes
+    python scripts/ingest_podcast.py audio.m4a                # infere essay e ingere
+    python scripts/ingest_podcast.py audio.m4a meu-ensaio     # especifica o essay alvo
 """
 from __future__ import annotations
 

@@ -1,27 +1,20 @@
 #!/usr/bin/env python3
-"""
-Gera o mapa público — grafo e globo — com os renderizadores da própria wiki.
+"""build_public_map.py - Gera os dados e visualizações dos mapas públicos (grafo e globo).
 
-`build_graph.py` e `build_sphere.py` já produzem o mapa interativo que a wiki
-usa: painel de índice, resumos expansíveis, selo de rascunho, busca, estilo.
-Este script não reimplementa nada disso. Ele pega o mesmo conjunto de nós, tira
-o que não pode ser público e entrega aos mesmos renderizadores.
+Filtra e sanitiza a malha de conhecimento da wiki para consumo público no Atlas:
+- Aplica allowlist estrita PUBLIC_NODE_FIELDS: título, tipo, tags, resumo de essays, conexões.
+- Remove qualquer caminho interno de arquivo (file), notas privadas ou corpos não autorizados.
+- Entrega a carga de dados compactada em base64 deflacionado para graph.html e sphere.html.
 
-O que atravessa para o mapa público:
-    título, tipo, tags, resumo (de essays), status de rascunho, grau, tamanho,
-    layout, todas as conexões e a URL externa de uma entrada de bibliografia.
+Escopo:
+    Módulo de biblioteca para compilação dos mapas públicos em SITE_ROOT.
+    Garante isolamento de privacidade de dados por construção.
 
-O que nunca atravessa:
-    tudo o mais. O nó público é montado do zero a partir da allowlist
-    `PUBLIC_NODE_FIELDS`, então o corpo de qualquer página, o caminho `file`
-    para dentro do repositório privado e qualquer campo futuro ficam de fora por
-    omissão, não por lista de proibidos. Link de leitura só existe para essay
-    autorizado: um nó não publicado está no mapa e não abre.
+Entradas (Inputs):
+    Nós e arestas coletados de DATA_ROOT/wiki/.
 
-Um site estático não esconde o que serve: título e resumo aqui são públicos.
-Essa é a troca deliberada — o catálogo é público, o texto não.
-
-Default sem argumentos: escrever o mapa público em SITE_ROOT.
+Saídas (Outputs):
+    Arquivos graph.html, sphere.html e search-index.json gerados em SITE_ROOT.
 """
 from __future__ import annotations
 

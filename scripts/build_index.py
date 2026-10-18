@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""
-build_index.py - Cache de metadados da wiki: índice navegável de essays +
-títulos/tags de todos os tipos. Evita re-parsear o frontmatter da wiki
-inteira a cada consulta (/query, /stats, /gaps, check_title...). Artefato
-gerado - nunca editar à mão; a fonte da verdade são os arquivos em disco.
+"""build_index.py - Cache de metadados da wiki: índice navegável de essays e tags.
 
-Lê:
-    wiki/essays|concepts|entities|insights/*.md   frontmatter completo
-    wiki/sources/manifest.md                      campo Tags: das fontes
+Gera o catálogo consolidado de ensaios, títulos, tags e resumos de todos os tipos de página.
+Evita re-parsear o frontmatter da wiki inteira a cada consulta (/query, /stats, /gaps, check_title).
 
-Gera:
-    wiki/index.json   títulos, paths, tags, summary, status/maturidade,
-                      tags_in_use consolidando essays + manifest
-    wiki/index.md     lista plana de essays por created decrescente
+Escopo:
+    Geração mecânica de índices em DATA_ROOT/wiki/. Artefato derivado — nunca editar à mão;
+    a fonte da verdade são os arquivos Markdown originais.
+
+Entradas (Inputs):
+    DATA_ROOT/wiki/ (essays, concepts, entities, insights) e wiki/sources/manifest.md.
+
+Saídas (Outputs):
+    wiki/index.json   Títulos, caminhos, tags, resumos, status e tags_in_use consolidado.
+    wiki/index.md     Lista plana de essays ordenada por data decrescente de criação.
+    Exit code: 0 em sucesso, 1 em falha de parsing.
 
 Uso:
-    python scripts/build_index.py             # sem flags
+    python scripts/build_index.py             # regenera index.json e index.md
 """
 
 import datetime

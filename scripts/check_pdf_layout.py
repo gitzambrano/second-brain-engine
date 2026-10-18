@@ -1,11 +1,31 @@
 #!/usr/bin/env python3
-"""
-Audita a geometria de paginação e layout dos PDFs, via PyMuPDF.
+"""check_pdf_layout.py - Audita a geometria de paginação e layout dos PDFs via PyMuPDF.
 
-Checa estouro de margem à direita e à esquerda, título órfão e páginas
-anormalmente vazias. O default sem argumentos audita cada ``output/pdf/*.pdf``
-e falha em defeito de layout bloqueante; use ``--report-only`` para o antigo
-comportamento de sempre sair zero.
+Inspeciona a diagramação visual dos PDFs gerados pelo pipeline Pandoc + LuaLaTeX:
+- Estouro de margens (esquerda, direita, cabeçalho e rodapé).
+- Detecção de títulos de seções órfãos no rodapé da página.
+- Detecção de páginas anormalmente vazias decorrentes de quebras de página impróprias.
+- Posicionamento correto de legendas de figuras e tabelas.
+
+Escopo:
+    Auditoria geométrica read-only em DATA_ROOT/output/pdf/*.pdf.
+    Falha em defeitos bloqueantes de layout; use --report-only para modo consultivo.
+
+Entradas (Inputs):
+    Arquivos PDF em DATA_ROOT/output/pdf/*.pdf.
+    Argumentos CLI opcionais:
+        arquivo.pdf     Arquivo PDF específico para validar
+        --report-only   Emite diagnóstico sem retornar código de erro
+        --json          Emite diagnóstico formatado em JSON
+
+Saídas (Outputs):
+    Stdout: Relatório geométrico com coordenadas de eventuais estouros e títulos órfãos.
+    JSON: {"check": "pdf_layout", "status": "pass"|"skip"|"fail", "issues": [...]}
+    Exit code: 0 em conformidade (ou em --report-only), 1 em defeito de layout.
+
+Uso:
+    python scripts/check_pdf_layout.py                 # audita todos os exports PDF
+    python scripts/check_pdf_layout.py output/pdf/x.pdf # audita arquivo específico
 """
 from __future__ import annotations
 

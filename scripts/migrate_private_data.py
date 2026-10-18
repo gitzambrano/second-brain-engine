@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
-"""
-Copia e confere os dados pessoais legados para o data/ aninhado, antes de apagar.
+"""migrate_private_data.py - Copia e confere dados pessoais legados para data/ antes de apagar.
 
-Origens legadas:
-    ./wiki ./plan ./raw ./output ./.obsidian
+Utilitário de migração da estrutura monolítica legada para a arquitetura de 3 repositórios:
+- Origens legadas: ./wiki ./plan ./raw ./output ./.obsidian
+- Destino: ./data/<mesmo caminho relativo>
+- Valida integridade byte a byte via hashes SHA-256 antes de qualquer exclusão.
 
-Destino:
-    ./data/<mesmo caminho relativo>
+Escopo:
+    Utilitário de migração estrutural. Sem argumentos executa inventário consultivo.
+    Nunca toca em ./data/.git e nunca escreve no repositório público do engine.
 
-Sem argumentos: apenas inventário.
---copy: copia sem apagar a origem.
---verify: compara cada arquivo de origem com o destino por SHA-256.
---finalize: confere primeiro, depois apaga os diretórios legados de origem.
+Entradas (Inputs):
+    Diretórios legados na raiz do engine.
+    Argumentos CLI opcionais:
+        --copy        Copia arquivos sem apagar a origem
+        --verify      Confere cada arquivo de origem com o destino por SHA-256
+        --finalize    Confere por hash e apaga os diretórios legados na raiz do engine
 
-A ferramenta nunca toca em ./data/.git e nunca escreve inventário no repositório
-público do engine.
+Saídas (Outputs):
+    Stdout: Log de arquivos migrados, conferidos ou excluídos.
+    Exit code: 0 em sucesso, 1 em falha de cópia ou divergência de hash.
+
+Uso:
+    python scripts/migrate_private_data.py            # inventário de migração
+    python scripts/migrate_private_data.py --copy     # copia para data/
+    python scripts/migrate_private_data.py --verify   # valida integridade por hash
+    python scripts/migrate_private_data.py --finalize # limpa diretórios antigos após validação
 """
 from __future__ import annotations
 

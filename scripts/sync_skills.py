@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
-"""
-sync_skills.py - Espelha .agents/ nos formatos que cada harness lê. Fonte
-única é sempre .agents/ - as saídas são geradas, nunca editadas à mão.
+"""sync_skills.py - Espelha .agents/ nos formatos que cada harness lê.
 
-Lê:
-    .agents/skills/**, .agents/agents/**
+Mantém a integridade entre a fonte única e os mirrors para Claude Code e Codex:
+- .agents/skills/** e .agents/agents/** são a fonte única canônica.
+- .claude/skills/ e .claude/agents/ recebem cópias idênticas (removendo órfãos).
+- .codex/agents/*.toml são adaptadores derivados do formato Markdown.
 
-Gera:
-    .claude/skills/, .claude/agents/  cópias idênticas (remove órfão)
-    .codex/agents/*.toml             adaptador do Codex, derivado do .md
+Escopo:
+    Sincronizador mecânico de agentes e skills em CODE_ROOT.
+    Nunca edite os espelhos à mão; toda modificação deve ser feita em .agents/.
+
+Entradas (Inputs):
+    Diretório .agents/ (skills e agentes).
+    Argumentos CLI opcionais:
+        --check    Verifica se há descompasso (drift) sem escrever em disco (exit 1 se houver)
+        --quiet    Modo silencioso para hooks de sessão (reporta apenas se houver alterações)
+
+Saídas (Outputs):
+    Espelhos atualizados em .claude/ e adaptadores em .codex/.
+    Stdout: Lista de arquivos sincronizados ou aviso de conformidade.
+    Exit code: 0 em sucesso (ou sem drift), 1 se drift for detectado com --check.
 
 Uso:
-    python scripts/sync_skills.py            # espelha e reporta o que mudou
-    python scripts/sync_skills.py --check    # não escreve; exit 1 se houver drift
-    python scripts/sync_skills.py --quiet    # reporta só se algo mudou (modo hook)
-
-Flags:
-    --check   apenas detecta drift, não escreve
-    --quiet   silencia o relatório quando nada muda
+    python scripts/sync_skills.py                             # sincroniza todos os espelhos
+    python scripts/sync_skills.py --check                     # verifica drift sem alterar
+    python scripts/sync_skills.py --quiet                     # modo hook de sessão
 """
 from __future__ import annotations
 

@@ -1,27 +1,19 @@
-"""Assa o retrato estático do mapa que ilustra a capa do Atlas.
+"""build_cover.py - Assa o retrato estático do mapa que ilustra a capa do Atlas.
 
-O enfeite da capa precisa ser o mapa de verdade, não uma imitação. A versão
-anterior baixava `graph.json` (851 KB) na página inicial e refazia o desenho em
-JavaScript a partir de uma amostra de 300 nós — outro layout, outro contorno,
-metade das arestas. Era mais pesado que o mapa que representava e não se
-parecia com ele.
+Captura o retrato visual do mapa a partir de graph.html já compilado, em navegador
+headless Playwright Chromium, com a mesma topologia, arestas e layout:
+- Gera uma imagem PNG opaca por tema (light, sepia, dark).
+- Elimina a necessidade de carregar grafos pesados em JavaScript na página inicial.
 
-Aqui o retrato é capturado do próprio `graph.html` já construído, num navegador
-headless, com o mesmo código de desenho, o mesmo layout e as mesmas arestas.
-Sai um PNG por tema. O fundo é opaco e igual ao da página, então a imagem
-assenta sem costura nenhuma e dispensa transparência — que só serviria para
-recortar as bordas anti-aliased dos nós.
+Escopo:
+    Módulo de biblioteca para geração de imagens da capa em SITE_ROOT/assets/.
+    Sem navegador headless, devolve resultado com status="skip" e preserva imagem existente.
 
-Sem navegador headless a função não é um erro: devolve um resultado com
-`status="skip"` e o build mantém o PNG anterior. Assar a capa é passo de
-publicação, não pré-requisito para gerar o site — e `build_site.py --no-render`,
-que existe para checagem estrutural e de privacidade, nem chega a chamá-la.
+Entradas (Inputs):
+    Arquivo SITE_ROOT/graph.html e temas suportados.
 
-Os quatro desfechos são distintos e ditos por extenso, porque "pulou" sem
-motivo é o que fazia um CI vermelho parecer um CI sem browser: pacote ausente,
-browser do Playwright não baixado (com Chrome do sistema servindo de reserva),
-`graph.html` ausente, e erro real de renderização — este último sobe, não é
-engolido.
+Saídas (Outputs):
+    Imagens cover-<tema>.png gravadas em SITE_ROOT/assets/brand/.
 """
 from pathlib import Path
 

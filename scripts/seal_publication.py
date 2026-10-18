@@ -1,33 +1,30 @@
 #!/usr/bin/env python3
-"""
-Sela uma publicação: roda os gates obrigatórios e carimba o resultado no
-artefato.
+"""seal_publication.py - Sela uma publicação pública: executa gates e grava o manifesto de integridade.
 
-O buraco que isto fecha: o repositório `site/` publicava qualquer coisa que
-chegasse na branch. Um push manual, um merge errado ou um build feito numa
-máquina com o engine vermelho iam ao ar pelo mesmo caminho de uma publicação
-legítima — o deploy do site podia ficar verde enquanto a CI do engine estava
-vermelha, porque as duas nunca se olhavam.
+Garante que o artefato publicado em site/ traga a prova criptográfica de ter passado
+por todos os gates obrigatórios de qualidade antes do deploy no GitHub Pages:
+1. Executa os gates: privacy, budget e browser page check.
+2. Calcula o hash SHA-256 consolidado de todos os bytes servidos (artifact_digest).
+3. Registra o commit correspondente do engine e gera SITE_ROOT/site-manifest.json.
 
-Um repositório não consegue verificar a CI do outro sem credencial. O que ele
-consegue é exigir que o artefato traga consigo a prova de ter passado pelos
-gates, e que essa prova cubra exatamente os bytes presentes. É isso que o selo
-é:
+Escopo:
+    Portão de integridade e selagem do repositório site/. Altera apenas o site-manifest.json.
+    Qualquer modificação subsequente em site/ invalida o selo gerado.
 
-    gates            quais checagens passaram, nominalmente
-    artifact_digest  impressão do conteúdo publicado no momento do selo
-    engine_commit    de qual commit do engine ele saiu
+Entradas (Inputs):
+    Arquivos em SITE_ROOT e commit corrente em CODE_ROOT.
+    Argumentos CLI opcionais:
+        --allow-skip-browser    Permite pular teste de navegador em ambiente restrito
+        --json                  Emite resultado da selagem em JSON
 
-`check_artifact.py`, do lado do site, recalcula o digest e recusa o deploy se
-ele não bater. Isso torna inútil selar e editar depois: qualquer byte alterado
-em qualquer arquivo publicado invalida o selo. E torna impossível publicar sem
-selar, porque a ausência do campo também reprova.
+Saídas (Outputs):
+    Gravação de SITE_ROOT/site-manifest.json contendo commit, digest e lista de gates aprovados.
+    Stdout: Resumo com hash do artefato selado.
+    Exit code: 0 em sucesso na selagem, 1 em falha de qualquer gate obrigatório.
 
-O selo NÃO é assinatura criptográfica: quem tem acesso de escrita ao engine
-pode gerar um. Ele não existe para impedir um adversário, e sim para impedir o
-acidente — publicar um artefato que ninguém validou.
-
-Default sem argumentos: rodar os gates sobre SITE_ROOT e selar.
+Uso:
+    python scripts/seal_publication.py                      # selagem padrão completa
+    python scripts/seal_publication.py --allow-skip-browser  # selagem sem checagem de browser
 """
 from __future__ import annotations
 

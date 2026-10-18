@@ -1,9 +1,30 @@
 #!/usr/bin/env python3
-"""
-Busca na wiki com contexto de linhas mesclado, sem depender de grep externo.
+"""find_text.py - Busca textual contextualizada no corpus da wiki sem grep externo.
 
-O default sem argumentos imprime o inventário completo do corpus pesquisável,
-em vez de falhar por falta de termo de busca.
+Permite pesquisar termos exatos, padrões regex e wikilinks na base de conhecimento:
+- Agrupa ocorrências próximas mesclando linhas de contexto para leitura fluida.
+- Suporta filtragem por escopo de pastas (essays, concepts, entities, insights, sources).
+- Padrão sem argumentos imprime o inventário do corpus pesquisável em vez de falhar.
+
+Escopo:
+    Ferramenta de pesquisa read-only no diretório DATA_ROOT/wiki/.
+
+Entradas (Inputs):
+    Arquivos Markdown da wiki em DATA_ROOT/wiki/.
+    Argumentos CLI:
+        pattern           Termo ou regex a pesquisar (posicional opcional)
+        --scope ESCOPO    Subconjunto de pastas (padrão: essays, concepts, entities, insights)
+        -C, --context INT Número de linhas de contexto antes e depois (padrão: 2)
+        -i, --ignore-case Ignora maiúsculas/minúsculas na busca
+
+Saídas (Outputs):
+    Stdout: Ocorrências formatadas com caminho do arquivo, número da linha e contexto.
+    Exit code: 0 em sucesso, 1 se nenhum resultado for encontrado.
+
+Uso:
+    python scripts/find_text.py                     # inventário do corpus pesquisável
+    python scripts/find_text.py "termo"             # busca simples com contexto
+    python scripts/find_text.py "termo" --scope essays -C 3
 """
 import argparse
 import re

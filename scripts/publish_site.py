@@ -1,22 +1,31 @@
 #!/usr/bin/env python3
-"""Publica o Atlas com um único comando: validar, construir, selar e enviar.
+"""publish_site.py - Comando unificado de publicação do Atlas no GitHub Pages.
+
+Executa o fluxo completo e seguro de publicação:
+1. Valida que os 3 repositórios Git (. engine, data, site) estejam limpos e sincronizados.
+2. Reconstrói o site a partir da allowlist (build_site.py).
+3. Executa os gates obrigatórios e sela a publicação (seal_publication.py).
+4. Cria o commit em site/ e reescreve o histórico com dois commits rasos (--depth 1).
+5. Faz push com --force-with-lease para o repositório público do GitHub Pages.
+
+Escopo:
+    Orquestrador final de publicação em site/. Requer autorização explícita do usuário.
+    Nunca altera conteúdo editorial em data/.
+
+Entradas (Inputs):
+    Allowlist de visibilidade, conteúdo da wiki em DATA_ROOT e estado Git dos 3 repositórios.
+    Argumentos CLI opcionais:
+        --dry-run               Executa build e validações sem commitar nem fazer push
+        --allow-skip-browser    Permite pular gate de navegador se não houver Playwright
+
+Saídas (Outputs):
+    Site reconstruído, selado e publicado no branch main do repositório second-brain-site.
+    Stdout: Log de cada etapa com tempos de execução e confirmação de deploy.
+    Exit code: 0 em sucesso, 1 em falha de gate ou conflito Git.
 
 Uso:
-    python scripts/publish_site.py
-
-O comando não altera o corpus: ele exige os três repositórios limpos e
-sincronizados. O selo executa os gates de privacidade, orçamento e navegador
-uma única vez; depois disso, este script publica o artefato.
-
-Histórico raso do site: cada publicação reescreve `main` para exatamente dois
-commits — um commit órfão com a árvore do HEAD anterior e, por cima, o commit
-da nova publicação. Assim o repositório público não acumula binários antigos
-(os podcasts). O workflow da newsletter compara
-`.github/newsletter-manifest.json` com `HEAD^`; o commit órfão carrega o
-manifesto anterior, então a comparação continua válida. Como o remoto é
-reescrito a cada vez, o site nunca faz `pull --rebase`: antes do build o
-checkout local é alinhado a `origin/main` (o site é projeção gerada, não tem
-trabalho próprio a preservar).
+    python scripts/publish_site.py                      # publicação completa
+    python scripts/publish_site.py --dry-run            # simulação completa sem push
 """
 from __future__ import annotations
 
