@@ -76,6 +76,8 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`fix_podcasts.py`** | Renomeia podcasts de nome inequívoco para o slug do essay; lista os ambíguos sem tocar neles. | `python scripts/fix_podcasts.py` |
 | **`ingest_podcast.py`** | Valida, casa com o essay e arquiva um mp3/m4a em `wiki/podcasts/`. | `python scripts/ingest_podcast.py arquivo.m4a [essay]` |
 | **`notebooklm_podcast.py`** | Gera o podcast de um essay no NotebookLM por automação de navegador (sem LLM), com rodízio de perfis locais, e ingere o áudio. | `python scripts/notebooklm_podcast.py <essay>` |
+| **`batch_podcasts.py`** | Executa a geração em lote sequencial de podcasts para uma fila de essays, pulando os já gerados. | `python scripts/batch_podcasts.py` |
+| **`parallel_podcasts.py`** | Executa a geração paralela de podcasts distribuindo a fila entre múltiplos perfis do Chrome e contas do NotebookLM. | `python scripts/parallel_podcasts.py` |
 | **`retag.py`** | Utilitário para renomear ou migrar tags em lote nos arquivos da wiki. | `python scripts/retag.py tagA tagB` |
 | **`migrate_private_data.py`** | Utilitário para migração e reestruturação controlada do diretório de dados. | `python scripts/migrate_private_data.py` |
 
