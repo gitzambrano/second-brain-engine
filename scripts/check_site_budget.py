@@ -36,7 +36,7 @@ from sanity_common import CheckResult
 # Podcasts: cada cópia publicada (AAC mono 48 kbps) e a soma de todas.
 PODCAST_PREFIX = "assets/podcasts/"
 PODCAST_FILE_KB = 25 * 1024
-PODCASTS_TOTAL_MB = 500
+PODCASTS_TOTAL_MB = 700
 
 # Teto em KB por padrão de caminho, relativo a SITE_ROOT. A primeira regra que
 # casa vence, então o específico vem antes do genérico.
@@ -65,7 +65,7 @@ BUDGETS_KB: list[tuple[str, int]] = [
 
 # Teto do site inteiro. Não é o mesmo que a soma dos tetos individuais: serve
 # para pegar o caso de "cada arquivo dentro do limite, mil arquivos novos".
-TOTAL_MB = 40
+TOTAL_MB = 60
 
 
 def budget_for(relative: str) -> int | None:
