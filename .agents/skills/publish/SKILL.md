@@ -14,50 +14,38 @@ allowed-tools: Bash Read Glob
 ---
 # Publish
 
-Publica o **Second Brain Atlas** no Git independente `site/`. Nenhuma outra skill constrói ou publica o site.
+Publica o **Second Brain Atlas** no repositório público `site/`. Nenhuma outra skill constrói ou publica o site.
 
 ## Pré-condições
 
-- o pedido de publicação deve ser explícito;
-- essays legíveis publicamente precisam de `visibility: public`;
-- `site/` precisa estar inicializado com `.second-brain-site`;
-- esta skill nunca altera `visibility:` sem decisão explícita do Usuário.
+- Pedido de publicação deve ser explícito.
+- Essays legíveis publicamente precisam de `visibility: public`.
+- Nunca altere `visibility:` sem decisão explícita do Usuário.
+- `site/` precisa estar inicializado com `.second-brain-site`.
 
-## Gates
+## Execução
 
-Execute o comando único:
+Execute o comando único de publicação:
 
 ```bash
 python scripts/publish_site.py
 ```
 
-Regras:
+O script executa de forma autônoma:
+1. Sincronização prévia de `./` e `data/` com `origin/main`.
+2. Compilação do site e gates de validação (visibilidade, privacidade, Chromium, orçamento e selo).
+3. Publicação em `site/` mantendo histórico raso de 2 commits com `--force-with-lease`.
 
-- o comando salva e sincroniza automaticamente qualquer mudança pendente em `./` e `data/` com `origin/main` antes de compilar;
-- mudanças locais prévias em `site/` são regeneradas pelo build sem bloquear o fluxo;
-- qualquer erro bloqueante de compilação ou validação interrompe a publicação antes do commit;
-- ausência de Chromium é falha neste fluxo, não SKIP;
-- `--allow-skip-browser` não é válido para publicação;
-- o selo é obrigatório e deve corresponder ao conteúdo final e ao commit do engine que o gerou.
-
-## Histórico raso do site
-
-`site/` não acumula histórico binário. A cada publicação, `main` é reescrita para exatamente dois commits: um commit órfão com a árvore do HEAD anterior e, por cima, o commit da nova publicação. Em seguida o script envia com `git push --force-with-lease` (lease explícito sobre o SHA que o remoto tinha na última busca) e roda `git reflog expire --expire=now --all` e `git gc --prune=now` no checkout local.
-
-- Como o remoto é reescrito, o site nunca faz `pull --rebase`. Antes do build, o checkout é comparado a `origin/main` por **árvore**; se difere, vira `origin/main` (o site é projeção gerada, sem trabalho próprio).
-- O workflow da newsletter compara `.github/newsletter-manifest.json` com `HEAD^`. O commit órfão carrega o manifesto da publicação anterior, então a comparação continua válida.
-- Se o lease falhar (alguém empurrou para o remoto sem este checkout saber), a publicação aborta; rode de novo.
-- Podcasts publicados ficam em `assets/podcasts/`, têm orçamento próprio e vêm do build (`/podcast`).
+Qualquer falha bloqueante interrompe o fluxo antes do commit remoto. Ausência de Chromium é falha neste fluxo.
 
 ## Relato
 
-Informe:
+Informe o status dos gates:
+- Visibilidade: PASS|FAIL
+- Privacidade: PASS|FAIL
+- Navegador: PASS|FAIL
+- Orçamento: PASS|FAIL
+- Selo: PASS|FAIL
+- Git de `site/`: SHA/push ou `nada a commitar`
 
-- visibilidade: PASS|FAIL;
-- privacidade: PASS|FAIL;
-- navegador: PASS|FAIL;
-- orçamento: PASS|FAIL;
-- selo: PASS|FAIL;
-- Git de `site/`: SHA/push (histórico de dois commits) ou `nada a commitar`.
-
-Se um gate falhar, reporte o código e o artefato afetado; não publique parcialmente.
+Se algum gate falhar, reporte o código e o artefato afetado; nunca publique parcialmente.

@@ -18,28 +18,21 @@ Siga este arquivo e as skills em `.agents/skills/`. `conventions/SKILL.md` é a 
 
 São três repositórios Git independentes, sem submodules. O engine ignora `data/` e `site/`.
 Clones locais são mantidos **super shallow** (máximo 5 commits; `site` super shallow `--depth 1`) para economia de disco.
+Caminhos `wiki/...`, `plan/...`, `raw/...` e `output/...` são relativos a `DATA_ROOT` (`data/` por padrão). Resolva caminhos com `scripts/repo_paths.py`; nunca pelo diretório corrente.
+Estrutura detalhada de conteúdo, frontmatter, tags, links, referências, prosa e imagens: `conventions/SKILL.md`.
 
 ### Mídias Binárias e Podcasts
-- Originais gerados (`data/wiki/podcasts/*.m4a`) ficam fora do Git do `data` via `.gitignore`.
-- O repositório `site` armazena exclusivamente a projeção codificada para web (`site/assets/podcasts/*.m4a`) com histórico super shallow (`--depth 1`), permitindo que o GitHub Pages sirva os players de áudio sem acumular histórico pesado.
 
-### Invariante de GitHub Actions — NÃO VIOLAR
+- Arquivos brutos gerados (`data/wiki/podcasts/`) são ignorados no Git do `data`.
+- Apenas a projeção para web (`site/assets/podcasts/`) é versionada no `site` (histórico shallow `--depth 1`).
 
-Esta é uma regra arquitetural bloqueante, não uma preferência de implementação:
+### GitHub Actions
 
-- `second-brain-engine`: **NO GITHUB ACTIONS. ZERO.** Não criar `.github/workflows/` nem qualquer workflow de CI, testes, lint, build, QA, sync, cron, documentação, publicação, newsletter ou automação.
-- `second-brain-data`: **NO GITHUB ACTIONS. ZERO.** A mesma proibição é absoluta.
-- Os **únicos dois GitHub Actions permitidos em todo o ecossistema Second Brain** ficam exclusivamente em `second-brain-site`:
-  1. `pages.yml`: **gate mínimo de privacidade antes da publicação + deploy no GitHub Pages**.
-  2. `newsletter.yml`: **anúncio de novos essays via Kit após deploy concluído**.
-- O repositório do site não deve ter outros workflows nem virar CI geral. Ele não deve executar lint, testes do engine, QA de browser/PDF/HTML, builds editoriais, sincronização ou tarefas agendadas.
-- Testes, lint, QA, build, sweeps e demais checks de `second-brain-engine` e `second-brain-data` rodam localmente pelos scripts do engine ou quando explicitamente solicitados; nunca via GitHub Actions.
-- Se uma tarefa sugerir criar uma Action em `second-brain-engine` ou `second-brain-data`, a solução está errada: não crie. Se encontrar um workflow nesses repositórios, remova-o.
-- Não trate essas duas Actions como precedente para outras. **Elas são as únicas exceções e existem somente em `second-brain-site`.**
+Proibido criar qualquer GitHub Action em `second-brain-engine` e `second-brain-data`. Testes, lint e QA rodam apenas localmente.
 
-Caminhos `wiki/...`, `plan/...`, `raw/...` e `output/...` são relativos a `DATA_ROOT` (`data/` por padrão). Resolva caminhos com `scripts/repo_paths.py`; nunca pelo diretório corrente.
-
-Estrutura detalhada de conteúdo, frontmatter, tags, links, referências, prosa e imagens: `conventions/SKILL.md`.
+Os dois únicos workflows permitidos em todo o ecossistema ficam exclusivamente em `second-brain-site`:
+1. `pages.yml`: gate de privacidade e deploy no GitHub Pages.
+2. `newsletter.yml`: anúncio de novos essays via Kit.
 
 ### Fonte única para agentes
 
@@ -164,7 +157,6 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 - Nunca altere `visibility:` automaticamente; exige decisão explícita do Usuário.
 - Nenhum corpo não autorizado, link de leitura restrito ou caminho para `data/` pode sair.
 - `scripts/publish_site.py` só roda sob pedido explícito de publicação; ele executa os gates e envia `site/`, reescrevendo `main` para um histórico de dois commits (sem acumular binários antigos).
-- Os únicos GitHub Actions permitidos no pipeline de publicação ficam exclusivamente em `second-brain-site`: o gate mínimo de privacidade com deploy do Pages (`pages.yml`) e o anúncio de novos essays via Kit (`newsletter.yml`). **Não mover checks do engine/data para Actions.**
 - Contrato completo de dados: `conventions/SKILL.md`; workflow: `/publish`.
 
 ## Plano de Longo Prazo
@@ -183,22 +175,14 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 ## Regras Gerais
 
 1. **Não modifique documentos originais em `wiki/sources/`.** `manifest.md` e `map.md` são catálogos vivos e podem ser atualizados pelas skills responsáveis.
-2. Derivados (`index.*`, `references.*`, grafo, stats) são gerados por script; nunca editar à mão.
-3. Registre operações de conteúdo em `wiki/log.md` quando a skill exigir; o log é append-only.
+2. Derivados (`index.*`, `references.*`, grafo, stats) são gerados por script; nunca edite à mão.
+3. Registre operações de conteúdo em `wiki/log.md` quando a skill exigir (append-only).
 4. Toda página segue frontmatter, nomenclatura e estrutura de `conventions/SKILL.md`.
-5. Altere `updated:` somente quando a prosa do corpo mudar substancialmente. Não altere por metadata, lint, links, referências, formatação, renomeação ou `visibility:`.
+5. Altere `updated:` somente quando a prosa do corpo mudar substancialmente (nunca por metadata, lint, links ou formatação).
 6. **Contradição entre fontes:** não escolha um lado nem faça média. Mostre as versões com localização e aguarde a decisão do Usuário.
-7. Busque na wiki primeiro. Vá às fontes arquivadas quando a wiki não bastar ou quando for necessário verificar a evidência.
+7. Busque na wiki primeiro. Vá às fontes arquivadas apenas quando a wiki não bastar ou para verificar evidência.
 8. Toda a wiki é escrita em Português do Brasil.
-9. **Git é explícito por repositório.** Nunca represente o workspace com um único `git add`/`commit`:
-
-   ```bash
-   git -C . status
-   git -C data status
-   git -C site status
-   ```
-
-   Nunca force `git add -f data`.
+9. **Git é explícito por repositório** (`git -C .`, `git -C data`, `git -C site`). Nunca use um único commit e nunca force `git add -f data`.
 
 ## Subagents
 
@@ -206,9 +190,7 @@ Regras normativas: `conventions/SKILL.md`. Reuse valores existentes antes de cri
 
 ### `update`
 
-Fechamento mecânico de `./` e `data/`: pre-flight → fixer → rebuild → post-flight → commits locais → pushes. Nunca publica `site/`, decide conteúdo ou reescreve prosa.
-
-Execute apenas quando a skill chamadora autorizar ou sob pedido direto de sincronização/atualização. Contrato completo: `.agents/agents/update.md`.
+Fechamento mecânico (`./` e `data/`): fixes, rebuilds, commits locais e push. Exige autorização explícita ou solicitação direta. Contrato: `.agents/agents/update.md`.
 
 ### `lint-report`
 
@@ -236,7 +218,7 @@ Vale para `.agents/skills/` e `.agents/agents/`.
 - **summarize** — resume links, arquivos e mídia quando disponível.
 - **agent-browser** — fallback de navegador quando busca/fetch não resolverem.
 
-## Repository Quality Gates
+## Quality Gates
 
 Antes de fechar mudança mecânica:
 
@@ -244,6 +226,4 @@ Antes de fechar mudança mecânica:
 python scripts/check_repo.py --quick
 ```
 
-Mudança mecânica determinística deve ganhar teste de regressão quando viável. Use o corpus sintético `tests/fixtures/mini-brain/`, nunca `data/`. Matriz completa, marcadores e dependências: `docs/TESTING.md`.
-
-`/doctor` é diagnóstico read-only. Todo script executável deve ter default útil sem argumentos.
+Testes de regressão usam o corpus sintético `tests/fixtures/mini-brain/` (detalhes em `docs/TESTING.md`).

@@ -14,86 +14,76 @@ allowed-tools: Bash Read Write Edit Glob Grep WebSearch WebFetch AskUserQuestion
 ---
 # Review
 
-Revisa conteúdo e argumento, não estilo. `/continuity` cobre coerência estrutural; `/organize` cobre metadados/formatação; `/proofread` e `/polish` cobrem linguagem.
+Peer review crítico de conteúdo, argumento e evidência. Não faz revisão de estilo (`/polish`) nem de gramática (`/proofread`). `/continuity` cobre coerência estrutural e `/organize` cuida de metadados.
 
-`/review` é interativo e não roda em batch.
+`/review` é interativo e opera em um essay por vez; nunca roda em batch.
 
 ## 1. Preparar
 
-1. Resolva o essay alvo; pergunte apenas se houver ambiguidade.
-2. Leia o essay inteiro.
-3. Rode `/continuity` primeiro e reutilize os achados. Não refaça o mesmo checklist.
-4. Busque na wiki antes de sugerir material externo.
+1. Resolva o essay alvo (`/review <slug>`); pergunte apenas se houver ambiguidade real.
+2. Leia o essay inteiro na íntegra antes de qualquer análise.
+3. Execute `/continuity` primeiro e reutilize seus achados (não repita o mesmo checklist).
+4. Consulte a wiki com `qmd query` ou `scripts/find_text.py` antes de sugerir material externo.
 
 ## 2. Avaliar
 
-Analise seis dimensões.
+Audite o essay em seis dimensões substantivas:
 
 ### Força argumentativa
-
 - A tese depende de premissa frágil ou implícita?
 - Qual é a objeção mais forte de um leitor informado?
-- O essay responde essa objeção?
+- O essay responde e refuta essa objeção?
 - Qual elo mais enfraquece a conclusão?
 
 ### Validade lógica e filosófica
-
-- Há falácia, falsa dicotomia, generalização ou apelo indevido à autoridade?
-- Conceitos importantes estão definidos e usados de forma consistente?
-- Em tema filosófico, objeções clássicas relevantes estão representadas?
+- Há falácia formal ou informal, falsa dicotomia, generalização ou apelo indevido à autoridade?
+- Conceitos importantes estão definidos e usados de forma consistente em todo o texto?
+- Em tema filosófico, as objeções clássicas relevantes estão representadas com rigor?
 
 ### Validade física e matemática
+- Afirmações quantitativas têm fonte, derivação ou ordem de grandeza realista?
+- Unidades, hipóteses adotadas e limites de validade estão corretos?
+- Há conflito com princípios físicos e leis estabelecidas?
 
-- Afirmações quantitativas têm fonte, derivação ou ordem de grandeza?
-- Unidades, hipóteses e limites de validade estão corretos?
-- Há conflito com princípios físicos estabelecidos?
-
-Para essay técnico, duas exigências são obrigatórias:
-
-1. **Insight físico de first principles:** mecanismo, causa e resposta a parâmetros.
-2. **Desenvolvimento matemático:** equações centrais apresentadas ou derivadas com os passos que carregam a física.
-
-Falta de qualquer uma é **Crítico**.
+> [!IMPORTANT]
+> **Requisitos mandatórios para essays técnicos (falta de qualquer um é 🔴 Crítico):**
+> 1. **Insight físico de first principles:** explicação causal do mecanismo, por que o fenômeno ocorre e como responde à variação de parâmetros.
+> 2. **Desenvolvimento matemático:** equações centrais apresentadas ou derivadas com os passos matemáticos que carregam a física.
 
 ### Profundidade e completude
-
-- Há descrição sem mecanismo?
-- Algum conceito ficou apenas no nível de definição?
-- Falta exemplo, consequência concreta ou caso numérico onde seria útil?
+- Há descrição puramente fenomenológica sem o mecanismo causal subjacente?
+- Algum conceito-chave ficou apenas no nível de definição abstrata?
+- Falta exemplo concreto, consequência prática ou caso numérico onde seria útil?
 
 ### Citações e cobertura
-
-- Claims históricos, empíricos ou atribuídos têm fonte?
+- Claims históricos, empíricos ou atribuídos a terceiros têm fontes verificadas?
 - Falta autor, obra, corrente ou perspectiva indispensável ao tema?
-- Há seção relevante praticamente sem sustentação externa?
+- Há seção relevante sustentada apenas por asserção autoral sem apoio externo?
 
 ### Enriquecimento
-
-Sugira somente quando agregar valor real:
-- fonte ou obra específica;
-- experimento mental;
-- exemplo concreto ou numérico;
-- analogia útil;
-- conexão com outra página da wiki.
+Sugira somente quando agregar valor substantivo real:
+- Fonte primária, norma técnica ou livro-texto de referência;
+- Experimento mental que clarifique distinções conceituais difíceis;
+- Exemplo concreto, numérico ou contraexemplo revelador;
+- Analogia precisa ou conexão forte com outra página da wiki.
 
 ## 3. Priorizar e reportar
 
-Classifique:
+Classifique cada achado por severidade:
+- **🔴 Crítico:** enfraquece diretamente ou invalida a tese; exige resolução obrigatória antes de promover a `status: revisao`.
+- **🟡 Moderado:** reduz rigor, clareza ou profundidade sem derrubar o argumento central.
+- **🟢 Sugestão:** oportunidade de enriquecimento opcional.
 
-- **🔴 Crítico:** enfraquece ou invalida a tese; resolver antes de `revisao`.
-- **🟡 Moderado:** reduz rigor, clareza ou profundidade.
-- **🟢 Sugestão:** enriquecimento opcional.
-
-Reporte antes de editar:
+Apresente o relatório consolidado ao Usuário antes de propor edição:
 
 ```markdown
-## Relatório de Revisão — Título
+## Relatório de Revisão — Título do Essay
 
 ### Visão geral
-...
+[Síntese do argumento e incorporação dos achados de /continuity]
 
 ### 🔴 Críticos
-1. Problema — localização — impacto.
+1. Problema — localização — impacto na tese.
 
 ### 🟡 Moderados
 1. ...
@@ -101,57 +91,51 @@ Reporte antes de editar:
 ### 🟢 Sugestões
 1. ...
 
-### Fontes / exemplos candidatos
+### Fontes e exemplos candidatos
 - ...
 ```
 
-Inclua os achados relevantes de `/continuity` na visão geral e na prioridade apropriada.
-
 ## 4. Plano de modificação
 
-Pergunte quais achados o Usuário quer resolver. Para os selecionados, proponha um plano numerado com:
+Pergunte quais achados o Usuário deseja resolver. Para os itens selecionados, formule um plano numerado com:
+1. **Localização:** seção e parágrafo afetados.
+2. **Mudança concreta:** redação ou alteração proposta.
+3. **Evidência necessária:** fonte, dado ou equação a introduzir.
+4. **Efeito no argumento:** como a mudança fortalece a tese.
 
-- localização;
-- mudança concreta;
-- evidência/fonte necessária;
-- efeito esperado no argumento.
-
-Aguarde aprovação explícita. Não edite antes dela.
+**Aguarde aprovação explícita antes de qualquer escrita.**
 
 ## 5. Executar o plano aprovado
 
-Para cada item aprovado:
-
-1. releia o trecho em contexto;
-2. aplique somente a mudança aprovada;
-3. preserve o estilo do essay e siga `conventions/SKILL.md`;
-4. atualize Sumário/Referências quando a estrutura ou fontes mudarem;
-5. marque o item como concluído.
-
-Não amplie o escopo silenciosamente.
+Após a aprovação do Usuário:
+1. Releia o trecho em contexto antes de editar.
+2. Aplique estritamente as mudanças combinadas, preservando a voz do autor e as normas de `conventions/SKILL.md`.
+3. Atualize `## Sumário` se houver alteração na estrutura e `## Referências` se novas fontes forem citadas.
+4. Não amplie o escopo nem adicione alterações não aprovadas.
 
 ## 6. Fechar
 
-Após mudanças:
-
-- atualize `updated:` apenas se a prosa do corpo mudou; ajuste mecânico não conta;
-- rode o fechamento mecânico de essay único em `conventions/SKILL.md`;
-- se referências mudaram, rode `python scripts/build_references.py`;
-- se summary/tags mudaram, rode `python scripts/build_index.py`;
-- registre:
-
-```markdown
-## [YYYY-MM-DD] review | Título
-Revisão: N críticos, M moderados, K sugestões. X modificações aplicadas.
-```
-
-Se o essay era `draft` e não restar crítico, pergunte se o Usuário quer promover para `revisao`. Não altere status automaticamente.
-
-Se a edição mudou estrutura ou tese, ofereça repetir `/continuity`.
+Após concluir as modificações:
+1. Atualize `updated:` no frontmatter apenas se a prosa do corpo sofreu alteração substantiva (ajuste mecânico não conta).
+2. Execute a validação mecânica de essay único (`conventions/SKILL.md`):
+   ```bash
+   python scripts/fix_lint.py <slug>
+   python scripts/check_wiki.py <slug>
+   python scripts/check_references.py --file <slug>
+   ```
+3. Se referências mudaram: `python scripts/build_references.py`.
+4. Se summary ou tags mudaram: `python scripts/build_index.py`.
+5. Registre em `wiki/log.md`:
+   ```markdown
+   ## [YYYY-MM-DD] review | Título do Essay
+   Revisão: N críticos, M moderados, K sugestões. X modificações aplicadas.
+   ```
+6. Se o essay estava em `status: draft` e não restar nenhum crítico pendente, pergunte se o Usuário deseja promover para `revisao` (nunca altere status automaticamente).
+7. Se a edição alterou a estrutura ou a tese, ofereça rodar `/continuity`.
 
 ## Limites
 
-- Não edite sem aprovação do plano.
-- Não transforme review em reescrita de estilo.
-- Não invente citações; verifique fontes antes de integrá-las.
-- Contradições seguem `## Regra de contradição entre fontes` em `conventions/SKILL.md`.
+- Nunca edita sem aprovação explícita do plano de modificação.
+- Não transforma review em revisão de estilo (`/polish`) ou gramática (`/proofread`).
+- Não inventa dados ou citações; verifique fontes antes de integrá-las.
+- Contradições entre fontes seguem a regra canônica em `conventions/SKILL.md`.

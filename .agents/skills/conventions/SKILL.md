@@ -216,35 +216,23 @@ Se o essay tiver mais de oito caixas, use mais de um tipo quando houver funçõe
 
 ### Forma do bloco
 
-```markdown
-> [!example] Experimento Mental III
-> #### O Cérebro Dividido
-> Texto da caixa.
->
-> > [!success] Veredicto
-> > O desfecho.
-```
+O título é autoral. Sem rótulo, escreva `> [!tipo]` sozinho. Dentro da caixa vale Markdown normal (parágrafos, listas, tabelas, matemática, código e caixas aninhadas). Subtítulos dentro dela devem usar `####` (`##` e `###` quebram o Sumário).
 
-- **O título é autoral.** Preserve o rótulo existente. Sem rótulo, escreva `> [!tipo]` sozinho.
-- **`####` é o subtítulo da caixa.** `##` e `###` dentro dela quebram o Sumário.
-- **Dentro da caixa vale Markdown normal**: parágrafos, listas, tabelas, matemática, código e caixas aninhadas.
-- **Aspas tipográficas `“ ”` separam citação de atribuição.** Sem elas não há atribuição destacada — e nunca acrescente aspas que o autor não escreveu.
-
-Quatro tipos têm forma própria:
+Quatro tipos têm formato estruturado próprio:
 
 ```markdown
 > [!todo] Thomas Hobbes
 > #### 1588 – 1679 · Inglaterra
-> Por que ele importa para este argumento.
+> Relevância da entidade para o argumento.
 
 > [!warning] 39%
 > O que o número mede.
 > ---
-> [McKinsey, *Diversity Matters Even More*, 2023](https://exemplo)
+> [McKinsey, *Diversity Matters*, 2023](https://exemplo)
 
 > [!info] Evidência
-> #### Pacientes frontais e a metamorfose do caráter
-> Estudo, amostra, resultado.
+> #### Pacientes frontais e o caráter
+> Estudo empírico, amostra e resultado medido.
 
 > [!quote]
 > “A vida é o modo pelo qual a matéria encontrou de contemplar a si mesma.”
@@ -252,15 +240,17 @@ Quatro tipos têm forma própria:
 > — atribuído a Carl Sagan
 ```
 
-No `todo`, o título é o **nome** e o `####` contém metadados. No `warning`, o título é o **número** e `---` separa a fonte. No `quote`, a atribuição vem depois de uma linha em branco, começando por travessão.
+No `todo`, o título é o **nome da entidade** e `####` contém metadados. No `warning`, o título é **estritamente o número/valor** e `---` separa a fonte. No `quote`, a atribuição vem após linha em branco com travessão (`—`). Aspas tipográficas `“ ”` separam citação de atribuição — nunca adicione aspas que o autor não escreveu.
 
 ### O que não fazer
 
+- **Regras proprietárias de `warning` e `todo` (alerta anti-alucinação):**
+  - `warning` é **estritamente para números-chave** (`39%`, `0,12 ft/s`). **NUNCA** use `warning` para avisos de texto, alertas gerais ou advertências (use `danger` para riscos graves ou prosa comum).
+  - `todo` é **estritamente ficha de entidade** (pessoa, organização ou obra). **NUNCA** use `todo` para tarefas a fazer ou pendências.
 - alias (`tldr`, `summary`, `hint`, `important`, `caution`, `cite`, …) ou tipo inventado — é erro, não há fallback;
 - escolher o tipo pela cor que ele produz;
 - promover prosa comum a caixa só para dar destaque;
 - usar `note` como depósito de tudo que sobrou;
-- usar `warning` como "atenção" — ele é reservado a número;
 - repetir o mesmo rótulo em dezenas de caixas: isso é um molde, não um destaque.
 
 ## Dois tipos de essay
@@ -448,11 +438,27 @@ Se uma fonte nova ou uma afirmação do Usuário contradizer conteúdo existente
 
 ## Fechamento padrão de essay único
 
-Skills que editam um essay específico fecham com:
+Checklist operacional para qualquer skill que altere um essay específico:
 
-```bash
-python scripts/check_wiki.py <slug>
-python scripts/fix_lint.py <slug>
-```
-
-Aplique correções mecânicas inequívocas e reporte o restante.
+1. **Correção mecânica e validação estrutural:**
+   ```bash
+   python scripts/fix_lint.py <slug>
+   python scripts/check_wiki.py <slug>
+   ```
+2. **Auditoria bibliográfica:**
+   ```bash
+   python scripts/check_references.py --file <slug>
+   ```
+3. **Reconstrução condicional de derivados:**
+   - Se `## Referências` mudou:
+     ```bash
+     python scripts/build_references.py
+     ```
+   - Se `summary:`, `tags:` ou título mudaram:
+     ```bash
+     python scripts/build_index.py
+     ```
+4. **Disciplina de data:**
+   - Atualize `updated: YYYY-MM-DD` no frontmatter **apenas** se a prosa do corpo sofreu alteração substantiva (nunca por lint, metadados, links ou formatação).
+5. **Registro de log:**
+   - Registre a operação em `wiki/log.md` no formato canônico se a skill chamadora exigir.

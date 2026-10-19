@@ -15,57 +15,59 @@ allowed-tools: Bash Read Glob
 ---
 # Podcast
 
-Cada essay pode ter um podcast gerado por IA (NotebookLM). O original fica em `wiki/podcasts/<slug>.m4a` (ou `.mp3`), com o **slug exatamente igual ao nome do arquivo do essay**. Os originais são grandes: ficam só em disco, fora do Git de `data/`. Ao publicar, `scripts/build_site.py` recodifica uma cópia enxuta (AAC mono 48 kbps) em `site/assets/podcasts/` e o player aparece abaixo da assinatura do essay, somente para `visibility: public`. Essay `private` ou `hidden` nunca publica áudio.
+Gerencia os episódios de áudio dos essays em `wiki/podcasts/<slug>.<m4a|mp3>`, com slug idêntico ao do essay. Arquivos brutos ficam fora do Git de `data/`. Ao publicar via `/publish`, `scripts/build_site.py` converte uma versão compacta (AAC mono 48 kbps) para `site/assets/podcasts/` e insere o player apenas para essays com `visibility: public`.
 
 Esta skill nunca altera `visibility:` nem o texto de um essay.
 
-## Subcomandos
+## Scripts e Subcomandos
 
-### `ingest <arquivo> [essay]`
+### 1. Ingestão: `scripts/ingest_podcast.py`
 
-Arquiva um mp3/m4a que o Usuário já tem.
+Arquiva e vincula um arquivo de áudio local existente:
 
 ```bash
 python scripts/ingest_podcast.py <arquivo> [essay]
 ```
 
-O script valida o áudio, casa o arquivo com o essay (slug, título ou trecho) e move para `wiki/podcasts/<slug>.<ext>`. Casamento ambíguo sai com código 2 e lista os candidatos: pergunte ao Usuário qual é e rode de novo com o essay explícito. Não escolha por conta própria.
+- **O que faz:** valida o formato do áudio via ffmpeg, correlaciona o arquivo ao essay correspondente (por slug, título ou trecho da prosa) e move o arquivo para `wiki/podcasts/<slug>.<ext>`.
+- **Ambiguidade (código 2):** se mais de um essay for candidato, o script lista as opções. Pergunte ao Usuário qual é o correto e reexecute passando o slug explícito.
 
-### `generate <essay>`
+### 2. Geração: `scripts/notebooklm_podcast.py`
 
-Gera o podcast no NotebookLM, sem gastar tokens de LLM:
+Gera o áudio via NotebookLM usando perfil local de navegador:
 
 ```bash
 python scripts/notebooklm_podcast.py <essay>
 ```
 
-O script roda headless e abre o Gemini Notebook (ex-NotebookLM, `notebook.google.com`) com um perfil de navegador local, cria um caderno, cola o corpo do essay (sem frontmatter, Sumário e Conexões) como fonte, personaliza o Resumo em áudio em português do Brasil, na maior duração oferecida (em pt-BR, “Padrão”; “Longo” só existe em inglês), com o prompt de `.agents/skills/podcast/prompt.md`, espera a geração (até 30 min), baixa o áudio e o entrega a `ingest_podcast.py`.
+- **O que faz:** cria um caderno no Gemini Notebook/NotebookLM, envia o corpo do essay como fonte, aplica as diretrizes de áudio de `.agents/skills/podcast/prompt.md` em português do Brasil, aguarda a geração, baixa o áudio gerado e o repassa automaticamente para `ingest_podcast.py`.
+- **Autenticação e contas:** utiliza perfis em `.local/notebooklm/profiles/`. Se a sessão estiver deslogada, solicite ao Usuário autenticar via `python scripts/notebooklm_podcast.py --login <pasta>`.
+- **Opções úteis:**
+  - `--account <pasta>`: força uma conta específica.
+  - `--headed`: abre o navegador visível (essencial para depurar falhas visuais).
+  - `--force`: substitui podcast existente.
+  - `--dry-run`: simula sem gerar.
+  - Sem argumentos: lista essays públicos sem podcast e status das contas.
+- **Atenção:** confirme com o Usuário antes de iniciar a geração, pois consome cotas da conta.
 
-Contas e perfis:
-
-- cada subpasta de `.local/notebooklm/profiles/` é um perfil e uma conta; `--profiles-dir` ou a variável `NOTEBOOKLM_PROFILES_DIR` apontam outra pasta;
-- o rodízio segue a ordem alfabética das pastas; limite de uso coloca a conta em cooldown e passa à próxima; `--account <pasta>` força uma;
-- o estado (cooldowns, depuração, downloads) vive em `.local/notebooklm/`, nunca em repositório; nenhuma conta ou e-mail entra em arquivo versionado;
-- o script nunca digita senha. Sessão deslogada é reportada; peça ao Usuário para entrar com `python scripts/notebooklm_podcast.py --login <pasta>`.
-
-Opções úteis: `--headed` (ver o navegador), `--delete-notebook`, `--timeout <min>`, `--dry-run`, `--force` (substituir podcast existente). Sem argumentos, o script lista os essays públicos sem podcast e o estado dos perfis.
-
-Se o NotebookLM truncar o prompt, o script aborta e informa quantos caracteres foram aceitos; encurte `prompt.md` com o Usuário em vez de seguir truncado. Falha de fluxo grava captura de tela e HTML em `.local/notebooklm/debug/` e informa o passo que falhou.
-
-Antes de gerar, confirme com o Usuário qual essay e que a geração consome cota das contas.
-
-### `check`
+### 3. Auditoria e Correção: `scripts/check_podcasts.py` e `scripts/fix_podcasts.py`
 
 ```bash
 python scripts/check_podcasts.py
 python scripts/fix_podcasts.py
 ```
 
-`check_podcasts.py` audita nomes, órfãos, integridade do áudio (ffmpeg), cópias e players no site e vazamento de conta. `fix_podcasts.py` renomeia somente os nomes de casamento inequívoco e lista os ambíguos sem tocá-los. Reporte cada achado com o código e o arquivo.
+- **`check_podcasts.py` verifica:**
+  - Correspondência exata entre o slug do áudio e o slug do essay;
+  - Áudios órfãos em `wiki/podcasts/` sem essay correspondente;
+  - Integridade do arquivo de áudio via ffmpeg;
+  - Projeção no site: presença de cópia web em `site/assets/podcasts/` para essays públicos e garantia de que essays privados/ocultos não tenham player publicado;
+  - Vazamento de contas: assegura que e-mails e dados de sessão de `.local/` não vazaram para o repositório.
+- **`fix_podcasts.py`:** renomeia automaticamente arquivos com correspondência inequívoca e reporta casos ambíguos para decisão manual.
 
-## Depois
+## Fechamento
 
-Podcast novo só vai ao ar numa publicação explícita (`/publish`). Ofereça `/status update` se o trabalho foi substancial.
+Podcasts só vão ao ar publicamente após `/publish`. Ofereça `/status update` caso o trabalho da sessão tenha sido relevante.
 
 ## Skills relacionadas
 
