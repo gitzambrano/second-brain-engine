@@ -354,13 +354,17 @@ def resolve_image_paths(text, essay_dir):
             png = abs_path.with_suffix('.png')
             if not png.exists() or png.stat().st_size == 0:
                 try:
-                    import pymupdf as fitz
-                    doc = fitz.open(abs_path)
-                    pix = doc[0].get_pixmap(dpi=300)
-                    pix.save(str(png))
-                    doc.close()
+                    from svg_to_png import render_svg_file
+                    render_svg_file(abs_path, png, scale=2)
                 except Exception:
-                    pass
+                    try:
+                        import pymupdf as fitz
+                        doc = fitz.open(abs_path)
+                        pix = doc[0].get_pixmap(dpi=300)
+                        pix.save(str(png))
+                        doc.close()
+                    except Exception:
+                        pass
             if png.exists() and png.stat().st_size > 0:
                 abs_path = png
         return f'![{alt}]({abs_path.as_posix()})'

@@ -51,7 +51,7 @@ Exija as quatro camadas quando forem pertinentes:
 1. **Mecanismo físico:** explique por que o fenômeno ocorre e como responde aos parâmetros.
 2. **Desenvolvimento matemático:** apresente as equações relevantes e derive os passos que carregam a física.
 3. **Aplicação concreta:** inclua exemplo numérico ou ordem de grandeza.
-4. **Representação visual:** gere plot, gráfico ou diagrama quando a relação quantitativa ficar mais clara visualmente.
+4. **Representação visual:** gere plot, gráfico ou diagrama quando a relação quantitativa ficar mais clara visualmente. Siga rigorosamente a paridade bilíngue (<slug>_fig<N>.svg e <slug>_fig<N>_en.svg) e renderização Retina 2x via scripts/svg_to_png.py conforme /diagram e conventions/SKILL.md.
 
 Use normas, papers e livros-texto específicos. Não substitua intuição física por fórmula nem fórmula por descrição qualitativa.
 

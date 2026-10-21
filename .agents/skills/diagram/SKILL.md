@@ -1,9 +1,9 @@
 ---
 name: diagram
 description: >
-  Modela, valida e compila diagramas conceituais e arquiteturais em Mermaid
-  para essays. Use quando precisar de diagramas de blocos, fluxogramas ou
-  mapas estruturais com renderização estática para o corpus.
+  Modela, valida e compila diagramas conceituais e arquiteturais em Mermaid e
+  SVG para essays, garantindo paridade bilíngue (PT/EN) e renderização Retina 2x.
+  Use quando precisar de diagramas de blocos, fluxogramas ou ilustrações técnicas.
 metadata:
   second-brain-role: "visual-designer"
   second-brain-mode: "mixed"
@@ -14,35 +14,58 @@ allowed-tools: Bash Read Write Glob
 ---
 # Diagram
 
-**[ambos]** Modela, valida e compila diagramas Mermaid para essays, gerando artefato estático em `wiki/assets/` e referenciando na prosa.
+**[ambos]** Modela, valida e compila diagramas em SVG e Mermaid para essays, assegurando paridade bilíngue estrita (PT/EN), gerando artefatos estáticos em `wiki/assets/` e referenciando na prosa.
 
 ## Princípios
 
-1. **Legibilidade multiplataforma**: use nós com preenchimento sólido (`#1E293B` ou `#FFFFFF`), bordas contrastantes e linhas de tom intermediário (`#94A3B8`, `#0EA5E9` ou `#475569`). O diagrama deve ser legível tanto em fundo branco (PDF/site claro) quanto escuro (site escuro).
-2. **Sintaxe segura**: coloque sempre o texto dos nós entre aspas duplas: `id["texto"]`. Nunca use caracteres especiais (`(`, `)`, `[`, `]`) soltos no rótulo.
-3. **Ergonomia visual**:
-   - Limite de 7 a 12 nós por diagrama.
-   - Use `subgraph` para isolar responsabilidades ou fases lógicas.
-   - Use `flowchart TD` para fluxos e hierarquias verticais; `flowchart LR` para pipelines sequenciais horizontais.
-4. **Completude textual**: o diagrama apoia a prosa, mas nunca a substitui. O texto deve descrever a lógica essencial do fluxo de forma autocontida.
+1. **Escolha do formato**:
+   - **SVG (`.svg`)**: formato padrão e mandatório para ilustrações conceituais ricas, representações físicas, geometria espacial, cinemática, perfis aerodinâmicos e gráficos técnicos.
+   - **Mermaid (`.mmd`)**: indicado para fluxogramas de decisão, arquitetura de sistemas e pipelines de dados sequenciais.
+2. **Paridade Bilíngue Estrita (PT / EN)**:
+   - Todo diagrama visual vetorial deve ter versão em Português e versão em Inglês:
+     - PT: `wiki/assets/<slug-do-essay>_fig<N>.svg`
+     - EN: `wiki/assets/<slug-do-essay>_fig<N>_en.svg`
+   - A versão em inglês traduz rótulos, legendas, eixos e anotações, mantendo rigorosamente idênticos o layout, cores, proporções e elementos geométricos.
+   - Para diagramas puramente matemáticos ou geométricos sem texto, o arquivo `_en.svg` replica o conteúdo para garantir consistência de resolução em publicações bilíngues.
+3. **Renderização de Alta Definição (Retina 2x)**:
+   - Todo arquivo vetorial precisa do respectivo arquivo `.png` irmão compilado em alta fidelidade.
+   - Compilação via Chromium/Playwright garante suporte integral a marcadores de setas (`<marker>`), polígonos 3D, gradientes lineares e regras CSS avançadas (que quebram em renderizadores simplificados).
+4. **Legibilidade multiplataforma**:
+   - Use fundos sólidos (cartões `#ffffff` ou `#f8fafc`) e texto com contraste elevado (`#0f172a`, `#1e293b`).
+   - Use viewBox explícito com largura e altura bem definidas (ex.: `viewBox="0 0 1200 680"`).
+   - O diagrama deve permanecer perfeitamente legível tanto em exportações para PDF/LaTeX (fundo branco) quanto no Atlas web (modos claro e escuro).
+5. **Completude textual**: o diagrama apoia a prosa, mas nunca a substitui. O texto do ensaio deve descrever a lógica essencial de forma autocontida.
 
 ## Fluxo de Execução
 
 1. Localize a seção do essay onde o diagrama será inserido.
-2. Escreva o código-fonte Mermaid em `wiki/assets/<slug-do-essay>_fig<N>.mmd`.
-3. Compile o arquivo para PNG:
-   ```bash
-   python scripts/mermaid_to_png.py wiki/assets/<slug-do-essay>_fig<N>.mmd wiki/assets/<slug-do-essay>_fig<N>.png
-   ```
-   Se o compilador acusar erro de sintaxe, corrija o `.mmd` e repita a compilação até obter sucesso.
-4. Insira a figura no essay conforme `conventions/SKILL.md`:
-   ```markdown
-   ![Descrição textual sucinta](../assets/<slug-do-essay>_fig<N>.png)
+2. **Criação do Diagrama em Português (PT)**:
+   - Se for SVG: escreva `wiki/assets/<slug-do-essay>_fig<N>.svg`.
+   - Se for Mermaid: escreva `wiki/assets/<slug-do-essay>_fig<N>.mmd`.
+3. **Geração da Versão em Inglês (EN)**:
+   - Para diagramas SVG, crie o arquivo correspondente `<slug-do-essay>_fig<N>_en.svg` ou sincronize com:
+     ```bash
+     python scripts/generate_en_svgs.py <slug-do-essay>_fig<N>.svg
+     ```
+4. **Compilação dos Binários PNG Retina 2x**:
+   - Para SVGs (PT e EN):
+     ```bash
+     python scripts/svg_to_png.py <slug-do-essay>_fig<N>.svg
+     python scripts/svg_to_png.py <slug-do-essay>_fig<N>_en.svg
+     ```
+   - Para diagramas Mermaid:
+     ```bash
+     python scripts/mermaid_to_png.py wiki/assets/<slug-do-essay>_fig<N>.mmd wiki/assets/<slug-do-essay>_fig<N>.png
+     ```
+5. **Inserção no Essay**:
+   - Referencie o PNG relativo no ensaio conforme `conventions/SKILL.md`:
+     ```markdown
+     ![Descrição textual sucinta](../assets/<slug-do-essay>_fig<N>.png)
 
-   *Figura N. Legenda descritiva do diagrama.*
-   ```
-5. Assegure a explicação dos elementos do diagrama na prosa adjacente.
-6. Feche a edição validando o essay:
-   ```bash
-   python scripts/check_wiki.py <slug-do-essay>
-   ```
+     *Figura N. Legenda descritiva do diagrama.*
+     ```
+6. **Validação da Wiki**:
+   - Feche a edição validando o essay:
+     ```bash
+     python scripts/check_wiki.py <slug-do-essay>
+     ```

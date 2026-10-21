@@ -416,22 +416,89 @@ Lista plana de fontes já processadas:
 - Wikilink: `[[nome-do-arquivo|Título Visível]]`.
 - Sources preservam o nome original na subpasta do tipo.
 
-## Tratamento de imagens
+## Tratamento de imagens e diagramas
 
-1. Salve imagens em `wiki/assets/` com o nome `<slug-do-essay>_fig<N>.<ext>`, onde `N` é a ordem de aparição no texto. Nunca use base64 inline.
-2. Diagramas Mermaid: preserve o código-fonte em `wiki/assets/<slug-do-essay>_fig<N>.mmd` e compile para PNG via `scripts/mermaid_to_png.py`. Use nós com preenchimento sólido e linhas de contraste intermediário para legibilidade em tema claro e escuro.
-3. Use caminho relativo: `../assets/...` em essays e `../../assets/...` em resumos de sources.
-4. Descreva em texto a informação essencial de gráficos e diagramas.
-5. Toda figura tem legenda em itálico logo abaixo da imagem:
+1. Salve imagens em wiki/assets/ com o nome <slug-do-essay>_fig<N>.<ext>, onde N é a ordem de aparição no texto. Nunca use base64 inline.
+2. **Diagramas SVG e Paridade Bilíngue (PT / EN):**
+   - Todo diagrama vetorial conceitual ou técnico possui representação em SVG (.svg).
+   - Todo SVG **deve possuir paridade linguística estrita**:
+     - Versão em Português: <slug-do-essay>_fig<N>.svg
+     - Versão em Inglês: <slug-do-essay>_fig<N>_en.svg
+   - O arquivo em inglês traduz com rigor rótulos, legendas, formulações e anotações, preservando exatamente a mesma geometria, cores e proporções do original.
+   - Sincronização automatizada: use python scripts/generate_en_svgs.py [arquivo.svg].
+3. **Compilação para PNG de Alta Definição (Retina 2x):**
+   - Todo arquivo .svg e .mmd deve ter seu respectivo .png renderizado no mesmo diretório de assets (wiki/assets/).
+   - Para SVGs, utilize exclusivamente o script padronizado via Playwright/Chromium:
+     `ash
+     python scripts/svg_to_png.py [arquivo.svg]
+     `
+     Nunca utilize renderizadores com suporte vetorial incompleto (como PyMuPDF/fitz), pois falham em renderizar marcadores, polígonos e CSS complexo.
+   - Para diagramas Mermaid (.mmd), compile via:
+     `ash
+     python scripts/mermaid_to_png.py [arquivo.mmd]
+     `
+4. Use caminho relativo: ../assets/... em essays e ../../assets/... em resumos de sources.
+5. Descreva em texto a informação essencial de gráficos e diagramas.
+6. Toda figura tem legenda em itálico logo abaixo da imagem:
 
-   ```markdown
+   `markdown
    ![alt](../assets/arquivo.png)
 
    *Figura 3. Curva de calibração do modelo contra os placares observados.*
-   ```
+   `
 
-6. Numere as figuras sequencialmente a partir de 1. A legenda deve identificar a figura sem simplesmente repetir o alt ou o argumento do parágrafo.
+7. Numere as figuras sequencialmente a partir de 1. A legenda deve identificar a figura sem simplesmente repetir o alt ou o argumento do parágrafo.
 
+## Workflow de Construção de Essays (PT e EN)
+
+O ciclo de vida completo de produção de ensaios segue cinco fases padronizadas:
+
+`	ext
+[1. Esboço & Redação PT]  -->  [2. Diagramação & Paridade EN]  -->  [3. Gates da Wiki]
+  (plan/drafts/ -> essays/)      (SVG/MMD PT + _en.svg -> PNG 2x)     (check_wiki & refs)
+                                                                            |
+                                                                            v
+[5. Difusão Substack PT/EN] <--  [4. Atlas Web / Publicação]  <-------------+
+ (extract_essay -> publish)         (set_visibility -> build_site)
+`
+
+1. **Fase 1: Concepção e Redação em Português**
+   - Estruturação de tese e capítulos em plan/drafts/<slug>.md via /outline.
+   - Redação do ensaio principal em wiki/essays/<slug>.md via /essay ou /import.
+2. **Fase 2: Produção Visual e Paridade Bilíngue**
+   - Criação da figura principal em Português em wiki/assets/<slug>_fig<N>.svg (ou .mmd).
+   - Geração da versão equivalente em Inglês:
+     `ash
+     python scripts/generate_en_svgs.py <slug>_fig<N>.svg
+     `
+   - Renderização dos binários PNG Retina 2x correspondentes:
+     `ash
+     python scripts/svg_to_png.py <slug>_fig<N>.svg
+     python scripts/svg_to_png.py <slug>_fig<N>_en.svg
+     `
+3. **Fase 3: Validação da Wiki e Reconstrução de Derivados**
+   - Execução do fechamento padrão:
+     `ash
+     python scripts/fix_lint.py <slug>
+     python scripts/check_wiki.py <slug>
+     python scripts/check_references.py --file <slug>
+     python scripts/build_index.py
+     python scripts/build_references.py
+     `
+4. **Fase 4: Publicação no Atlas Web (site/)**
+   - Definição de visibilidade explícita se autorizado: python scripts/set_visibility.py allow <slug>.
+   - Compilação do site: python scripts/build_site.py (copia automaticamente os assets referenciados para site/assets/media/).
+5. **Fase 5: Difusão e Publicação Bilíngue no Substack**
+   - Extração do ensaio em lote para o workspace do Substack:
+     `ash
+     python substack\scripts\extract_essay.py <slug>
+     `
+     O extrator cria substack/posts/<slug>_pt.md e substack/posts/<slug>_en.md, associando e fazendo upload das figuras corretas (_en.png para inglês e .png para português) no CDN do Substack.
+   - Auditoria e publicação:
+     `ash
+     python substack\scripts\check_substack.py <slug>
+     python substack\scripts\publish_essay.py <slug>
+     `
 ## Regra de contradição entre fontes
 
 Se uma fonte nova ou uma afirmação do Usuário contradizer conteúdo existente, não escolha um lado nem faça média. Mostre as duas versões com localização exata e espere a decisão do Usuário antes de editar.

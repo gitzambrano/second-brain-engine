@@ -79,6 +79,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`batch_podcasts.py`** | Executa a geração em lote sequencial de podcasts para uma fila de essays, pulando os já gerados. | `python scripts/batch_podcasts.py` |
 | **`parallel_podcasts.py`** | Executa a geração paralela de podcasts distribuindo a fila entre múltiplos perfis do Chrome e contas do NotebookLM. | `python scripts/parallel_podcasts.py` |
 | **`retag.py`** | Utilitário para renomear ou migrar tags em lote nos arquivos da wiki. | `python scripts/retag.py tagA tagB` |
+| **`generate_en_svgs.py`** | Gera e sincroniza arquivos SVG em inglês (`_en.svg`) para todos os diagramas da wiki, garantindo paridade bilíngue estrita. | `python scripts/generate_en_svgs.py` |
 | **`migrate_private_data.py`** | Utilitário para migração e reestruturação controlada do diretório de dados. | `python scripts/migrate_private_data.py` |
 
 ### 4. Exportações Standalone e Validação
@@ -100,6 +101,7 @@ Os scripts utilizam prefixos verbais padronizados que revelam imediatamente sua 
 | **`find_text.py`** | Busca textual contextualizada com suporte a regex no corpus da wiki. | `python scripts/find_text.py "termo"` |
 | **`find_backlinks.py`** | Rastreia e lista todas as páginas que apontam para um determinado conceito ou ensaio. | `python scripts/find_backlinks.py <slug>` |
 | **`mermaid_to_png.py`** | Converte diagramas Mermaid em imagens PNG estáticas para inclusão em documentos. | `python scripts/mermaid_to_png.py` |
+| **`svg_to_png.py`** | Renderiza arquivos SVG em imagens PNG de alta resolução (Retina 2x) com fidelidade geométrica total via Playwright. | `python scripts/svg_to_png.py [arquivo.svg]` |
 | **`sync_qmd.bat` / `.sh`** | Sincroniza a coleção de busca vetorial semântica do `qmd` com a pasta de dados. | `./scripts/sync_qmd.sh` |
 | **`repo_paths.py`** | Ponto canônico de resolução de diretórios dos três repositórios Git (`DATA_ROOT`, `SITE_ROOT`, etc.). | `python scripts/repo_paths.py` |
 | **`bootstrap_repositories.py`** | Inicializa os esqueletos e os repositórios Git complementares (`data/` e `site/`). | `python scripts/bootstrap_repositories.py --create` |
