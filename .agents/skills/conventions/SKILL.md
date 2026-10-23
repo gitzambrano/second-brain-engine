@@ -2,7 +2,7 @@
 name: conventions
 description: >
   Fonte normativa de estrutura, frontmatter, tags, sources, links, referências,
-  prosa, imagens e regras editoriais da wiki. Use como referência pelas skills
+  prosa, imagens, listas, código e regras editoriais da wiki. Use como referência pelas skills
   que leem ou alteram conteúdo; não executa um workflow próprio.
 metadata:
   second-brain-role: "normative-reference"
@@ -217,6 +217,10 @@ Se o essay tiver mais de oito caixas, use mais de um tipo quando houver funçõe
 ### Forma do bloco
 
 O título é autoral. Sem rótulo, escreva `> [!tipo]` sozinho. Dentro da caixa vale Markdown normal (parágrafos, listas, tabelas, matemática, código e caixas aninhadas). Subtítulos dentro dela devem usar `####` (`##` e `###` quebram o Sumário).
+
+Tópicos usam listas Markdown (`- ` ou `1. `), inclusive dentro de caixas. Marcadores `•` digitados como texto não garantem uma linha por item nas exportações. Confira a separação dos itens no resultado renderizado.
+
+Blocos cercados por crases destinam-se a código, comandos, saídas literais ou árvores de arquivos. Derivações, equações, explicações e listas usam prosa, matemática ou listas Markdown. Links clicáveis ficam fora de código; preserve-os na prosa, em vez de apagá-los para esconder uma falha de renderização.
 
 Quatro tipos têm formato estruturado próprio:
 
