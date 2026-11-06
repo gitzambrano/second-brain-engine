@@ -322,8 +322,10 @@ def _split_quote_parts(
     """Split quoted words from attribution without semantic guessing.
 
     Canonical syntax uses explicit quotation marks. Everything through the
-    closing mark is quote text; everything after it is attribution. For old
-    explicit [!quote] blocks only, a final separate paragraph is accepted as a
+    closing mark is quote text; everything after it is attribution. Nested
+    quotes (e.g. within the quote or in attribution) are balanced so that
+    inner quotation marks do not misplace the boundary. For old explicit
+    [!quote] blocks only, a final separate paragraph is accepted as a
     migration fallback so existing author/work lines are not lost.
     """
     lines = _trim_blank(body)
@@ -337,21 +339,48 @@ def _split_quote_parts(
         if opener:
             closer = "”" if opener == "“" else '"'
             indent = lines[first][: len(lines[first]) - len(lines[first].lstrip())]
-            lines[first] = indent + stripped[1:]
-            for j in range(len(lines) - 1, first - 1, -1):
-                # After stripping exactly one Markdown quote level, a nested
-                # quote still starts with `>`. Its closing mark belongs to the
-                # inner quote and must never close the outer quotation.
-                if QUOTE_RE.match(lines[j]):
-                    continue
-                pos = lines[j].rfind(closer)
-                if pos < 0:
-                    continue
-                after = lines[j][pos + len(closer):].strip()
-                quote_lines = lines[: j + 1]
-                quote_lines[-1] = lines[j][:pos].rstrip()
-                attribution = ([after] if after else []) + lines[j + 1:]
-                return _trim_blank(quote_lines), _trim_blank(attribution)
+            test_lines = list(lines)
+            test_lines[first] = indent + stripped[1:]
+
+            if opener == "“" and closer == "”":
+                depth = 1
+                for j in range(first, len(test_lines)):
+                    if QUOTE_RE.match(test_lines[j]):
+                        continue
+                    if j > first and test_lines[j].strip().startswith(("—", "–", "--")):
+                        break
+                    line_j = test_lines[j]
+                    for col, ch in enumerate(line_j):
+                        if ch == "“":
+                            depth += 1
+                        elif ch == "”":
+                            depth -= 1
+                            if depth == 0:
+                                after = line_j[col + 1:].strip()
+                                quote_lines = test_lines[: j + 1]
+                                quote_lines[-1] = line_j[:col].rstrip()
+                                attribution = ([after] if after else []) + test_lines[j + 1:]
+                                return _trim_blank(quote_lines), _trim_blank(attribution)
+            else:
+                for j in range(first, len(test_lines)):
+                    if QUOTE_RE.match(test_lines[j]):
+                        continue
+                    if j > first and test_lines[j].strip().startswith(("—", "–", "--")):
+                        break
+                    line_j = test_lines[j]
+                    col = line_j.find('"')
+                    if col >= 0:
+                        after = line_j[col + 1:].strip()
+                        quote_lines = test_lines[: j + 1]
+                        quote_lines[-1] = line_j[:col].rstrip()
+                        attribution = ([after] if after else []) + test_lines[j + 1:]
+                        return _trim_blank(quote_lines), _trim_blank(attribution)
+
+            for j in range(first + 1, len(test_lines)):
+                if test_lines[j].strip().startswith(("—", "–", "--")):
+                    quote_lines = test_lines[:j]
+                    attribution = test_lines[j:]
+                    return _trim_blank(quote_lines), _trim_blank(attribution)
 
     if fallback_last_paragraph:
         paragraphs = _paragraphs(lines)

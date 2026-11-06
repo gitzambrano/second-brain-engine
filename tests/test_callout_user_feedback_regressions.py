@@ -70,3 +70,35 @@ def test_pdf_quote_marks_are_discreet_and_verdict_uses_parent_color():
     assert r'\fontsize{34pt}{34pt}' not in py
     assert 'textcolor{wbtype}' in lua and 'rule{\\\\linewidth}{0.4pt}' in lua
     assert "has_class(el, 'verdict-tag')" in lua
+
+
+def test_quote_attribution_with_inner_quotes():
+    src = (
+        "> [!quote]\n"
+        "> “Be quick, be quiet and be on time.”\n"
+        ">\n"
+        "> — Clarence “Kelly” Johnson [[#Referências|[11]]]\n"
+    )
+    out = transform_markdown(src)
+    assert "{.pull-quote .callout-quote}" in out
+    assert "{.quote-text}" in out
+    qt_block = out.split("{.quote-text}")[1].split("{.quote-attribution}")[0]
+    assert "Be quick, be quiet and be on time." in qt_block
+    assert "“Kelly”" not in qt_block
+    assert "{.quote-attribution}" in out
+    attr_block = out.split("{.quote-attribution}")[1]
+    assert "— Clarence “Kelly” Johnson [[#Referências|[11]]]" in attr_block
+
+
+def test_quote_with_balanced_inner_quotes():
+    src = (
+        "> [!quote]\n"
+        "> “O professor disse: “estudem mais” antes do teste.”\n"
+        ">\n"
+        "> — Autor\n"
+    )
+    out = transform_markdown(src)
+    assert "{.quote-text}" in out
+    assert "O professor disse: “estudem mais” antes do teste." in out
+    assert "{.quote-attribution}" in out
+    assert "— Autor" in out
