@@ -180,7 +180,7 @@ SITE_ADMIN_FILES = {
     "README.md",
 }
 SITE_ADMIN_DIRS = {".git", ".github"}
-PRESERVED_ASSET_DIRS = frozenset({"podcasts"})
+PRESERVED_ASSET_DIRS = frozenset({"podcasts", "fonts"})
 
 
 def _keep_covers(root: Path) -> dict[str, bytes]:

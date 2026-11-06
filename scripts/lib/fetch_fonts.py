@@ -74,7 +74,7 @@ def ensure_local_fonts(output_dir, css_url=None, dirname="_fonts", required_fami
         css_text = css_path.read_text(encoding="utf-8", errors="replace")
         refs = re.findall(r"url\(([^)]+)\)", css_text)
         if (all((font_dir / u).exists() for u in refs)
-                and all(f'font-family: "{family}"' in css_text for family in required_families)):
+                and all((f'font-family: "{family}"' in css_text or f"font-family: '{family}'" in css_text) for family in required_families)):
             return css_path
 
     try:
