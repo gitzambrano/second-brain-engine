@@ -82,8 +82,17 @@ def resolve_chromium():
     if managed.exists():
         return CHROMIUM_MANAGED, str(managed), f"chromium do playwright em {managed}"
 
-    names = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable")
+    names = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome")
     system = next((shutil.which(x) for x in names if shutil.which(x)), None)
+    if not system:
+        for win_path in (
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            str(Path.home() / r"AppData\Local\Google\Chrome\Application\chrome.exe"),
+        ):
+            if Path(win_path).is_file():
+                system = str(win_path)
+                break
     if system:
         return CHROMIUM_SYSTEM, system, f"chromium do sistema em {system}"
 
