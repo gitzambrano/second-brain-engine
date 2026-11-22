@@ -457,3 +457,45 @@ def test_logged_out_detection_covers_trynow_landing():
     assert nb.Ui(FakePage("https://accounts.google.com/signin")).logged_out()
     assert nb.Ui(FakePage("https://notebook.google.com/", landing=True)).logged_out()
     assert not nb.Ui(FakePage("https://notebook.google.com/notebook/abc")).logged_out()
+
+
+def test_notebooklm_download_in_popup(tmp_path, monkeypatch):
+    """A guia aberta pelo menu Baixar, nao a guia original, entrega o arquivo."""
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import notebooklm_podcast as nb
+
+    page = MagicMock()
+    context = MagicMock()
+    page.context = context
+    context.pages = [page]
+    handlers = {}
+    context.on.side_effect = lambda name, fn: handlers.__setitem__(name, fn)
+
+    popup = MagicMock()
+    popup_handlers = {}
+    popup.on.side_effect = lambda name, fn: popup_handlers.__setitem__(name, fn)
+    download = MagicMock()
+    download.suggested_filename = "teste.m4a"
+    download.failure.return_value = None
+    download.save_as.side_effect = lambda path: Path(path).write_bytes(b"x" * 4096)
+
+    def click_download():
+        handlers["page"](popup)
+        popup_handlers["download"](download)
+
+    menu = MagicMock()
+    menu.click.side_effect = click_download
+    page.get_by_role.return_value = menu
+    monkeypatch.setattr(nb.hi, "pause", lambda *_args: None)
+    monkeypatch.setattr(nb.hi, "human_click", lambda _page, loc: loc.click())
+    monkeypatch.setattr(
+        nb.pc, "probe",
+        lambda path: SimpleNamespace(ok=True, audio=["aac"], error=""),
+    )
+
+    result = nb.download_audio(SimpleNamespace(page=page, dismiss_overlays=lambda: None), tmp_path)
+    assert result == tmp_path / "podcast.m4a"
+    assert result.stat().st_size == 4096
+    download.save_as.assert_called_once_with(result)

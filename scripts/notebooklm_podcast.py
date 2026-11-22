@@ -611,52 +611,58 @@ def wait_for_audio(ui: Ui, timeout_min: int) -> None:
     raise FlowError(f"tempo esgotado ({timeout_min} min) esperando o áudio")
 
 
-AUDIO_URL_RE = re.compile(r"^https://lh3\.googleusercontent\.com/(?:rd-)?notebooklm/")
-
-
 def download_audio(ui: Ui, dest_dir: Path) -> Path:
-    """Baixa o áudio pronto.
-
-    O item "Baixar" do menu fecha o navegador controlado, então o arquivo é
-    obtido do mesmo endereço que o player do NotebookLM usa: abrir o item
-    revela a URL (redireciona para o servidor de mídia) e o contexto, que
-    carrega a sessão, a baixa inteira.
-    """
+    """Baixa o arquivo do menu; o NotebookLM pode iniciar o download em outra guia."""
     page = ui.page
     ui.dismiss_overlays()
-    seen: list[str] = []
-    page.on("response", lambda r: seen.append(r.url) if AUDIO_URL_RE.match(r.url) else None)
+    downloads = []
+    watched = set()
+
+    def watch(tab):
+        if tab in watched:
+            return
+        watched.add(tab)
+        tab.on("download", lambda download: downloads.append(download))
+
+    page.context.on("page", watch)
+    for tab in page.context.pages:
+        watch(tab)
+
     item = page.locator("artifact-library-item").first
     item.wait_for(state="visible", timeout=30000)
     item.hover(force=True)
     hi.pause(0.4, 0.9)
-    hi.human_click(page, item.locator("button[aria-label='Abrir'], button[aria-label='Open']").first)
-    deadline = time.time() + 60
-    while not seen and time.time() < deadline:
-        page.wait_for_timeout(500)
-    if not seen:
-        raise FlowError("áudio: o player não revelou o endereço do arquivo")
+    more = item.locator(
+        'button[aria-label="Mais"], button[aria-label="More"], '
+        'button[aria-label="More options"]'
+    ).first
+    hi.human_click(page, more)
+    menu_item = page.get_by_role("menuitem", name=re.compile(r"^(Baixar|Download)$", re.I))
+    hi.human_click(page, menu_item)
 
-    body_bytes = None
-    try:
-        response = page.context.request.get(seen[0], timeout=15 * 60 * 1000)
-        ctype = response.headers.get("content-type", "")
-        if response.ok and "audio" in ctype:
-            body_bytes = response.body()
-    except Exception as exc:
-        print(f"  aviso: request via playwright falhou ({exc}); tentando urllib direto...", file=sys.stderr)
+    deadline = time.time() + 120
+    while not downloads and time.time() < deadline:
+        page.wait_for_timeout(300)
+    if not downloads:
+        raise FlowError("audio: nenhuma guia iniciou o download pelo menu Baixar")
 
-    if body_bytes is None:
-        import urllib.request
-        req = urllib.request.Request(seen[0], headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(req, timeout=300) as resp:
-            body_bytes = resp.read()
-
-    if not body_bytes:
-        raise FlowError("áudio: download retornou corpo vazio")
+    download = downloads[0]
+    extension = Path(download.suggested_filename).suffix.lower() or ".bin"
     dest_dir.mkdir(parents=True, exist_ok=True)
-    target = dest_dir / "podcast.m4a"
-    target.write_bytes(body_bytes)
+    target = dest_dir / f"podcast{extension}"
+    try:
+        download.save_as(target)
+        failure = download.failure()
+        if failure:
+            raise FlowError(f"audio: download do NotebookLM falhou ({failure})")
+        if not target.is_file() or target.stat().st_size < 1024:
+            raise FlowError("audio: arquivo baixado esta vazio ou incompleto")
+        info = pc.probe(target)
+        if not info.ok or not info.audio:
+            raise FlowError(f"audio: arquivo baixado nao e audio valido ({info.error})")
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
     return target
 
 
