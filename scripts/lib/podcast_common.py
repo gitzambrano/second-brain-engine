@@ -235,11 +235,16 @@ def _load_json(path: Path) -> dict:
 
 
 def _save_json(path: Path, data: dict) -> None:
+    """Grava cache atomicamente, mesmo quando um build pode ser interrompido."""
+    tmp = path.with_name(path.name + ".tmp")
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+        os.replace(tmp, path)
     except OSError:
-        pass  # cache é otimização; nunca derruba o fluxo
+        tmp.unlink(missing_ok=True)
+        # Cache is an optimization; failure to write should not block publishing.
+        pass
 
 
 def cached_decode_check(path: Path, use_cache: bool = True) -> tuple[bool, str]:
@@ -487,6 +492,28 @@ def _source_key(src: Path, title: str) -> dict:
             "bitrate": SITE_BITRATE_K, "rate": SITE_SAMPLE_RATE}
 
 
+def _recover_existing_encode(src: Path, dst: Path, title: str) -> bool:
+    """Rebuild missing cache from a valid published copy, without transcoding.
+
+    A mismatch with an existing cache entry must always use normal re-encoding.
+    """
+    if not dst.is_file() or dst.stat().st_size == 0:
+        return False
+    if src.stat().st_mtime_ns > dst.stat().st_mtime_ns:
+        return False
+    if published_findings(dst):
+        return False
+    info = probe(dst)
+    if not info.audio or info.audio[0].sample_rate != SITE_SAMPLE_RATE:
+        return False
+    check = _run([require_ffmpeg(), "-hide_banner", "-nostdin", "-i", str(dst)], timeout=120)
+    metadata = check.stdout + "\n" + check.stderr
+    def field(name: str) -> str | None:
+        match = re.search(r"(?mi)^\s*" + name + r"\s*:\s*(.*?)\s*$", metadata)
+        return match.group(1).strip() if match else None
+    return field("title") == title and field("artist") == SITE_ARTIST
+
+
 def sync_site_podcasts(
     essays: list[EssayRef],
     site_root: Path | None = None,
@@ -517,6 +544,9 @@ def sync_site_podcasts(
         key = _source_key(src, essay.title)
         if dst.is_file() and dst.stat().st_size > 0 and cache.get(essay.slug) == key:
             log(f"  podcast: {essay.slug} (cache)")
+        elif essay.slug not in cache and _recover_existing_encode(src, dst, essay.title):
+            cache[essay.slug] = key
+            log(f"  podcast: {essay.slug} (validated cache recovery)")
         else:
             bad = [f for f in integrity_findings(src, deep=False) if f.severity == "ERROR"]
             if bad:

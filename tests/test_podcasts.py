@@ -149,6 +149,51 @@ def test_encode_is_cached_and_stale_copies_are_removed(world):
 
 
 @needs_ffmpeg
+def test_missing_encode_cache_recovers_existing_podcast_without_transcoding(world):
+    make_audio(world.podcasts / "ensaio-publico.m4a")
+    world.build()
+    dst = world.site / "assets" / "podcasts" / "ensaio-publico.m4a"
+    cache_file = world.local / "podcasts" / "encode-cache.json"
+    stamp = dst.stat().st_mtime_ns
+    cache_file.unlink()
+
+    result = world.build()
+    assert "cache recuperado" in result.stdout or "validated cache recovery" in result.stdout
+    assert dst.stat().st_mtime_ns == stamp
+    assert json.loads(cache_file.read_text(encoding="utf-8"))["ensaio-publico"]["version"] == pc.ENCODE_VERSION
+
+    # A cache-less rebuild must keep the private/hidden podcast exclusion.
+    assert sorted(p.name for p in dst.parent.iterdir()) == ["ensaio-publico.m4a"]
+
+
+@needs_ffmpeg
+def test_missing_encode_cache_reencodes_if_metadata_or_source_changes(world):
+    src = make_audio(world.podcasts / "ensaio-publico.m4a")
+    world.build()
+    dst = world.site / "assets" / "podcasts" / "ensaio-publico.m4a"
+    cache_file = world.local / "podcasts" / "encode-cache.json"
+
+    # The existing file has the old title: a changed essay must re-encode.
+    cache_file.unlink()
+    essay(world.essays / "ensaio-publico.md", "Novo T?tulo", "public")
+    result = world.build()
+    assert "recodificando ensaio-publico" in result.stdout
+    metadata = subprocess.run(
+        [FFMPEG, "-hide_banner", "-i", str(dst)], capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
+    ).stderr
+    assert "Novo T?tulo" in metadata
+
+    # Even with the same title, an original newer than the published copy
+    # cannot be silently accepted when local cache was lost.
+    cache_file.unlink()
+    old_mtime = dst.stat().st_mtime_ns
+    os.utime(src, ns=(old_mtime + 5_000_000_000, old_mtime + 5_000_000_000))
+    result = world.build()
+    assert "recodificando ensaio-publico" in result.stdout
+
+
+@needs_ffmpeg
 def test_check_podcasts_flags_leaked_audio_of_non_public_essay(world):
     make_audio(world.podcasts / "ensaio-publico.m4a")
     world.build()
