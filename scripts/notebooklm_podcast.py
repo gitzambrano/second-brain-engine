@@ -582,34 +582,39 @@ GENERATING_RE = re.compile(r"gerando|generating|criando|creating", re.I)
 
 
 def wait_for_audio(ui: Ui, timeout_min: int) -> None:
+    """Wait until an audio artifact is ready; generic Play controls are unrelated."""
     page = ui.page
     deadline = time.time() + timeout_min * 60
-    seen_generating = False
     while time.time() < deadline:
         text = ui.visible_text()
         ui.check_notices()
         if FAILED_RE.search(text):
-            raise FlowError("o NotebookLM reportou falha na geração do áudio")
-        generating = bool(GENERATING_RE.search(text))
-        seen_generating = seen_generating or generating
-        play = ui.find(rx(r"^Reproduzir", r"^Play", r"Reproduzir (resumo|[áa]udio)"), ("button",), 1.5)
-        more = ui.find(rx(r"Mais op[cç][oõ]es", r"^Mais$", r"More options", r"^More$"), ("button",), 1.0)
-        artifact_btn = page.locator("artifact-library-item button[aria-label*='Abrir'], artifact-library-item button[aria-label*='Open']").first
-        has_artifact = False
-        try:
-            has_artifact = artifact_btn.is_visible()
-        except Exception:
-            pass
-        if not generating and (play is not None or (seen_generating and more is not None) or (seen_generating and has_artifact)):
+            raise FlowError("o NotebookLM reportou falha na geracao do audio")
+        cards = page.locator("artifact-library-item")
+        generating = False
+        ready = False
+        for index in range(cards.count()):
+            card = cards.nth(index)
+            try:
+                if GENERATING_RE.search(card.inner_text()):
+                    generating = True
+                    continue
+                more = card.locator(
+                    'button[aria-label="Mais"], button[aria-label="More"], '
+                    'button[aria-label="More options"]'
+                ).first
+                if more.count() and more.is_enabled():
+                    ready = True
+            except Exception:  # noqa: BLE001 - artifact replaced during polling
+                pass
+        if ready and not generating:
             return
-        # Ociosidade humana: rolagem e movimentos suaves entre as verificações.
         try:
             hi.human_scroll(page, random.choice((-120, 120, 200)), steps=4)
-            hi.move_to(page, random.uniform(300, 1100), random.uniform(250, 700))
         except Exception:  # noqa: BLE001
             pass
         time.sleep(random.uniform(*POLL_SECONDS))
-    raise FlowError(f"tempo esgotado ({timeout_min} min) esperando o áudio")
+    raise FlowError(f"tempo esgotado ({timeout_min} min) esperando o audio pronto")
 
 
 def download_audio(ui: Ui, dest_dir: Path) -> Path:
@@ -748,7 +753,8 @@ def generate_once(account: str, profile: Path, essay: pc.EssayRef, args) -> Path
                         add_pasted_text(ui, source)
                     set_notebook_title(ui, title)
                     customize_audio(ui, prompt, args.allow_truncated_prompt)
-                    wait_for_audio(ui, args.timeout)
+                # Also wait when reusing a notebook with an audio still generating.
+                wait_for_audio(ui, args.timeout)
                 downloaded = download_audio(ui, STATE_DIR / "downloads")
                 if args.delete_notebook:
                     try:
