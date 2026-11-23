@@ -31,6 +31,7 @@ import re
 from pathlib import Path
 
 from unidecode import unidecode
+import yaml
 
 from repo_paths import ESSAYS_DIR, relative_data
 
@@ -54,7 +55,19 @@ def audit(essays_dir: Path = ESSAYS_DIR) -> list[dict[str, str]]:
         body = path.read_text(encoding="utf-8-sig")
         heading = H1_RE.search(body)
         expected = title_slug(heading.group(1) if heading else path.stem)
-        if SLUG_RE.fullmatch(path.stem) and path.stem == expected:
+
+        # Keep published URLs stable when the editorial title changes.
+        # The pinned permalink must still be valid and match the filename.
+        frontmatter_match = re.match(r"\A---\s*\n(.*?)\n---", body, re.S)
+        metadata = yaml.safe_load(frontmatter_match.group(1)) or {} if frontmatter_match else {}
+        pinned = metadata.get("permalink_slug") if isinstance(metadata, dict) else None
+        if pinned is not None:
+            if (metadata.get("visibility") == "public"
+                    and isinstance(pinned, str)
+                    and SLUG_RE.fullmatch(pinned)
+                    and path.stem == pinned):
+                continue
+        elif SLUG_RE.fullmatch(path.stem) and path.stem == expected:
             continue
         issues.append({
             "code": "ESSAY_FILENAME_TITLE_MISMATCH",

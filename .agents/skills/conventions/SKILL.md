@@ -54,9 +54,12 @@ summary: "Resumo em prosa contínua, entre 200 e 530 caracteres."
 status: draft | revisao | finalizado
 visibility: public     # opcional; ver ## Publicação
 newsletter_issue: 1    # opcional; anuncia por e-mail quando o essay já é public
+permalink_slug: slug-ja-publicado  # opcional; preserva URL quando H1 muda
 ```
 
 `summary:`: 200–530 caracteres, uma linha, aspas duplas; descreva o arco do argumento, não apenas o tema.
+
+permalink_slug: excecao para essay publico cujo titulo mudou apos publicacao. O valor precisa ser kebab-case e igual ao nome do arquivo (sem extensao), preservando a URL e o podcast; para outros essays, o nome deriva do H1.
 
 ### `updated:` mede o texto, não a manutenção
 

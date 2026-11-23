@@ -43,3 +43,26 @@ def test_hidden_essay_is_not_required_in_the_public_index(mini_brain):
     report = json.loads(proc.stdout)
     codes = {issue["code"] for issue in report["corpus"]}
     assert "INDEX_MISSING_ESSAY" not in codes
+
+def test_public_essay_can_pin_existing_permalink(mini_brain):
+    essays = mini_brain / "wiki" / "essays"
+    essay = essays / "kitchen-sink.md"
+    original = essay.read_text(encoding="utf-8")
+    essay.write_text(
+        original.replace(
+            "status: draft\n",
+            "status: draft\nvisibility: public\npermalink_slug: kitchen-sink\n",
+        ),
+        encoding="utf-8",
+    )
+    proc = run_script("check_essay_slugs.py", "--json", data_root=mini_brain)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+    essay.write_text(
+        essay.read_text(encoding="utf-8").replace(
+            "permalink_slug: kitchen-sink", "permalink_slug: unrelated-slug"
+        ),
+        encoding="utf-8",
+    )
+    proc = run_script("check_essay_slugs.py", "--json", data_root=mini_brain)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
