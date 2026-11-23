@@ -864,7 +864,11 @@ def main() -> int:
         print(f"nenhum perfil em {profiles_dir}. Crie uma subpasta por conta ou use --profiles-dir.", file=sys.stderr)
         return 1
     state = load_state()
-    order = rotation_order(accounts, state, args.account)
+    # Reusing an existing audio does not consume generation quota.
+    if args.existing_audio and args.notebook_url and args.account in accounts:
+        order = [args.account]
+    else:
+        order = rotation_order(accounts, state, args.account)
     if not order:
         print("todas as contas estão em cooldown; veja o estado sem argumentos", file=sys.stderr)
         return 1
