@@ -531,14 +531,15 @@ def customize_audio(ui: Ui, prompt: str, allow_truncated: bool) -> None:
         raise FlowError("áudio: diálogo de personalização não abriu")
     hi.pause(0.6, 1.2)
 
-    # Idioma: português (Brasil).
+    # Skip language selection if Brazilian Portuguese is already selected.
+    # Reopening the selector sometimes closes it and hides the desired option.
     combo = page.locator("mat-select[role='combobox']").first
-    hi.human_click(page, combo)
-    hi.pause(0.5, 1.0)
-    option = page.get_by_role("option", name=rx(r"portugu[eê]s \(Brasil\)", r"Portuguese \(Brazil\)")).first
-    option.wait_for(state="attached", timeout=10000)
-    option.scroll_into_view_if_needed()
-    hi.human_click(page, option)
+    selected = combo.inner_text().strip()
+    if not (re.search(r"portugu.s", selected, re.I) and "Brasil" in selected):
+        combo.click(timeout=10000)
+        option = page.get_by_role("option", name=rx(r"portugu.s.*Brasil", r"Portuguese.*Brazil")).first
+        option.wait_for(state="visible", timeout=15000)
+        option.click(timeout=10000)
     hi.pause(0.5, 1.0)
 
     # Duração: a mais longa disponível. Em português o NotebookLM oferece só
@@ -636,9 +637,23 @@ def download_audio(ui: Ui, dest_dir: Path) -> Path:
         'button[aria-label="Mais"], button[aria-label="More"], '
         'button[aria-label="More options"]'
     ).first
-    hi.human_click(page, more)
-    menu_item = page.get_by_role("menuitem", name=re.compile(r"^(Baixar|Download)$", re.I))
-    hi.human_click(page, menu_item)
+    # Direct click avoids missing the small menu button by simulated mouse movement.
+    menu_item = page.get_by_role("menuitem", name=re.compile(r"^(Baixar|Download)$", re.I)).first
+    for attempt in range(3):
+        try:
+            more.click(timeout=10000, force=(attempt > 0))
+            menu_item.wait_for(state="visible", timeout=4500)
+            break
+        except Exception:  # noqa: BLE001
+            try:
+                page.keyboard.press("Escape")
+                item.hover(force=True)
+                page.wait_for_timeout(500)
+            except Exception:  # noqa: BLE001
+                pass
+    else:
+        raise FlowError("audio: download menu did not open after three attempts")
+    menu_item.click(timeout=12000)
 
     deadline = time.time() + 120
     while not downloads and time.time() < deadline:
